@@ -1,0 +1,46 @@
+{
+  "name": "b944or--run",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@syncfusion/ej2-base": "25.2.5",
+    "@syncfusion/ej2-buttons": "25.2.4",
+    "@syncfusion/ej2-documenteditor": "25.2.5",
+    "@syncfusion/ej2-icons": "25.2.3",
+    "@syncfusion/ej2-lists": "25.2.3",
+    "@syncfusion/ej2-navigations": "25.2.4",
+    "@syncfusion/ej2-pivotview": "25.2.5",
+    "@syncfusion/ej2-react-base": "25.2.3",
+    "@syncfusion/ej2-react-gantt": "^25.2.5",
+    "@syncfusion/ej2-react-popups": "25.2.4",
+    "@syncfusion/ej2-react-schedule": "^25.2.4",
+    "@syncfusion/ej2-schedule": "25.2.4",
+    "@syncfusion/ej2-splitbuttons": "25.2.4",
+    "react": "18.1.0",
+    "react-dom": "18.1.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5",
+    "react-scripts": "latest",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
