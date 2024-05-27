@@ -3,7 +3,6 @@ import Scheduler from './components/Scheduler';
 import Gantt from './components/Gantt';
 import { extend } from '@syncfusion/ej2-base';
 
-
 const initialData = [
   // Inserisci qui i dati iniziali se necessario
 ];
@@ -28,13 +27,11 @@ const App = () => {
     if (args.requestType === 'eventCreated') {
       const newEvents = Array.isArray(args.data) ? args.data : [args.data];
       newEvents.forEach(newEvent => {
-        console.log('New Event:', newEvent);
         updatedScheduleData = [...updatedScheduleData.filter(event => event.Id !== newEvent.Id), newEvent];
       });
     } else if (args.requestType === 'eventChanged') {
       const updatedEvents = Array.isArray(args.data) ? args.data : [args.data];
       updatedEvents.forEach(updatedEvent => {
-        console.log('Updated Event:', updatedEvent);
         updatedScheduleData = updatedScheduleData.map(event =>
           event.Id === updatedEvent.Id ? updatedEvent : event
         );
@@ -90,17 +87,9 @@ const App = () => {
 
     console.log('Updated Schedule Data from Gantt:', updatedScheduleData);
 
-    // Sync the updated data with the existing schedule data
     const finalScheduleData = scheduleData.map(event => {
       const ganttTask = updatedScheduleData.find(task => task.Id === event.Id);
-      return ganttTask ? { ...event, ...ganttTask } : event;
-    });
-
-    // Add any new tasks from Gantt to the Scheduler data
-    updatedScheduleData.forEach(task => {
-      if (!finalScheduleData.find(event => event.Id === task.Id)) {
-        finalScheduleData.push(task);
-      }
+      return ganttTask ? ganttTask : event;
     });
 
     console.log('Final Schedule Data:', finalScheduleData);
@@ -116,4 +105,3 @@ const App = () => {
 };
 
 export default App;
-

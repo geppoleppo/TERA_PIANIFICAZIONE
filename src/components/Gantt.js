@@ -3,6 +3,7 @@ import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInjec
 
 const Gantt = ({ data, onDataChange }) => {
   const taskbarTemplate = (props) => {
+    console.log('Gantt Task Color:', props.Color);
     return (
       <div style={{ backgroundColor: props.Color || '#357cd2', width: '100%', height: '100%' }}>
         {props.TaskName}
@@ -19,7 +20,6 @@ const Gantt = ({ data, onDataChange }) => {
       });
     }
   };
-  
 
   return (
     <GanttComponent

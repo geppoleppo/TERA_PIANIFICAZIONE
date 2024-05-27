@@ -36,7 +36,25 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const onActionComplete = (args) => {
+    console.log('Scheduler Event Data:', args.data);
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
+      // Set color based on resource if not already set
+      if (args.data && Array.isArray(args.data)) {
+        args.data.forEach(event => {
+          if (!event.Color) {
+            const resource = resourceData.find(res => res.Id === event.ConferenceId);
+            if (resource) {
+              event.Color = resource.Color;
+            }
+          }
+        });
+      } else if (args.data && !args.data.Color) {
+        const resource = resourceData.find(res => res.Id === args.data.ConferenceId);
+        if (resource) {
+          args.data.Color = resource.Color;
+        }
+      }
+      console.log('Updated Scheduler Event Data:', args.data);
       onDataChange(args);
     }
   };
