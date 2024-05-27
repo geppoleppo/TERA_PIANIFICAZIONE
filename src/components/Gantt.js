@@ -11,6 +11,7 @@ const Gantt = ({ data, onDataChange }) => {
   };
 
   const onActionComplete = (args) => {
+    console.log('Gantt Action Complete:', args);
     if (args.requestType === 'save' || args.requestType === 'delete') {
       onDataChange({
         requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
@@ -18,6 +19,7 @@ const Gantt = ({ data, onDataChange }) => {
       });
     }
   };
+  
 
   return (
     <GanttComponent

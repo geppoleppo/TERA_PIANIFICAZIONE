@@ -21,6 +21,7 @@ const App = () => {
   const [ganttData, setGanttData] = useState(initialGanttData);
 
   const handleSchedulerDataChange = (args) => {
+    console.log('Scheduler Data Change:', args);
     let updatedScheduleData = [...scheduleData];
 
     if (args.requestType === 'eventCreated') {
@@ -40,6 +41,7 @@ const App = () => {
       updatedScheduleData = updatedScheduleData.filter(event => !removedEventIds.includes(event.Id));
     }
 
+    console.log('Updated Schedule Data:', updatedScheduleData);
     setScheduleData(updatedScheduleData);
 
     const updatedGanttData = updatedScheduleData.map(event => ({
@@ -50,22 +52,28 @@ const App = () => {
       Predecessor: event.Predecessor || '',
       Color: event.Color || '#357cd2'
     }));
+    console.log('Updated Gantt Data:', updatedGanttData);
     setGanttData(updatedGanttData);
   };
 
   const handleGanttDataChange = (args) => {
+    console.log('Gantt Data Change:', args);
     let updatedGanttData = [...ganttData];
 
-    if (args.requestType === 'save') {
-      const updatedTask = Array.isArray(args.data) ? args.data[0] : args.data;
-      updatedGanttData = updatedGanttData.map(task =>
-        task.TaskID === updatedTask.TaskID ? { ...task, ...updatedTask } : task
-      );
-    } else if (args.requestType === 'delete') {
-      const removedTaskID = Array.isArray(args.data) ? args.data[0].TaskID : args.data.TaskID;
-      updatedGanttData = updatedGanttData.filter(task => task.TaskID !== removedTaskID);
+    if (args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
+      const updatedTasks = Array.isArray(args.data) ? args.data : [args.data];
+      updatedTasks.forEach(updatedTask => {
+        if (args.requestType === 'eventChanged') {
+          updatedGanttData = updatedGanttData.map(task =>
+            task.TaskID === updatedTask.TaskID ? { ...task, ...updatedTask } : task
+          );
+        } else if (args.requestType === 'eventRemoved') {
+          updatedGanttData = updatedGanttData.filter(task => task.TaskID !== updatedTask.TaskID);
+        }
+      });
     }
 
+    console.log('Updated Gantt Data after change:', updatedGanttData);
     setGanttData(updatedGanttData);
 
     const updatedScheduleData = updatedGanttData.map(task => ({
@@ -76,7 +84,16 @@ const App = () => {
       Predecessor: task.Predecessor,
       Color: task.Color
     }));
-    setScheduleData(updatedScheduleData);
+
+    console.log('Updated Schedule Data from Gantt:', updatedScheduleData);
+
+    const finalScheduleData = updatedScheduleData.map(task => {
+      const existingEvent = scheduleData.find(event => event.Id === task.Id);
+      return existingEvent ? { ...existingEvent, ...task } : task;
+    });
+
+    console.log('Final Schedule Data:', finalScheduleData);
+    setScheduleData(finalScheduleData);
   };
 
   return (
