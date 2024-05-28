@@ -1,19 +1,16 @@
 import React from 'react';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
+import resources from './resources'; // Importa le risorse
 
 const Scheduler = ({ data, onDataChange }) => {
-  const resourceData = [
-    { Text: 'Margaret', Id: 1, Color: '#1aaa55' },
-    { Text: 'Robert', Id: 2, Color: '#357cd2' },
-    { Text: 'Laura', Id: 3, Color: '#7fa900' }
-  ];
 
   const getEmployeeName = (value) => {
     return ((value.resourceData) ? value.resourceData[value.resource.textField] : value.resourceName);
   };
 
   const getEmployeeImage = (value) => {
-    return getEmployeeName(value).replace(' ', '-').toLowerCase();
+    const resource = resources.find(res => res.Id === value.resourceData.Id);
+    return resource ? resource.Image : '';
   };
 
   const getEmployeeDesignation = (value) => {
@@ -42,14 +39,14 @@ const Scheduler = ({ data, onDataChange }) => {
       if (args.data && Array.isArray(args.data)) {
         args.data.forEach(event => {
           if (!event.Color) {
-            const resource = resourceData.find(res => res.Id === event.ConferenceId);
+            const resource = resources.find(res => res.Id === event.ConferenceId);
             if (resource) {
               event.Color = resource.Color;
             }
           }
         });
       } else if (args.data && !args.data.Color) {
-        const resource = resourceData.find(res => res.Id === args.data.ConferenceId);
+        const resource = resources.find(res => res.Id === args.data.ConferenceId);
         if (resource) {
           args.data.Color = resource.Color;
         }
@@ -86,7 +83,7 @@ const Scheduler = ({ data, onDataChange }) => {
           title='Attendees'
           name='Conferences'
           allowMultiple={true}
-          dataSource={resourceData}
+          dataSource={resources}
           textField='Text'
           idField='Id'
           colorField='Color'

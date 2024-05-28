@@ -1,11 +1,13 @@
 import React from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar } from '@syncfusion/ej2-react-gantt';
+import resources from './resources'; // Importa le risorse
 
 const Gantt = ({ data, onDataChange }) => {
   const taskbarTemplate = (props) => {
-    console.log('Gantt Task Color:', props.Color);
+    const resource = resources.find(res => res.Id === props.ConferenceId);
+    const color = resource ? resource.Color : '#357cd2';
     return (
-      <div style={{ backgroundColor: props.Color || '#357cd2', width: '100%', height: '100%' }}>
+      <div style={{ backgroundColor: color, width: '100%', height: '100%' }}>
         {props.TaskName}
       </div>
     );
