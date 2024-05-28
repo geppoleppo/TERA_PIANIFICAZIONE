@@ -3,8 +3,11 @@ import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInjec
 import commesse, { getCommessaColor } from './commesse';
 
 const Gantt = ({ data, onDataChange }) => {
+  console.log('Gantt data received:', data); // Log dei dati ricevuti
+
   const taskbarTemplate = (props) => {
     const commessaColor = getCommessaColor(props.CommessaId);
+    console.log(`taskbarTemplate: TaskID=${props.TaskID}, CommessaId=${props.CommessaId}, Color=${commessaColor}`); // Log per debug
     return (
       <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
         {props.TaskName}
@@ -30,7 +33,7 @@ const Gantt = ({ data, onDataChange }) => {
       allowSelection={true}
       allowSorting={true}
       editSettings={{ allowEditing: true, allowAdding: true, allowDeleting: true, allowTaskbarEditing: true }}
-      taskbarTemplate={taskbarTemplate}
+      taskbarTemplate={taskbarTemplate} // Assicurati che il template sia associato
       actionComplete={onActionComplete}
     >
       <ColumnsDirective>
@@ -39,6 +42,7 @@ const Gantt = ({ data, onDataChange }) => {
         <ColumnDirective field='StartDate' headerText='Data Inizio' width='150' />
         <ColumnDirective field='EndDate' headerText='Data Fine' width='150' />
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' />
+        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' /> {/* Aggiungi questa colonna per debug */}
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar]} />
     </GanttComponent>

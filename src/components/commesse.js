@@ -23,7 +23,9 @@ const commesse = [
 
 export const getCommessaColor = (commessaId) => {
   const commessa = commesse.find(com => com.Id === commessaId);
-  return commessa ? commessa.Color : '#000000';  // Default nero
+  const color = commessa ? commessa.Color : '#000000';
+  console.log(`getCommessaColor: CommessaId=${commessaId}, Color=${color}`); // Log per debug
+  return color;
 };
 
 export default commesse;

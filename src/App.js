@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Scheduler from './components/Scheduler';
 import Gantt from './components/Gantt';
 import { extend } from '@syncfusion/ej2-base';
-
 import commesse, { getCommessaColor } from './components/commesse';
 
+
 const initialData = [
-  // Inserisci qui i dati iniziali, assicurandoti che includano il campo CommessaId
+  { Id: 1, Subject: 'Task 1', StartTime: new Date(2024, 4, 1), EndTime: new Date(2024, 4, 3), CommessaId: 1 },
+  { Id: 2, Subject: 'Task 2', StartTime: new Date(2024, 4, 2), EndTime: new Date(2024, 4, 4), CommessaId: 2 }
 ];
 
 const initialGanttData = initialData.map(event => ({
@@ -22,6 +23,10 @@ const initialGanttData = initialData.map(event => ({
 const App = () => {
   const [scheduleData, setScheduleData] = useState(extend([], initialData, null, true));
   const [ganttData, setGanttData] = useState(initialGanttData);
+
+  useEffect(() => {
+    console.log('Initial Gantt Data:', ganttData);
+  }, []);
 
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
