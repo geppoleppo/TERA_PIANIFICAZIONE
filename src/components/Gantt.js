@@ -1,13 +1,12 @@
 import React from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar } from '@syncfusion/ej2-react-gantt';
-import resources from './resources'; // Importa le risorse
+import commesse, { getCommessaColor } from './commesse'; // Importa le commesse e la funzione
 
 const Gantt = ({ data, onDataChange }) => {
   const taskbarTemplate = (props) => {
-    const resource = resources.find(res => res.Id === props.ConferenceId);
-    const color = resource ? resource.Color : '#357cd2';
+    const commessaColor = getCommessaColor(props.CommessaId);
     return (
-      <div style={{ backgroundColor: color, width: '100%', height: '100%' }}>
+      <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
         {props.TaskName}
       </div>
     );

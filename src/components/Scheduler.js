@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
-import resources from './resources'; // Importa le risorse
-import commesse from './commesse'; // Importa le commesse
+import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation, getResourceColor } from './resources'; // Importa le risorse e le funzioni
+import commesse, { getCommessaColor } from './commesse'; // Importa le commesse e le funzioni
 
 const Scheduler = ({ data, onDataChange }) => {
   const [filteredResources, setFilteredResources] = useState(resources);
@@ -24,23 +24,6 @@ const Scheduler = ({ data, onDataChange }) => {
       const selectedIds = selectedOptions.map(option => option.value);
       setFilteredCommesse(commesse.filter(commessa => selectedIds.includes(commessa.Id)));
     }
-  };
-
-  const getEmployeeName = (value) => {
-    return ((value.resourceData) ? value.resourceData[value.resource.textField] : value.resourceName);
-  };
-
-  const getEmployeeImage = (value) => {
-    if (value.resourceData) {
-      const resource = resources.find(res => res.Id === value.resourceData.Id);
-      return resource ? resource.Image : '';
-    }
-    return '';
-  };
-
-  const getEmployeeDesignation = (value) => {
-    let resourceName = getEmployeeName(value);
-    return (resourceName === 'Margaret') ? 'Sales Representative' : (resourceName === 'Robert') ? 'Vice President, Sales' : 'Inside Sales Coordinator';
   };
 
   const monthEventTemplate = (props) => {
@@ -73,17 +56,13 @@ const Scheduler = ({ data, onDataChange }) => {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
             if (!event.Color) {
-              const resource = resources.find(res => res.Id === event.ConferenceId);
-              if (resource) {
-                event.Color = resource.Color;
-              }
+              const resourceColor = getResourceColor(event.ConferenceId);
+              event.Color = resourceColor;
             }
           });
         } else if (!args.data.Color) {
-          const resource = resources.find(res => res.Id === args.data.ConferenceId);
-          if (resource) {
-            args.data.Color = resource.Color;
-          }
+          const resourceColor = getResourceColor(args.data.ConferenceId);
+          args.data.Color = resourceColor;
         }
       }
       console.log('Updated Scheduler Event Data:', args.data);
@@ -165,7 +144,7 @@ const Scheduler = ({ data, onDataChange }) => {
             field='CommessaId'
             title='Commessa'
             name='Commesse'
-            allowMultiple={false}
+            allowMultiple={true}
             dataSource={filteredCommesse}
             textField='Text'
             idField='Id'
