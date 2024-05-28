@@ -25,7 +25,7 @@ const Gantt = ({ data, onDataChange }) => {
   return (
     <GanttComponent
       dataSource={data}
-      taskFields={{ id: 'TaskID', name: 'TaskName', startDate: 'StartDate', endDate: 'EndDate', dependency: 'Predecessor', color: 'Color' }}
+      taskFields={{ id: 'TaskID', name: 'TaskName', startDate: 'StartDate', endDate: 'EndDate', dependency: 'Predecessor', CommessaId: 'CommessaId' }}
       height='650px'
       allowSelection={true}
       allowSorting={true}

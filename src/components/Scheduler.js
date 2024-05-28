@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
-import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation, getResourceColor } from './resources';
+import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation } from './resources';
 import commesse, { getCommessaColor } from './commesse';
 
 const Scheduler = ({ data, onDataChange }) => {
@@ -22,18 +22,17 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const getFilteredCommesse = () => {
-    if (selectedCommesse.length === 0) return [];
-    // Filtra solo la commessa selezionata invece di tutte le commesse selezionate
+    //if (selectedCommesse.length === 0) return commesse;
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
-    
   };
 
   const monthEventTemplate = (props) => {
     const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
     const commessaText = commessa ? commessa.Text : 'No Commessa';
     const subjectText = props.Subject ? props.Subject : '';
+    const color = props.Color ? props.Color : '#000000'; // Default to black if no color
     return (
-      <div className="template-wrap">
+      <div className="template-wrap" style={{ backgroundColor: color }}>
         <div className="subject">{`${commessaText} - ${subjectText}`}</div>
       </div>
     );
@@ -57,14 +56,12 @@ const Scheduler = ({ data, onDataChange }) => {
       if (args.data) {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
-            if (!event.Color) {
-              const resourceColor = getResourceColor(event.ConferenceId);
-              event.Color = resourceColor;
-            }
+            const commessaColor = getCommessaColor(event.CommessaId);
+            event.Color = commessaColor;
           });
-        } else if (!args.data.Color) {
-          const resourceColor = getResourceColor(args.data.ConferenceId);
-          args.data.Color = resourceColor;
+        } else {
+          const commessaColor = getCommessaColor(args.data.CommessaId);
+          args.data.Color = commessaColor;
         }
       }
       console.log('Updated Scheduler Event Data:', args.data);
