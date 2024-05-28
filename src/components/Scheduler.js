@@ -10,8 +10,11 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const getEmployeeImage = (value) => {
-    const resource = resources.find(res => res.Id === value.resourceData.Id);
-    return resource ? resource.Image : '';
+    if (value.resourceData) {
+      const resource = resources.find(res => res.Id === value.resourceData.Id);
+      return resource ? resource.Image : '';
+    }
+    return '';
   };
 
   const getEmployeeDesignation = (value) => {
@@ -36,20 +39,21 @@ const Scheduler = ({ data, onDataChange }) => {
   const onActionComplete = (args) => {
     console.log('Scheduler Event Data:', args.data);
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      // Set color based on resource if not already set
-      if (args.data && Array.isArray(args.data)) {
-        args.data.forEach(event => {
-          if (!event.Color) {
-            const resource = resources.find(res => res.Id === event.ConferenceId);
-            if (resource) {
-              event.Color = resource.Color;
+      if (args.data) {
+        if (Array.isArray(args.data)) {
+          args.data.forEach(event => {
+            if (!event.Color) {
+              const resource = resources.find(res => res.Id === event.ConferenceId);
+              if (resource) {
+                event.Color = resource.Color;
+              }
             }
+          });
+        } else if (!args.data.Color) {
+          const resource = resources.find(res => res.Id === args.data.ConferenceId);
+          if (resource) {
+            args.data.Color = resource.Color;
           }
-        });
-      } else if (args.data && !args.data.Color) {
-        const resource = resources.find(res => res.Id === args.data.ConferenceId);
-        if (resource) {
-          args.data.Color = resource.Color;
         }
       }
       console.log('Updated Scheduler Event Data:', args.data);
@@ -73,10 +77,11 @@ const Scheduler = ({ data, onDataChange }) => {
           startTime: { title: 'From', name: 'StartTime' },
           endTime: { title: 'To', name: 'EndTime' },
           color: { name: 'Color' },
-          conferenceId: { title: 'Commessa', name: 'ConferenceId' } // Campo commessa
+          conferenceId: { title: 'Attendees', name: 'ConferenceId' },
+          commessaId: { title: 'Commessa', name: 'CommessaId' } // Nuovo campo commessa
         }
       }}
-      group={{ allowGroupEdit: true, resources: ['Conferences'] }} // Raggruppa solo per Conferences
+      group={{ allowGroupEdit: true, resources: ['Conferences'] }}
       actionComplete={onActionComplete}
     >
       <ResourcesDirective>
@@ -91,7 +96,7 @@ const Scheduler = ({ data, onDataChange }) => {
           colorField='Color'
         />
         <ResourceDirective
-          field='ConferenceId'
+          field='CommessaId'
           title='Commessa'
           name='Commesse'
           allowMultiple={false}
