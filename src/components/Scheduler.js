@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
-import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
+import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation } from './resources';
 import commesse, { getCommessaColor } from './commesse';
 
@@ -22,7 +22,7 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const getFilteredCommesse = () => {
-    //if (selectedCommesse.length === 0) return commesse;
+    if (selectedCommesse.length === 0) return [];
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
 
@@ -39,12 +39,13 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const resourceHeaderTemplate = (props) => {
+    const isEmployee = resources.some(resource => resource.Id === props.resourceData.Id);
     return (
       <div className="template-wrap">
-        <img src={getEmployeeImage(props)} alt={getEmployeeName(props)} className="resource-image" />
+        {isEmployee && <img src={getEmployeeImage(props)} alt={getEmployeeName(props)} className="resource-image" />}
         <div className="resource-details">
           <div className="resource-name">{getEmployeeName(props)}</div>
-          <div className="resource-designation">{getEmployeeDesignation(props)}</div>
+          {isEmployee && <div className="resource-designation">{getEmployeeDesignation(props)}</div>}
         </div>
       </div>
     );
@@ -104,7 +105,7 @@ const Scheduler = ({ data, onDataChange }) => {
         width='100%'
         height='650px'
         selectedDate={new Date()}
-        currentView='WorkWeek'
+        currentView='TimelineMonth'
         resourceHeaderTemplate={resourceHeaderTemplate}
         eventSettings={{
           dataSource: data,
@@ -126,7 +127,7 @@ const Scheduler = ({ data, onDataChange }) => {
           <ViewDirective option='Day' />
           <ViewDirective option='WorkWeek' />
           <ViewDirective option='Month' eventTemplate={monthEventTemplate} />
-          <ViewDirective option='TimelineWeek' />
+          <ViewDirective option='TimelineMonth' interval={3} /> {/* Copre 3 mesi */}
         </ViewsDirective>
         <ResourcesDirective>
           <ResourceDirective
@@ -150,7 +151,7 @@ const Scheduler = ({ data, onDataChange }) => {
             colorField='Color'
           />
         </ResourcesDirective>
-        <Inject services={[Day, WorkWeek, Month, TimelineViews, Resize, DragAndDrop]} />
+        <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
       </ScheduleComponent>
     </div>
   );

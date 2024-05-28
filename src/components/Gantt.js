@@ -1,5 +1,5 @@
 import React from 'react';
-import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar } from '@syncfusion/ej2-react-gantt';
+import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD } from '@syncfusion/ej2-react-gantt';
 import commesse, { getCommessaColor } from './commesse';
 
 const Gantt = ({ data, onDataChange }) => {
@@ -34,7 +34,21 @@ const Gantt = ({ data, onDataChange }) => {
       allowSorting={true}
       editSettings={{ allowEditing: true, allowAdding: true, allowDeleting: true, allowTaskbarEditing: true }}
       taskbarTemplate={taskbarTemplate} // Assicurati che il template sia associato
+      timelineSettings={{
+        timelineViewMode: 'Month',
+        topTier: {
+          unit: 'Month',
+          count: 1,
+          format: 'MMM yyyy'
+        },
+        bottomTier: {
+          unit: 'Week',
+          count: 1,
+          format: 'dd MMM'
+        }
+      }}
       actionComplete={onActionComplete}
+      allowRowDragAndDrop={true} // Abilita il drag and drop delle righe
     >
       <ColumnsDirective>
         <ColumnDirective field='TaskID' visible={false} />
@@ -44,7 +58,7 @@ const Gantt = ({ data, onDataChange }) => {
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' />
         <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' /> {/* Aggiungi questa colonna per debug */}
       </ColumnsDirective>
-      <GanttInject services={[Edit, Selection, Toolbar]} />
+      <GanttInject services={[Edit, Selection, Toolbar, RowDD]} />
     </GanttComponent>
   );
 };

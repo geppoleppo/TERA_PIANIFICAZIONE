@@ -4,25 +4,11 @@ import Gantt from './components/Gantt';
 import { extend } from '@syncfusion/ej2-base';
 import commesse, { getCommessaColor } from './components/commesse';
 
-
-const initialData = [
-  { Id: 1, Subject: 'Task 1', StartTime: new Date(2024, 4, 1), EndTime: new Date(2024, 4, 3), CommessaId: 1 },
-  { Id: 2, Subject: 'Task 2', StartTime: new Date(2024, 4, 2), EndTime: new Date(2024, 4, 4), CommessaId: 2 }
-];
-
-const initialGanttData = initialData.map(event => ({
-  TaskID: event.Id,
-  TaskName: event.Subject,
-  StartDate: event.StartTime,
-  EndDate: event.EndTime,
-  Predecessor: event.Predecessor || '',
-  CommessaId: event.CommessaId,
-  Color: getCommessaColor(event.CommessaId)
-}));
+const initialData = []; // Rimuovi le attività predefinite
 
 const App = () => {
   const [scheduleData, setScheduleData] = useState(extend([], initialData, null, true));
-  const [ganttData, setGanttData] = useState(initialGanttData);
+  const [ganttData, setGanttData] = useState(initialData);
 
   useEffect(() => {
     console.log('Initial Gantt Data:', ganttData);
