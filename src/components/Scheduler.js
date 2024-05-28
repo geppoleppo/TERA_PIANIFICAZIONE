@@ -5,25 +5,25 @@ import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation, g
 import commesse, { getCommessaColor } from './commesse';
 
 const Scheduler = ({ data, onDataChange }) => {
-  const [filteredResources, setFilteredResources] = useState(resources);
-  const [filteredCommesse, setFilteredCommesse] = useState(commesse);
+  const [selectedResources, setSelectedResources] = useState([]);
+  const [selectedCommesse, setSelectedCommesse] = useState([]);
 
   const handleResourceChange = (selectedOptions) => {
-    if (!selectedOptions || selectedOptions.length === 0) {
-      setFilteredResources(resources);
-    } else {
-      const selectedIds = selectedOptions.map(option => option.value);
-      setFilteredResources(resources.filter(resource => selectedIds.includes(resource.Id)));
-    }
+    setSelectedResources(selectedOptions ? selectedOptions.map(option => option.value) : []);
   };
 
   const handleCommessaChange = (selectedOptions) => {
-    if (!selectedOptions || selectedOptions.length === 0) {
-      setFilteredCommesse(commesse);
-    } else {
-      const selectedIds = selectedOptions.map(option => option.value);
-      setFilteredCommesse(commesse.filter(commessa => selectedIds.includes(commessa.Id)));
-    }
+    setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
+  };
+
+  const getFilteredResources = () => {
+    if (selectedResources.length === 0) return [];
+    return resources.filter(resource => selectedResources.includes(resource.Id));
+  };
+
+  const getFilteredCommesse = () => {
+    if (selectedCommesse.length === 0) return [];
+    return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
 
   const monthEventTemplate = (props) => {
@@ -89,14 +89,14 @@ const Scheduler = ({ data, onDataChange }) => {
           isMulti
           options={resourceOptions}
           onChange={handleResourceChange}
-          placeholder="Filter by Resources"
+          placeholder="Select Resources"
           className="filter-dropdown"
         />
         <Select
           isMulti
           options={commessaOptions}
           onChange={handleCommessaChange}
-          placeholder="Filter by Commesse"
+          placeholder="Select Commesse"
           className="filter-dropdown"
         />
       </div>
@@ -135,7 +135,7 @@ const Scheduler = ({ data, onDataChange }) => {
             title='Attendees'
             name='Conferences'
             allowMultiple={true}
-            dataSource={filteredResources}
+            dataSource={getFilteredResources()}
             textField='Text'
             idField='Id'
             colorField='Color'
@@ -145,7 +145,7 @@ const Scheduler = ({ data, onDataChange }) => {
             title='Commessa'
             name='Commesse'
             allowMultiple={false}
-            dataSource={filteredCommesse}
+            dataSource={getFilteredCommesse()}
             textField='Text'
             idField='Id'
             colorField='Color'
