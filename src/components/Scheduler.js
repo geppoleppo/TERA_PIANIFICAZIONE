@@ -23,7 +23,9 @@ const Scheduler = ({ data, onDataChange }) => {
 
   const getFilteredCommesse = () => {
     if (selectedCommesse.length === 0) return [];
+    // Filtra solo la commessa selezionata invece di tutte le commesse selezionate
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
+    
   };
 
   const monthEventTemplate = (props) => {
