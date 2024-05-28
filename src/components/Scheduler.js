@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
 import resources from './resources'; // Importa le risorse
 import commesse from './commesse'; // Importa le commesse
@@ -7,19 +8,21 @@ const Scheduler = ({ data, onDataChange }) => {
   const [filteredResources, setFilteredResources] = useState(resources);
   const [filteredCommesse, setFilteredCommesse] = useState(commesse);
 
-  const filterResources = (condition) => {
-    if (condition === 'all') {
+  const handleResourceChange = (selectedOptions) => {
+    if (!selectedOptions || selectedOptions.length === 0) {
       setFilteredResources(resources);
     } else {
-      setFilteredResources(resources.filter(resource => resource.Id === condition));
+      const selectedIds = selectedOptions.map(option => option.value);
+      setFilteredResources(resources.filter(resource => selectedIds.includes(resource.Id)));
     }
   };
 
-  const filterCommesse = (condition) => {
-    if (condition === 'all') {
+  const handleCommessaChange = (selectedOptions) => {
+    if (!selectedOptions || selectedOptions.length === 0) {
       setFilteredCommesse(commesse);
     } else {
-      setFilteredCommesse(commesse.filter(commessa => commessa.Id === condition));
+      const selectedIds = selectedOptions.map(option => option.value);
+      setFilteredCommesse(commesse.filter(commessa => selectedIds.includes(commessa.Id)));
     }
   };
 
@@ -90,15 +93,33 @@ const Scheduler = ({ data, onDataChange }) => {
 
   const group = { byGroupID: false, resources: ['Conferences', 'Commesse'] };
 
+  const resourceOptions = resources.map(resource => ({
+    value: resource.Id,
+    label: resource.Text
+  }));
+
+  const commessaOptions = commesse.map(commessa => ({
+    value: commessa.Id,
+    label: commessa.Text
+  }));
+
   return (
     <div>
-      <div className="filter-buttons">
-        <button onClick={() => filterResources('all')}>All Resources</button>
-        <button onClick={() => filterResources(1)}>Resource 1</button>
-        <button onClick={() => filterResources(2)}>Resource 2</button>
-        <button onClick={() => filterCommesse('all')}>All Commesse</button>
-        <button onClick={() => filterCommesse(1)}>Commessa 1</button>
-        <button onClick={() => filterCommesse(2)}>Commessa 2</button>
+      <div className="filter-selectors">
+        <Select
+          isMulti
+          options={resourceOptions}
+          onChange={handleResourceChange}
+          placeholder="Filter by Resources"
+          className="filter-dropdown"
+        />
+        <Select
+          isMulti
+          options={commessaOptions}
+          onChange={handleCommessaChange}
+          placeholder="Filter by Commesse"
+          className="filter-dropdown"
+        />
       </div>
       <ScheduleComponent
         cssClass='group-editing'
@@ -144,7 +165,7 @@ const Scheduler = ({ data, onDataChange }) => {
             field='CommessaId'
             title='Commessa'
             name='Commesse'
-            allowMultiple={true}
+            allowMultiple={false}
             dataSource={filteredCommesse}
             textField='Text'
             idField='Id'
