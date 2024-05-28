@@ -23,17 +23,26 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const monthEventTemplate = (props) => {
-    return (<div className="subject">{props.Subject}</div>);
+    const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
+    const commessaText = commessa ? commessa.Text : 'No Commessa';
+    const subjectText = props.Subject ? props.Subject : '';
+    return (
+      <div className="template-wrap">
+        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
+      </div>
+    );
   };
 
   const resourceHeaderTemplate = (props) => {
-    return (<div className="template-wrap">
-      <div className={"resource-image " + getEmployeeImage(props)}></div>
-      <div className="resource-details">
-        <div className="resource-name">{getEmployeeName(props)}</div>
-        <div className="resource-designation">{getEmployeeDesignation(props)}</div>
+    return (
+      <div className="template-wrap">
+        <div className={"resource-image " + getEmployeeImage(props)}></div>
+        <div className="resource-details">
+          <div className="resource-name">{getEmployeeName(props)}</div>
+          <div className="resource-designation">{getEmployeeDesignation(props)}</div>
+        </div>
       </div>
-    </div>);
+    );
   };
 
   const onActionComplete = (args) => {
@@ -61,6 +70,8 @@ const Scheduler = ({ data, onDataChange }) => {
     }
   };
 
+  const group = { byGroupID: false, resources: ['Conferences', 'Commesse'] };
+
   return (
     <ScheduleComponent
       cssClass='group-editing'
@@ -72,16 +83,17 @@ const Scheduler = ({ data, onDataChange }) => {
       eventSettings={{
         dataSource: data,
         fields: {
-          subject: { title: 'Conference Name', name: 'Subject' },
+          subject: { title: 'Task', name: 'Subject', default: '' },
           description: { title: 'Summary', name: 'Description' },
           startTime: { title: 'From', name: 'StartTime' },
           endTime: { title: 'To', name: 'EndTime' },
           color: { name: 'Color' },
           conferenceId: { title: 'Attendees', name: 'ConferenceId', validation: { required: true } },
-          commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } } // Nuovo campo commessa
-        }
+          commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
+        },
+        template: monthEventTemplate
       }}
-      group={{ allowGroupEdit: true, resources: ['Conferences'] }}
+      group={group}
       actionComplete={onActionComplete}
     >
       <ViewsDirective>
@@ -109,6 +121,7 @@ const Scheduler = ({ data, onDataChange }) => {
           dataSource={commesse}
           textField='Text'
           idField='Id'
+          colorField='Color'
         />
       </ResourcesDirective>
       <Inject services={[Day, WorkWeek, Month, TimelineViews, Resize, DragAndDrop]} />
