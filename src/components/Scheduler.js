@@ -40,7 +40,7 @@ const Scheduler = ({ data, onDataChange }) => {
   const resourceHeaderTemplate = (props) => {
     return (
       <div className="template-wrap">
-        <div className={"resource-image " + getEmployeeImage(props)}></div>
+        <img src={getEmployeeImage(props)} alt={getEmployeeName(props)} className="resource-image" />
         <div className="resource-details">
           <div className="resource-name">{getEmployeeName(props)}</div>
           <div className="resource-designation">{getEmployeeDesignation(props)}</div>
