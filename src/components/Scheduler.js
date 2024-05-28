@@ -77,13 +77,19 @@ const Scheduler = ({ data, onDataChange }) => {
           startTime: { title: 'From', name: 'StartTime' },
           endTime: { title: 'To', name: 'EndTime' },
           color: { name: 'Color' },
-          conferenceId: { title: 'Attendees', name: 'ConferenceId' },
-          commessaId: { title: 'Commessa', name: 'CommessaId' } // Nuovo campo commessa
+          conferenceId: { title: 'Attendees', name: 'ConferenceId', validation: { required: true } },
+          commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } } // Nuovo campo commessa
         }
       }}
       group={{ allowGroupEdit: true, resources: ['Conferences'] }}
       actionComplete={onActionComplete}
     >
+      <ViewsDirective>
+        <ViewDirective option='Day' />
+        <ViewDirective option='WorkWeek' />
+        <ViewDirective option='Month' eventTemplate={monthEventTemplate} />
+        <ViewDirective option='TimelineWeek' />
+      </ViewsDirective>
       <ResourcesDirective>
         <ResourceDirective
           field='ConferenceId'
@@ -105,12 +111,6 @@ const Scheduler = ({ data, onDataChange }) => {
           idField='Id'
         />
       </ResourcesDirective>
-      <ViewsDirective>
-        <ViewDirective option='Day' />
-        <ViewDirective option='WorkWeek' />
-        <ViewDirective option='Month' eventTemplate={monthEventTemplate} />
-        <ViewDirective option='TimelineWeek' />
-      </ViewsDirective>
       <Inject services={[Day, WorkWeek, Month, TimelineViews, Resize, DragAndDrop]} />
     </ScheduleComponent>
   );
