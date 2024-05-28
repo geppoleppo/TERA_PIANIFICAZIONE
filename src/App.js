@@ -3,9 +3,10 @@ import Scheduler from './components/Scheduler';
 import Gantt from './components/Gantt';
 import { extend } from '@syncfusion/ej2-base';
 
+import commesse, { getCommessaColor } from './components/commesse';
 
 const initialData = [
-  // Inserisci qui i dati iniziali se necessario
+  // Inserisci qui i dati iniziali, assicurandoti che includano il campo CommessaId
 ];
 
 const initialGanttData = initialData.map(event => ({
@@ -14,7 +15,8 @@ const initialGanttData = initialData.map(event => ({
   StartDate: event.StartTime,
   EndDate: event.EndTime,
   Predecessor: event.Predecessor || '',
-  Color: event.Color || '#357cd2'
+  CommessaId: event.CommessaId,
+  Color: getCommessaColor(event.CommessaId)
 }));
 
 const App = () => {
@@ -28,12 +30,14 @@ const App = () => {
     if (args.requestType === 'eventCreated') {
       const newEvents = Array.isArray(args.data) ? args.data : [args.data];
       newEvents.forEach(newEvent => {
+        newEvent.Color = getCommessaColor(newEvent.CommessaId);
         console.log('New Event:', newEvent);
         updatedScheduleData = [...updatedScheduleData.filter(event => event.Id !== newEvent.Id), newEvent];
       });
     } else if (args.requestType === 'eventChanged') {
       const updatedEvents = Array.isArray(args.data) ? args.data : [args.data];
       updatedEvents.forEach(updatedEvent => {
+        updatedEvent.Color = getCommessaColor(updatedEvent.CommessaId);
         console.log('Updated Event:', updatedEvent);
         updatedScheduleData = updatedScheduleData.map(event =>
           event.Id === updatedEvent.Id ? updatedEvent : event
@@ -53,7 +57,8 @@ const App = () => {
       StartDate: event.StartTime,
       EndDate: event.EndTime,
       Predecessor: event.Predecessor || '',
-      Color: event.Color || '#357cd2'
+      CommessaId: event.CommessaId,
+      Color: getCommessaColor(event.CommessaId)
     }));
     console.log('Updated Gantt Data:', updatedGanttData);
     setGanttData(updatedGanttData);
@@ -67,6 +72,7 @@ const App = () => {
       const updatedTasks = Array.isArray(args.data) ? args.data : [args.data];
       updatedTasks.forEach(updatedTask => {
         if (args.requestType === 'save') {
+          updatedTask.Color = getCommessaColor(updatedTask.CommessaId);
           updatedGanttData = updatedGanttData.map(task =>
             task.TaskID === updatedTask.TaskID ? { ...task, ...updatedTask } : task
           );
@@ -85,7 +91,8 @@ const App = () => {
       StartTime: task.StartDate,
       EndTime: task.EndDate,
       Predecessor: task.Predecessor,
-      Color: task.Color
+      CommessaId: task.CommessaId,
+      Color: getCommessaColor(task.CommessaId)
     }));
 
     console.log('Updated Schedule Data from Gantt:', updatedScheduleData);
