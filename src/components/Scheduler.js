@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
-import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation, getResourceColor } from './resources'; // Importa le risorse e le funzioni
-import commesse, { getCommessaColor } from './commesse'; // Importa le commesse e le funzioni
+import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation, getResourceColor } from './resources';
+import commesse, { getCommessaColor } from './commesse';
 
 const Scheduler = ({ data, onDataChange }) => {
   const [filteredResources, setFilteredResources] = useState(resources);
@@ -144,7 +144,7 @@ const Scheduler = ({ data, onDataChange }) => {
             field='CommessaId'
             title='Commessa'
             name='Commesse'
-            allowMultiple={true}
+            allowMultiple={false}
             dataSource={filteredCommesse}
             textField='Text'
             idField='Id'

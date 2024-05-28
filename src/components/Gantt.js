@@ -1,6 +1,6 @@
 import React from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar } from '@syncfusion/ej2-react-gantt';
-import commesse, { getCommessaColor } from './commesse'; // Importa le commesse e la funzione
+import commesse, { getCommessaColor } from './commesse';
 
 const Gantt = ({ data, onDataChange }) => {
   const taskbarTemplate = (props) => {
