@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
 import resources from './resources'; // Importa le risorse
+import commesse from './commesse'; // Importa le commesse
 
 const Scheduler = ({ data, onDataChange }) => {
 
@@ -71,10 +72,11 @@ const Scheduler = ({ data, onDataChange }) => {
           description: { title: 'Summary', name: 'Description' },
           startTime: { title: 'From', name: 'StartTime' },
           endTime: { title: 'To', name: 'EndTime' },
-          color: { name: 'Color' }
+          color: { name: 'Color' },
+          conferenceId: { title: 'Commessa', name: 'ConferenceId' } // Campo commessa
         }
       }}
-      group={{ allowGroupEdit: true, resources: ['Conferences'] }}
+      group={{ allowGroupEdit: true, resources: ['Conferences'] }} // Raggruppa solo per Conferences
       actionComplete={onActionComplete}
     >
       <ResourcesDirective>
@@ -87,6 +89,15 @@ const Scheduler = ({ data, onDataChange }) => {
           textField='Text'
           idField='Id'
           colorField='Color'
+        />
+        <ResourceDirective
+          field='ConferenceId'
+          title='Commessa'
+          name='Commesse'
+          allowMultiple={false}
+          dataSource={commesse}
+          textField='Text'
+          idField='Id'
         />
       </ResourcesDirective>
       <ViewsDirective>
