@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { L10n, loadCldr } from '@syncfusion/ej2-base';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
-import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation } from './resources';
-import commesse, { getCommessaColor } from './commesse';
+import axios from 'axios';
 import '../index.css';  // Ensure this is correctly imported
 
 // Load the required CLDR data
@@ -36,9 +35,34 @@ L10n.load({
 });
 
 const Scheduler = ({ data, onDataChange }) => {
+  const [resources, setResources] = useState([]);
+  const [commesse, setCommesse] = useState([]);
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [currentView, setCurrentView] = useState('Day');
+
+  useEffect(() => {
+    fetchResources();
+    fetchCommesse();
+  }, []);
+
+  const fetchResources = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/collaboratori');
+      setResources(response.data);
+    } catch (error) {
+      console.error('Error fetching resources:', error);
+    }
+  };
+
+  const fetchCommesse = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/commesse');
+      setCommesse(response.data);
+    } catch (error) {
+      console.error('Error fetching commesse:', error);
+    }
+  };
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
@@ -76,7 +100,7 @@ const Scheduler = ({ data, onDataChange }) => {
 
   const monthEventTemplate = (props) => {
     const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
-    const commessaText = commessa ? commessa.Text : 'No Commessa';
+    const commessaText = commessa ? commessa.Descrizione : 'No Commessa';
     const subjectText = props.Subject ? props.Subject : '';
     const color = props.Color ? props.Color : '#000000'; // Default to black if no color
     return (
@@ -87,44 +111,30 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const resourceHeaderTemplate = (props) => {
-    console.log('resourceHeaderTemplate props:', props);
-
-    const isEmployee = props.resource.title === 'Attendees';
-    console.log('isEmployee:', isEmployee);
-
-    if (isEmployee) {
-      const image = getEmployeeImage(props);
-      const name = getEmployeeName(props);
-      console.log('Employee Image:', image);
-      console.log('Employee Name:', name);
-    }
-
+    const resource = resources.find(resource => resource.Id === props.resource.id);
     return (
       <div className="template-wrap">
-        {isEmployee && <img src={getEmployeeImage(props)} alt={getEmployeeName(props)} className="resource-image" />}
+        {resource && <img src={resource.Immagine} alt={resource.Nome} className="resource-image" />}
         <div className="resource-details">
-          <div className="resource-name">{getEmployeeName(props)}</div>
-          {isEmployee && <div className="resource-designation">{getEmployeeDesignation(props)}</div>}
+          <div className="resource-name">{resource ? resource.Nome : ''}</div>
         </div>
       </div>
     );
   };
 
   const onActionComplete = (args) => {
-    console.log('Scheduler Event Data:', args.data);
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
-            const commessaColor = getCommessaColor(event.CommessaId);
-            event.Color = commessaColor;
+            const commessa = commesse.find(commessa => commessa.Id === event.CommessaId);
+            event.Color = commessa ? commessa.Colore : '#000000';
           });
         } else {
-          const commessaColor = getCommessaColor(args.data.CommessaId);
-          args.data.Color = commessaColor;
+          const commessa = commesse.find(commessa => commessa.Id === args.data.CommessaId);
+          args.data.Color = commessa ? commessa.Colore : '#000000';
         }
       }
-      console.log('Updated Scheduler Event Data:', args.data);
       onDataChange(args);
     }
   };
@@ -137,12 +147,12 @@ const Scheduler = ({ data, onDataChange }) => {
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
     value: resource.Id,
-    label: resource.Text
+    label: resource.Nome
   }))];
 
   const commessaOptions = [{ value: 'select-all', label: 'Select All' }, ...commesse.map(commessa => ({
     value: commessa.Id,
-    label: commessa.Text
+    label: commessa.Descrizione
   }))];
 
   return (
@@ -203,9 +213,9 @@ const Scheduler = ({ data, onDataChange }) => {
               name='Conferences'
               allowMultiple={true}
               dataSource={getFilteredResources()}
-              textField='Text'
+              textField='Nome'
               idField='Id'
-              colorField='Color'
+              colorField='Colore'
             />
             <ResourceDirective
               field='CommessaId'
@@ -213,9 +223,9 @@ const Scheduler = ({ data, onDataChange }) => {
               name='Commesse'
               allowMultiple={false}
               dataSource={getFilteredCommesse()}
-              textField='Text'
+              textField='Descrizione'
               idField='Id'
-              colorField='Color'
+              colorField='Colore'
             />
           </ResourcesDirective>
           <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
