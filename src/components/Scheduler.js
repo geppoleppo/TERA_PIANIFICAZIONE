@@ -39,7 +39,18 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const resourceHeaderTemplate = (props) => {
-    const isEmployee = resources.some(resource => resource.Id === props.resourceData.Id);
+    console.log('resourceHeaderTemplate props:', props);
+    
+    const isEmployee = props.resource.title === 'Attendees';
+    console.log('isEmployee:', isEmployee);
+  
+    if (isEmployee) {
+      const image = getEmployeeImage(props);
+      const name = getEmployeeName(props);
+      console.log('Employee Image:', image);
+      console.log('Employee Name:', name);
+    }
+  
     return (
       <div className="template-wrap">
         {isEmployee && <img src={getEmployeeImage(props)} alt={getEmployeeName(props)} className="resource-image" />}
@@ -50,6 +61,8 @@ const Scheduler = ({ data, onDataChange }) => {
       </div>
     );
   };
+  
+  
 
   const onActionComplete = (args) => {
     console.log('Scheduler Event Data:', args.data);
