@@ -3,10 +3,12 @@ import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation } from './resources';
 import commesse, { getCommessaColor } from './commesse';
+import '../index.css';  // Ensure this is correctly imported
 
 const Scheduler = ({ data, onDataChange }) => {
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
+  const [currentView, setCurrentView] = useState('Day');
 
   const handleResourceChange = (selectedOptions) => {
     setSelectedResources(selectedOptions ? selectedOptions.map(option => option.value) : []);
@@ -40,17 +42,17 @@ const Scheduler = ({ data, onDataChange }) => {
 
   const resourceHeaderTemplate = (props) => {
     console.log('resourceHeaderTemplate props:', props);
-    
+
     const isEmployee = props.resource.title === 'Attendees';
     console.log('isEmployee:', isEmployee);
-  
+
     if (isEmployee) {
       const image = getEmployeeImage(props);
       const name = getEmployeeName(props);
       console.log('Employee Image:', image);
       console.log('Employee Name:', name);
     }
-  
+
     return (
       <div className="template-wrap">
         {isEmployee && <img src={getEmployeeImage(props)} alt={getEmployeeName(props)} className="resource-image" />}
@@ -61,8 +63,6 @@ const Scheduler = ({ data, onDataChange }) => {
       </div>
     );
   };
-  
-  
 
   const onActionComplete = (args) => {
     console.log('Scheduler Event Data:', args.data);
@@ -83,7 +83,11 @@ const Scheduler = ({ data, onDataChange }) => {
     }
   };
 
-  const group = { byGroupID: false, resources: ['Conferences', 'Commesse'] };
+  const handleViewChange = (args) => {
+    setCurrentView(args.currentView);
+  };
+
+  const group = currentView === 'Month' ? { byGroupID: false, resources: [] } : { byGroupID: false, resources: ['Conferences', 'Commesse'] };
 
   const resourceOptions = resources.map(resource => ({
     value: resource.Id,
@@ -113,59 +117,62 @@ const Scheduler = ({ data, onDataChange }) => {
           className="filter-dropdown"
         />
       </div>
-      <ScheduleComponent
-        cssClass='group-editing'
-        width='100%'
-        height='650px'
-        selectedDate={new Date()}
-        currentView='TimelineMonth'
-        resourceHeaderTemplate={resourceHeaderTemplate}
-        eventSettings={{
-          dataSource: data,
-          fields: {
-            subject: { title: 'Task', name: 'Subject', default: '' },
-            description: { title: 'Summary', name: 'Description' },
-            startTime: { title: 'From', name: 'StartTime' },
-            endTime: { title: 'To', name: 'EndTime' },
-            color: { name: 'Color' },
-            conferenceId: { title: 'Attendees', name: 'ConferenceId', validation: { required: true } },
-            commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
-          },
-          template: monthEventTemplate
-        }}
-        group={group}
-        actionComplete={onActionComplete}
-      >
-        <ViewsDirective>
-          <ViewDirective option='Day' />
-          <ViewDirective option='WorkWeek' />
-          <ViewDirective option='Month' eventTemplate={monthEventTemplate} />
-          <ViewDirective option='TimelineMonth' interval={3} /> {/* Copre 3 mesi */}
-        </ViewsDirective>
-        <ResourcesDirective>
-          <ResourceDirective
-            field='ConferenceId'
-            title='Attendees'
-            name='Conferences'
-            allowMultiple={true}
-            dataSource={getFilteredResources()}
-            textField='Text'
-            idField='Id'
-            colorField='Color'
-          />
-          <ResourceDirective
-            field='CommessaId'
-            title='Commessa'
-            name='Commesse'
-            allowMultiple={false}
-            dataSource={getFilteredCommesse()}
-            textField='Text'
-            idField='Id'
-            colorField='Color'
-          />
-        </ResourcesDirective>
-        <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
-      </ScheduleComponent>
+      <div className="scroll-container"> {/* Aggiungi la classe per lo scorrimento */}
+        <ScheduleComponent
+          cssClass='group-editing'
+          width='100%'
+          height='650px'
+          selectedDate={new Date()}
+          currentView={currentView}
+          resourceHeaderTemplate={resourceHeaderTemplate}
+          eventSettings={{
+            dataSource: data,
+            fields: {
+              subject: { title: 'Task', name: 'Subject', default: '' },
+              description: { title: 'Summary', name: 'Description' },
+              startTime: { title: 'From', name: 'StartTime' },
+              endTime: { title: 'To', name: 'EndTime' },
+              color: { name: 'Color' },
+              conferenceId: { title: 'Attendees', name: 'ConferenceId', validation: { required: true } },
+              commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
+            },
+            template: monthEventTemplate
+          }}
+          group={group}
+          actionComplete={onActionComplete}
+          viewChanged={handleViewChange}
+        >
+          <ViewsDirective>
+            <ViewDirective option='Day' allowVirtualScrolling={true} />
+            <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
+            <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
+            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 3 mesi */}
+          </ViewsDirective>
+          <ResourcesDirective>
+            <ResourceDirective
+              field='ConferenceId'
+              title='Attendees'
+              name='Conferences'
+              allowMultiple={true}
+              dataSource={getFilteredResources()}
+              textField='Text'
+              idField='Id'
+              colorField='Color'
+            />
+            <ResourceDirective
+              field='CommessaId'
+              title='Commessa'
+              name='Commesse'
+              allowMultiple={false}
+              dataSource={getFilteredCommesse()}
+              textField='Text'
+              idField='Id'
+              colorField='Color'
+            />
+          </ResourcesDirective>
+          <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
+        </ScheduleComponent>
+      </div>
     </div>
   );
 };
