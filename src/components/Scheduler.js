@@ -1,9 +1,39 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
+import { L10n, loadCldr } from '@syncfusion/ej2-base';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import resources, { getEmployeeName, getEmployeeImage, getEmployeeDesignation } from './resources';
 import commesse, { getCommessaColor } from './commesse';
 import '../index.css';  // Ensure this is correctly imported
+
+// Load the required CLDR data
+import * as numberingSystems from 'cldr-data/main/it/numbers.json';
+import * as gregorian from 'cldr-data/main/it/ca-gregorian.json';
+import * as timeZoneNames from 'cldr-data/main/it/timeZoneNames.json';
+import * as weekData from 'cldr-data/supplemental/weekData.json';
+loadCldr(numberingSystems, gregorian, timeZoneNames, weekData);
+
+// Load Italian locale
+L10n.load({
+  'it': {
+    'schedule': {
+      'day': 'Giorno',
+      'week': 'Settimana',
+      'workWeek': 'Settimana lavorativa',
+      'month': 'Mese',
+      'agenda': 'Agenda',
+      'today': 'Oggi',
+      'noEvents': 'Nessun evento',
+      'allDay': 'Tutto il giorno',
+      'start': 'Inizio',
+      'end': 'Fine',
+      'more': 'di più',
+      'close': 'Chiudi',
+      'cancel': 'Annulla',
+      'noTitle': '(Nessun titolo)',
+    },
+  }
+});
 
 const Scheduler = ({ data, onDataChange }) => {
   const [selectedResources, setSelectedResources] = useState([]);
@@ -11,11 +41,27 @@ const Scheduler = ({ data, onDataChange }) => {
   const [currentView, setCurrentView] = useState('Day');
 
   const handleResourceChange = (selectedOptions) => {
-    setSelectedResources(selectedOptions ? selectedOptions.map(option => option.value) : []);
+    if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
+      if (selectedOptions.length === 1) {
+        setSelectedResources(resources.map(resource => resource.Id));
+      } else {
+        setSelectedResources([]);
+      }
+    } else {
+      setSelectedResources(selectedOptions ? selectedOptions.map(option => option.value) : []);
+    }
   };
 
   const handleCommessaChange = (selectedOptions) => {
-    setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
+    if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
+      if (selectedOptions.length === 1) {
+        setSelectedCommesse(commesse.map(commessa => commessa.Id));
+      } else {
+        setSelectedCommesse([]);
+      }
+    } else {
+      setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
+    }
   };
 
   const getFilteredResources = () => {
@@ -89,15 +135,15 @@ const Scheduler = ({ data, onDataChange }) => {
 
   const group = currentView === 'Month' ? { byGroupID: false, resources: [] } : { byGroupID: false, resources: ['Conferences', 'Commesse'] };
 
-  const resourceOptions = resources.map(resource => ({
+  const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
     value: resource.Id,
     label: resource.Text
-  }));
+  }))];
 
-  const commessaOptions = commesse.map(commessa => ({
+  const commessaOptions = [{ value: 'select-all', label: 'Select All' }, ...commesse.map(commessa => ({
     value: commessa.Id,
     label: commessa.Text
-  }));
+  }))];
 
   return (
     <div>
@@ -124,6 +170,8 @@ const Scheduler = ({ data, onDataChange }) => {
           height='650px'
           selectedDate={new Date()}
           currentView={currentView}
+          locale='it'  // Set locale to Italian
+          dateFormat='dd/MM/yyyy'  // Set date format
           resourceHeaderTemplate={resourceHeaderTemplate}
           eventSettings={{
             dataSource: data,
