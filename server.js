@@ -91,6 +91,44 @@ app.delete('/commesse/:id', (req, res) => {
     }
 });
 
+// Rotte per GanttTasks
+app.get('/gantttasks', (req, res) => {
+    try {
+        const ganttTasks = db.getAllGanttTasks();
+        res.json(ganttTasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/gantttasks', (req, res) => {
+    try {
+        const id = db.addGanttTask(req.body);
+        res.json({ id });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Rotte per SchedulerEvents
+app.get('/schedulerevents', (req, res) => {
+    try {
+        const schedulerEvents = db.getAllSchedulerEvents();
+        res.json(schedulerEvents);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/schedulerevents', (req, res) => {
+    try {
+        const id = db.addSchedulerEvent(req.body);
+        res.json({ id });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });

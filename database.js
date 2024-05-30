@@ -20,11 +20,94 @@ const createTables = () => {
         );
     `;
 
+    const queryGanttTasks = `
+        CREATE TABLE IF NOT EXISTS GanttTasks (
+            TaskID INTEGER PRIMARY KEY,
+            TaskName TEXT,
+            StartDate TEXT,
+            EndDate TEXT,
+            Predecessor TEXT,
+            Progress INTEGER,
+            CommessaId INTEGER
+        );
+    `;
+
+    const querySchedulerEvents = `
+        CREATE TABLE IF NOT EXISTS SchedulerEvents (
+            EventID INTEGER PRIMARY KEY,
+            Subject TEXT,
+            StartTime TEXT,
+            EndTime TEXT,
+            IsAllDay BOOLEAN,
+            CommessaId INTEGER
+        );
+    `;
+
     db.prepare(queryCollaboratori).run();
     db.prepare(queryCommesse).run();
+    db.prepare(queryGanttTasks).run();
+    db.prepare(querySchedulerEvents).run();
 };
 
 createTables();
+
+// Funzione di debug per verificare la creazione delle tabelle
+const verifyTables = () => {
+    try {
+        const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+        console.log("Tables in the database:", tables);
+    } catch (error) {
+        console.error("Error verifying tables:", error);
+    }
+};
+
+verifyTables();
+
+// Funzioni per GanttTasks
+const addGanttTask = (task) => {
+    try {
+        const query = `INSERT INTO GanttTasks (TaskID, TaskName, StartDate, EndDate, Predecessor, Progress, CommessaId) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        const stmt = db.prepare(query);
+        const info = stmt.run(task.TaskID, task.TaskName, task.StartDate, task.EndDate, task.Predecessor, task.Progress, task.CommessaId);
+        return info.lastInsertRowid;
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to add Gantt task.");
+    }
+};
+
+const getAllGanttTasks = () => {
+    try {
+        const query = `SELECT * FROM GanttTasks`;
+        return db.prepare(query).all();
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to retrieve Gantt tasks.");
+    }
+};
+
+// Funzioni per SchedulerEvents
+const addSchedulerEvent = (event) => {
+    try {
+        const query = `INSERT INTO SchedulerEvents (EventID, Subject, StartTime, EndTime, IsAllDay, CommessaId) VALUES (?, ?, ?, ?, ?, ?)`;
+        const stmt = db.prepare(query);
+        const info = stmt.run(event.EventID, event.Subject, event.StartTime, event.EndTime, event.IsAllDay, event.CommessaId);
+        return info.lastInsertRowid;
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to add scheduler event.");
+    }
+};
+
+const getAllSchedulerEvents = () => {
+    try {
+        const query = `SELECT * FROM SchedulerEvents`;
+        return db.prepare(query).all();
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to retrieve scheduler events.");
+    }
+};
 
 // Funzione per aggiungere un nuovo collaboratore
 const addCollaboratore = (nome, colore, immagine) => {
@@ -130,5 +213,9 @@ module.exports = {
     updateCollaboratore,
     updateCommessa,
     deleteCollaboratore,
-    deleteCommessa
+    deleteCommessa,
+    addGanttTask,
+    getAllGanttTasks,
+    addSchedulerEvent,
+    getAllSchedulerEvents
 };

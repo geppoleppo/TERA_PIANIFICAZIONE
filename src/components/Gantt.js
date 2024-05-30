@@ -1,5 +1,6 @@
 import React from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD } from '@syncfusion/ej2-react-gantt';
+import axios from 'axios';
 import commesse, { getCommessaColor } from './commesse';
 
 const Gantt = ({ data, onDataChange }) => {
@@ -15,6 +16,15 @@ const Gantt = ({ data, onDataChange }) => {
     );
   };
 
+  const saveDataToDB = async (task) => {
+    try {
+      await axios.post('http://localhost:3001/gantttasks', task);
+      console.log('Task saved:', task);
+    } catch (error) {
+      console.error('Error saving task:', error);
+    }
+  };
+
   const onActionComplete = (args) => {
     console.log('Gantt Action Complete:', args);
     if (args.requestType === 'save' || args.requestType === 'delete') {
@@ -22,8 +32,12 @@ const Gantt = ({ data, onDataChange }) => {
         requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
         data: args.data
       });
+      if (args.requestType === 'save') {
+        saveDataToDB(args.data);
+      }
     }
   };
+
   return (
     <GanttComponent
       dataSource={data}
