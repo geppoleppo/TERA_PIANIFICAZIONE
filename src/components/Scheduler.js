@@ -97,30 +97,32 @@ const Scheduler = ({ data, onDataChange }) => {
     if (selectedCommesse.length === 0) return [];
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
-const monthEventTemplate = (props) => {
-  console.log('monthEventTemplate props:', props); // Log completo di props
 
-  const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
-  const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
-  const subjectText = props.Subject ? props.Subject : '';
-  const color = props.Color ? props.Color : '#000000'; // Default to black if no color
+  const monthEventTemplate = (props) => {
+    console.log('monthEventTemplate props:', props); // Log completo di props
 
-  return (
-    <div className="template-wrap" style={{ backgroundColor: color }}>
-      <div className="subject">{`${commessaText} - ${subjectText}`}</div>
-    </div>
-  );
-};
+    const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
+    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
+    const subjectText = props.Subject ? props.Subject : '';
+    const color = props.Color ? props.Color : '#000000'; // Default to black if no color
 
+    return (
+      <div className="template-wrap" style={{ backgroundColor: color }}>
+        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
+      </div>
+    );
+  };
 
   const resourceHeaderTemplate = (props) => {
     console.log('resourceHeaderTemplate props:', props); // Log completo di props
     const commessa = props.resourceData.Descrizione;
-    if (props.resourceData.Descrizione) {
+    if (commessa) {
       return (
         <div className="template-wrap">
-            <div className="resource-details">{commessa ? commessa : ''}</div>
-           </div>
+          <div className="commessa-details">
+            <div className="commessa-name">{commessa}</div>
+          </div>
+        </div>
       );
     }
 
@@ -141,22 +143,22 @@ const monthEventTemplate = (props) => {
     console.log('onActionComplete args:', args);
 
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-        if (args.data) {
-            if (Array.isArray(args.data)) {
-                args.data.forEach(event => {
-                    console.log('Event data:', event); // Log degli eventi
+      if (args.data) {
+        if (Array.isArray(args.data)) {
+          args.data.forEach(event => {
+            console.log('Event data:', event); // Log degli eventi
 
-                    const commessa = commesse.find(commessa => commessa.Id === event.CommessaId);
-                    event.Color = commessa ? commessa.Colore : '#000000';
-                });
-            } else {
-                console.log('Event data:', args.data); // Log degli eventi
+            const commessa = commesse.find(commessa => commessa.Id === event.CommessaId);
+            event.Color = commessa ? commessa.Colore : '#000000';
+          });
+        } else {
+          console.log('Event data:', args.data); // Log degli eventi
 
-                const commessa = commesse.find(commessa => commessa.Id === args.data.CommessaId);
-                args.data.Color = commessa ? commessa.Colore : '#000000';
-            }
+          const commessa = commesse.find(commessa => commessa.Id === args.data.CommessaId);
+          args.data.Color = commessa ? commessa.Colore : '#000000';
         }
-        onDataChange(args);
+      }
+      onDataChange(args);
     }
   };
 
@@ -164,7 +166,11 @@ const monthEventTemplate = (props) => {
     setCurrentView(args.currentView);
   };
 
-  const group = currentView === 'Month' ? { byGroupID: false, resources: [] } : { byGroupID: false, resources: ['Conferences', 'Commesse'] };
+  const group = {
+    allowGroupEdit: true, // Aggiungi questa linea per abilitare l'editing di gruppo
+    byGroupID: false,
+    resources: currentView === 'Month' ? [] : ['Conferences', 'Commesse']
+  };
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
     value: resource.Id,
