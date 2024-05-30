@@ -97,21 +97,36 @@ const Scheduler = ({ data, onDataChange }) => {
     if (selectedCommesse.length === 0) return [];
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
+const monthEventTemplate = (props) => {
+  console.log('monthEventTemplate props:', props); // Log completo di props
 
-  const monthEventTemplate = (props) => {
-    const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
-    const commessaText = commessa ? commessa.Descrizione : 'No Commessa';
-    const subjectText = props.Subject ? props.Subject : '';
-    const color = props.Color ? props.Color : '#000000'; // Default to black if no color
-    return (
-      <div className="template-wrap" style={{ backgroundColor: color }}>
-        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
-      </div>
-    );
-  };
+  const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
+  const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
+  const subjectText = props.Subject ? props.Subject : '';
+  const color = props.Color ? props.Color : '#000000'; // Default to black if no color
+
+  return (
+    <div className="template-wrap" style={{ backgroundColor: color }}>
+      <div className="subject">{`${commessaText} - ${subjectText}`}</div>
+    </div>
+  );
+};
+
 
   const resourceHeaderTemplate = (props) => {
-    const resource = resources.find(resource => resource.Id === props.resource.id);
+    console.log('resourceHeaderTemplate props:', props); // Log completo di props
+    const commessa = props.resourceData.Descrizione;
+    if (props.resourceData.Descrizione) {
+      return (
+        <div className="template-wrap">
+            <div className="resource-details">{commessa ? commessa : ''}</div>
+           </div>
+      );
+    }
+
+    const resource = resources.find(resource => resource.Id === props.resourceData.Id);
+    console.log('resource:', resource); // Aggiungi questo log per debug
+
     return (
       <div className="template-wrap">
         {resource && <img src={resource.Immagine} alt={resource.Nome} className="resource-image" />}
@@ -123,19 +138,25 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const onActionComplete = (args) => {
+    console.log('onActionComplete args:', args);
+
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        if (Array.isArray(args.data)) {
-          args.data.forEach(event => {
-            const commessa = commesse.find(commessa => commessa.Id === event.CommessaId);
-            event.Color = commessa ? commessa.Colore : '#000000';
-          });
-        } else {
-          const commessa = commesse.find(commessa => commessa.Id === args.data.CommessaId);
-          args.data.Color = commessa ? commessa.Colore : '#000000';
+        if (args.data) {
+            if (Array.isArray(args.data)) {
+                args.data.forEach(event => {
+                    console.log('Event data:', event); // Log degli eventi
+
+                    const commessa = commesse.find(commessa => commessa.Id === event.CommessaId);
+                    event.Color = commessa ? commessa.Colore : '#000000';
+                });
+            } else {
+                console.log('Event data:', args.data); // Log degli eventi
+
+                const commessa = commesse.find(commessa => commessa.Id === args.data.CommessaId);
+                args.data.Color = commessa ? commessa.Colore : '#000000';
+            }
         }
-      }
-      onDataChange(args);
+        onDataChange(args);
     }
   };
 
@@ -194,7 +215,7 @@ const Scheduler = ({ data, onDataChange }) => {
               conferenceId: { title: 'Attendees', name: 'ConferenceId', validation: { required: true } },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
-            template: monthEventTemplate
+            template: monthEventTemplate // Aggiunto qui per assicurarsi che il template sia usato
           }}
           group={group}
           actionComplete={onActionComplete}
