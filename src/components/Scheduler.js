@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { L10n, loadCldr } from '@syncfusion/ej2-base';
+import { createElement } from '@syncfusion/ej2-base';
+import { DropDownList } from '@syncfusion/ej2-dropdowns';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import axios from 'axios';
 import '../index.css';  // Ensure this is correctly imported
@@ -99,8 +100,6 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const monthEventTemplate = (props) => {
-    console.log('monthEventTemplate props:', props); // Log completo di props
-
     const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
     const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
     const subjectText = props.Subject ? props.Subject : '';
@@ -114,7 +113,6 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const resourceHeaderTemplate = (props) => {
-    console.log('resourceHeaderTemplate props:', props); // Log completo di props
     const commessa = props.resourceData.Descrizione;
     if (commessa) {
       return (
@@ -127,8 +125,6 @@ const Scheduler = ({ data, onDataChange }) => {
     }
 
     const resource = resources.find(resource => resource.Id === props.resourceData.Id);
-    console.log('resource:', resource); // Aggiungi questo log per debug
-
     return (
       <div className="template-wrap">
         {resource && <img src={resource.Immagine} alt={resource.Nome} className="resource-image" />}
@@ -140,20 +136,14 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const onActionComplete = (args) => {
-    console.log('onActionComplete args:', args);
-
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
-            console.log('Event data:', event); // Log degli eventi
-
             const commessa = commesse.find(commessa => commessa.Id === event.CommessaId);
             event.Color = commessa ? commessa.Colore : '#000000';
           });
         } else {
-          console.log('Event data:', args.data); // Log degli eventi
-
           const commessa = commesse.find(commessa => commessa.Id === args.data.CommessaId);
           args.data.Color = commessa ? commessa.Colore : '#000000';
         }
@@ -167,7 +157,7 @@ const Scheduler = ({ data, onDataChange }) => {
   };
 
   const group = {
-    allowGroupEdit: true, // Aggiungi questa linea per abilitare l'editing di gruppo
+    allowGroupEdit: true, 
     byGroupID: false,
     resources: currentView === 'Month' ? [] : ['Conferences', 'Commesse']
   };
@@ -181,6 +171,64 @@ const Scheduler = ({ data, onDataChange }) => {
     value: commessa.Id,
     label: commessa.Descrizione
   }))];
+
+  const onPopupOpen = (args) => {
+    if (args.type === 'Editor') {
+      if (!args.element.querySelector('.custom-field-row')) {
+        let row = createElement('div', { className: 'custom-field-row' });
+        let formElement = args.element.querySelector('.e-schedule-form');
+        formElement.firstChild.insertBefore(row, args.element.querySelector('.e-title-location-row'));
+
+        // Commessa dropdown
+        let commessaContainer = createElement('div', { className: 'custom-field-container' });
+        let commessaInput = createElement('input', {
+          className: 'e-field', attrs: { name: 'CommessaId' }
+        });
+        commessaContainer.appendChild(commessaInput);
+        row.appendChild(commessaContainer);
+        let commessaDropDown = new DropDownList({
+          dataSource: commesse,
+          fields: { text: 'Descrizione', value: 'Id' },
+          value: args.data.CommessaId,
+          floatLabelType: 'Always', placeholder: 'Commessa'
+        });
+        commessaDropDown.appendTo(commessaInput);
+
+        // Responsabile dropdown
+        let responsabileContainer = createElement('div', { className: 'custom-field-container' });
+        let responsabileInput = createElement('input', {
+          className: 'e-field', attrs: { name: 'ResponsabileId' }
+        });
+        responsabileContainer.appendChild(responsabileInput);
+        row.appendChild(responsabileContainer);
+        let responsabileDropDown = new DropDownList({
+          dataSource: resources,
+          fields: { text: 'Nome', value: 'Id' },
+          value: args.data.ResponsabileId,
+          floatLabelType: 'Always', placeholder: 'Responsabile'
+        });
+        responsabileDropDown.appendTo(responsabileInput);
+
+        // Incaricati dropdown (multi-select)
+        let incaricatiContainer = createElement('div', { className: 'custom-field-container' });
+        let incaricatiInput = createElement('input', {
+          className: 'e-field', attrs: { name: 'IncaricatiIds' }
+        });
+        incaricatiContainer.appendChild(incaricatiInput);
+        row.appendChild(incaricatiContainer);
+        let incaricatiDropDown = new DropDownList({
+          dataSource: resources,
+          fields: { text: 'Nome', value: 'Id' },
+          value: args.data.IncaricatiIds,
+          floatLabelType: 'Always', placeholder: 'Incaricati',
+          mode: 'CheckBox',
+          showSelectAll: true,
+          showDropDownIcon: true
+        });
+        incaricatiDropDown.appendTo(incaricatiInput);
+      }
+    }
+  };
 
   return (
     <div>
@@ -204,7 +252,7 @@ const Scheduler = ({ data, onDataChange }) => {
         <ScheduleComponent
           cssClass='group-editing'
           width='100%'
-          height='650px'
+          height='550px'
           selectedDate={new Date()}
           currentView={currentView}
           locale='it'  // Set locale to Italian
@@ -221,8 +269,9 @@ const Scheduler = ({ data, onDataChange }) => {
               conferenceId: { title: 'Attendees', name: 'ConferenceId', validation: { required: true } },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
-            template: monthEventTemplate // Aggiunto qui per assicurarsi che il template sia usato
+            template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
           }}
+          popupOpen={onPopupOpen}
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
