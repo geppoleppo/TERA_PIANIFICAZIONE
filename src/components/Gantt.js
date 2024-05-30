@@ -24,7 +24,6 @@ const Gantt = ({ data, onDataChange }) => {
       });
     }
   };
-
   return (
     <GanttComponent
       dataSource={data}

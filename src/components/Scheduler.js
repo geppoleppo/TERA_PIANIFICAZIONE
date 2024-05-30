@@ -7,6 +7,7 @@ import axios from 'axios';
 import '../index.css';  // Ensure this is correctly imported
 
 // Load the required CLDR data
+import { loadCldr, L10n } from '@syncfusion/ej2-base';
 import * as numberingSystems from 'cldr-data/main/it/numbers.json';
 import * as gregorian from 'cldr-data/main/it/ca-gregorian.json';
 import * as timeZoneNames from 'cldr-data/main/it/timeZoneNames.json';
