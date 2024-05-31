@@ -286,7 +286,7 @@ const Scheduler = ({ onDataChange }) => {
               startTime: { title: 'From', name: 'StartTime' },
               endTime: { title: 'To', name: 'EndTime' },
               color: { name: 'Color' },
-              conferenceId: { title: 'Attendees', name: 'ConferenceId', validation: { required: true } },
+              IncaricatiId: { title: 'Collaboratori', name: 'IncaricatiId', validation: { required: true } },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
             template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
@@ -304,7 +304,7 @@ const Scheduler = ({ onDataChange }) => {
           </ViewsDirective>
           <ResourcesDirective>
             <ResourceDirective
-              field='ConferenceId'
+              field='IncaricatiId'
               title='Attendees'
               name='Conferences'
               allowMultiple={true}

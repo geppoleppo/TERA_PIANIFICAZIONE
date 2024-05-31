@@ -40,7 +40,7 @@ const createTables = () => {
         EndTime TEXT,
         IsAllDay INTEGER,
         CommessaId INTEGER,
-        ConferenceId TEXT
+        IncaricatiId TEXT
     );
     
     `;
@@ -92,9 +92,9 @@ const getAllGanttTasks = () => {
 const addSchedulerEvent = (event) => {
     try {
         // Convert array values to a format suitable for SQLite
-        const conferenceId = event.ConferenceId ? event.ConferenceId.join(',') : null;
+        const IncaricatiId = event.IncaricatiId ? event.IncaricatiId.join(',') : null;
         
-        const query = `INSERT INTO SchedulerEvents (Subject, StartTime, EndTime, IsAllDay, CommessaId, ConferenceId) VALUES (?, ?, ?, ?, ?, ?)`;
+        const query = `INSERT INTO SchedulerEvents (Subject, StartTime, EndTime, IsAllDay, CommessaId, IncaricatiId) VALUES (?, ?, ?, ?, ?, ?)`;
         const stmt = db.prepare(query);
         const info = stmt.run(
             event.Subject, 
@@ -102,7 +102,7 @@ const addSchedulerEvent = (event) => {
             event.EndTime, 
             event.IsAllDay ? 1 : 0, // Convert boolean to integer
             event.CommessaId,
-            conferenceId
+            IncaricatiId
         );
         return info.lastInsertRowid;
     } catch (error) {
@@ -115,9 +115,9 @@ const addSchedulerEvent = (event) => {
 const updateSchedulerEvent = (id, event) => {
     try {
         // Convert array values to a format suitable for SQLite
-        const conferenceId = event.ConferenceId ? event.ConferenceId.join(',') : null;
+        const IncaricatiId = event.IncaricatiId ? event.IncaricatiId.join(',') : null;
 
-        const query = `UPDATE SchedulerEvents SET Subject = ?, StartTime = ?, EndTime = ?, IsAllDay = ?, CommessaId = ?, ConferenceId = ? WHERE EventID = ?`;
+        const query = `UPDATE SchedulerEvents SET Subject = ?, StartTime = ?, EndTime = ?, IsAllDay = ?, CommessaId = ?, IncaricatiId = ? WHERE EventID = ?`;
         const stmt = db.prepare(query);
         stmt.run(
             event.Subject, 
@@ -125,7 +125,7 @@ const updateSchedulerEvent = (id, event) => {
             event.EndTime, 
             event.IsAllDay ? 1 : 0, // Convert boolean to integer
             event.CommessaId,
-            conferenceId,
+            IncaricatiId,
             id
         );
     } catch (error) {
