@@ -4,6 +4,7 @@ import Gantt from './components/Gantt';
 import { extend } from '@syncfusion/ej2-base';
 //import commesse, { getCommessaColor } from './components/commesse';
 
+
 const initialData = []; // Rimuovi le attività predefinite
 
 const App = () => {
@@ -17,92 +18,78 @@ const App = () => {
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
     let updatedScheduleData = [...scheduleData];
-
-    if (args.requestType === 'eventCreated') {
-      const newEvents = Array.isArray(args.data) ? args.data : [args.data];
-      newEvents.forEach(newEvent => {
-        newEvent.Color = getCommessaColor(newEvent.CommessaId);
-        console.log('New Event:', newEvent);
-        updatedScheduleData = [...updatedScheduleData.filter(event => event.Id !== newEvent.Id), newEvent];
+  
+    const updateData = (data, isCreation = false) => {
+      return data.map(item => {
+        if (isCreation || item.Id === args.data.Id) {
+          return { ...item, ...args.data };
+        }
+        return item;
       });
-    } else if (args.requestType === 'eventChanged') {
-      const updatedEvents = Array.isArray(args.data) ? args.data : [args.data];
-      updatedEvents.forEach(updatedEvent => {
-        updatedEvent.Color = getCommessaColor(updatedEvent.CommessaId);
-        console.log('Updated Event:', updatedEvent);
-        updatedScheduleData = updatedScheduleData.map(event =>
-          event.Id === updatedEvent.Id ? updatedEvent : event
-        );
-      });
-    } else if (args.requestType === 'eventRemoved') {
-      const removedEventIds = Array.isArray(args.data) ? args.data.map(event => event.Id) : [args.data.Id];
-      updatedScheduleData = updatedScheduleData.filter(event => !removedEventIds.includes(event.Id));
+    };
+  
+    switch (args.requestType) {
+      case 'eventCreated':
+        updatedScheduleData = updateData(updatedScheduleData, true);
+        break;
+      case 'eventChanged':
+        updatedScheduleData = updateData(updatedScheduleData);
+        break;
+      case 'eventRemoved':
+        updatedScheduleData = updatedScheduleData.filter(event => !args.data.map(data => data.Id).includes(event.Id));
+        break;
+      default:
+        break;
     }
-
-    console.log('Updated Schedule Data:', updatedScheduleData);
+  
     setScheduleData(updatedScheduleData);
-
+  
     const updatedGanttData = updatedScheduleData.map(event => ({
       TaskID: event.Id,
       TaskName: event.Subject,
       StartDate: event.StartTime,
       EndDate: event.EndTime,
-      Predecessor: event.Predecessor || '',
-      CommessaId: event.CommessaId,
-      Color: getCommessaColor(event.CommessaId)
+      CommessaId: event.CommessaId
     }));
-    console.log('Updated Gantt Data:', updatedGanttData);
+  
     setGanttData(updatedGanttData);
   };
-
+  
   const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
     let updatedGanttData = [...ganttData];
-
-    if (args.requestType === 'save' || args.requestType === 'delete') {
-      const updatedTasks = Array.isArray(args.data) ? args.data : [args.data];
-      updatedTasks.forEach(updatedTask => {
-        if (args.requestType === 'save') {
-          updatedTask.Color = getCommessaColor(updatedTask.CommessaId);
-          updatedGanttData = updatedGanttData.map(task =>
-            task.TaskID === updatedTask.TaskID ? { ...task, ...updatedTask } : task
-          );
-        } else if (args.requestType === 'delete') {
-          updatedGanttData = updatedGanttData.filter(task => task.TaskID !== updatedTask.TaskID);
+  
+    const updateData = (data, isCreation = false) => {
+      return data.map(task => {
+        if (isCreation || task.TaskID === args.data.TaskID) {
+          return { ...task, ...args.data };
         }
+        return task;
       });
+    };
+  
+    switch (args.requestType) {
+      case 'save':
+        updatedGanttData = updateData(updatedGanttData, true);
+        break;
+      case 'delete':
+        updatedGanttData = updatedGanttData.filter(task => !args.data.map(data => data.TaskID).includes(task.TaskID));
+        break;
+      default:
+        break;
     }
-
-    console.log('Updated Gantt Data after change:', updatedGanttData);
+  
     setGanttData(updatedGanttData);
-
+  
     const updatedScheduleData = updatedGanttData.map(task => ({
       Id: task.TaskID,
       Subject: task.TaskName,
       StartTime: task.StartDate,
-      EndTime: task.EndDate,
-      Predecessor: task.Predecessor,
-      CommessaId: task.CommessaId,
-      Color: getCommessaColor(task.CommessaId)
+      EndDate: task.EndDate,
+      CommessaId: task.CommessaId
     }));
-
-    console.log('Updated Schedule Data from Gantt:', updatedScheduleData);
-
-    // Sync the updated data with the existing schedule data
-    const finalScheduleData = scheduleData.map(event => {
-      const ganttTask = updatedScheduleData.find(task => task.Id === event.Id);
-      return ganttTask ? { ...event, ...ganttTask } : event;
-    });
-
-    // Add any new tasks from Gantt to the Scheduler data
-    updatedScheduleData.forEach(task => {
-      if (!finalScheduleData.find(event => event.Id === task.Id)) {
-        finalScheduleData.push(task);
-      }
-    });
-
-    console.log('Final Schedule Data:', finalScheduleData);
-    setScheduleData(finalScheduleData);
+  
+    setScheduleData(updatedScheduleData);
   };
 
   return (

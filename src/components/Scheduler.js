@@ -116,7 +116,7 @@ const Scheduler = ({ onDataChange }) => {
     const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
     const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
     const subjectText = props.Subject ? props.Subject : '';
-    const color = props.Color ? props.Color : '#000000'; // Default to black if no color
+    const color = commessa ? commessa.Colore : '#000000'; // Usa il colore della commessa
 
     return (
       <div className="template-wrap" style={{ backgroundColor: color }}>
@@ -169,6 +169,8 @@ const Scheduler = ({ onDataChange }) => {
         }
     }
 };
+
+
 
   const handleViewChange = (args) => {
     setCurrentView(args.currentView);
