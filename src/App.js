@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Scheduler from './components/Scheduler';
 import Gantt from './components/Gantt';
 import { extend } from '@syncfusion/ej2-base';
-import commesse, { getCommessaColor } from './components/commesse';
+//import commesse, { getCommessaColor } from './components/commesse';
 
 const initialData = []; // Rimuovi le attività predefinite
 

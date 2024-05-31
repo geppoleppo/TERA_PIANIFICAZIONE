@@ -1,7 +1,7 @@
 import React from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD } from '@syncfusion/ej2-react-gantt';
 import axios from 'axios';
-import commesse, { getCommessaColor } from './commesse';
+//import commesse, { getCommessaColor } from './commesse';
 
 const Gantt = ({ data, onDataChange }) => {
   console.log('Gantt data received:', data); // Log dei dati ricevuti
