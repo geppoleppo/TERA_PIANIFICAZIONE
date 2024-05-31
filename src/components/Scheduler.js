@@ -289,7 +289,7 @@ const Scheduler = ({ onDataChange }) => {
             },
             template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
           }}
-          popupOpen={onPopupOpen}
+          //popupOpen={onPopupOpen}
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
