@@ -16,14 +16,25 @@ const Gantt = ({ data, onDataChange }) => {
     );
   };
 
-  const saveDataToDB = async (task) => {
+const saveDataToDB = async (task) => {
     try {
-      await axios.post('http://localhost:3001/gantttasks', task);
-      console.log('Task saved:', task);
+        await axios.post('http://localhost:3001/gantttasks', task);
+        console.log('Task saved:', task);
     } catch (error) {
-      console.error('Error saving task:', error);
+        if (error.response && error.response.status === 409) { // Conflict error for duplicate TaskID
+            try {
+                await axios.put(`http://localhost:3001/gantttasks/${task.TaskID}`, task);
+                console.log('Task updated:', task);
+            } catch (updateError) {
+                console.error('Error updating task:', updateError);
+            }
+        } else {
+            console.error('Error saving task:', error);
+        }
     }
-  };
+};
+
+
 
   const onActionComplete = (args) => {
     console.log('Gantt Action Complete:', args);

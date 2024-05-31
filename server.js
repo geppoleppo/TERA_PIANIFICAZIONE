@@ -70,6 +70,27 @@ app.post('/commesse', (req, res) => {
     }
 });
 
+app.put('/gantttasks/:id', (req, res) => {
+    try {
+        db.updateGanttTask(req.params.id, req.body);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/gantttasks/:id', (req, res) => {
+    try {
+        db.deleteGanttTask(req.params.id);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
+
 app.put('/commesse/:id', (req, res) => {
     const { id } = req.params;
     const { descrizione, colore } = req.body;
@@ -114,13 +135,17 @@ app.post('/gantttasks', (req, res) => {
 app.get('/schedulerevents', (req, res) => {
     try {
         const schedulerEvents = db.getAllSchedulerEvents();
+        console.log('Loaded scheduler events from database:', schedulerEvents); // Log per debug
         res.json(schedulerEvents);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
+
+
 app.post('/schedulerevents', (req, res) => {
+    console.log('Received event data:', req.body); // Log per debug
     try {
         const id = db.addSchedulerEvent(req.body);
         res.json({ id });
@@ -128,6 +153,29 @@ app.post('/schedulerevents', (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.put('/schedulerevents/:id', (req, res) => {
+    console.log('Received update data:', req.body); // Log per debug
+    try {
+        db.updateSchedulerEvent(req.params.id, req.body);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+app.delete('/schedulerevents/:id', (req, res) => {
+    console.log('Received delete request for EventID:', req.params.id); // Log per debug
+    try {
+        db.deleteSchedulerEvent(req.params.id);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

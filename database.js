@@ -33,14 +33,16 @@ const createTables = () => {
     `;
 
     const querySchedulerEvents = `
-        CREATE TABLE IF NOT EXISTS SchedulerEvents (
-            EventID INTEGER PRIMARY KEY,
-            Subject TEXT,
-            StartTime TEXT,
-            EndTime TEXT,
-            IsAllDay BOOLEAN,
-            CommessaId INTEGER
-        );
+    CREATE TABLE IF NOT EXISTS SchedulerEvents (
+        EventID INTEGER PRIMARY KEY,
+        Subject TEXT,
+        StartTime TEXT,
+        EndTime TEXT,
+        IsAllDay INTEGER,
+        CommessaId INTEGER,
+        ConferenceId TEXT
+    );
+    
     `;
 
     db.prepare(queryCollaboratori).run();
@@ -89,15 +91,50 @@ const getAllGanttTasks = () => {
 // Funzioni per SchedulerEvents
 const addSchedulerEvent = (event) => {
     try {
-        const query = `INSERT INTO SchedulerEvents (EventID, Subject, StartTime, EndTime, IsAllDay, CommessaId) VALUES (?, ?, ?, ?, ?, ?)`;
+        // Convert array values to a format suitable for SQLite
+        const conferenceId = event.ConferenceId ? event.ConferenceId.join(',') : null;
+        
+        const query = `INSERT INTO SchedulerEvents (Subject, StartTime, EndTime, IsAllDay, CommessaId, ConferenceId) VALUES (?, ?, ?, ?, ?, ?)`;
         const stmt = db.prepare(query);
-        const info = stmt.run(event.EventID, event.Subject, event.StartTime, event.EndTime, event.IsAllDay, event.CommessaId);
+        const info = stmt.run(
+            event.Subject, 
+            event.StartTime, 
+            event.EndTime, 
+            event.IsAllDay ? 1 : 0, // Convert boolean to integer
+            event.CommessaId,
+            conferenceId
+        );
         return info.lastInsertRowid;
     } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to add scheduler event.");
     }
 };
+
+
+const updateSchedulerEvent = (id, event) => {
+    try {
+        // Convert array values to a format suitable for SQLite
+        const conferenceId = event.ConferenceId ? event.ConferenceId.join(',') : null;
+
+        const query = `UPDATE SchedulerEvents SET Subject = ?, StartTime = ?, EndTime = ?, IsAllDay = ?, CommessaId = ?, ConferenceId = ? WHERE EventID = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(
+            event.Subject, 
+            event.StartTime, 
+            event.EndTime, 
+            event.IsAllDay ? 1 : 0, // Convert boolean to integer
+            event.CommessaId,
+            conferenceId,
+            id
+        );
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to update scheduler event.");
+    }
+};
+
+
 
 const getAllSchedulerEvents = () => {
     try {
@@ -205,6 +242,41 @@ const deleteCommessa = (id) => {
     }
 };
 
+
+const updateGanttTask = (id, task) => {
+    try {
+        const query = `UPDATE GanttTasks SET TaskName = ?, StartDate = ?, EndDate = ?, Predecessor = ?, Progress = ?, CommessaId = ? WHERE TaskID = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(task.TaskName, task.StartDate, task.EndDate, task.Predecessor, task.Progress, task.CommessaId, id);
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to update Gantt task.");
+    }
+};
+
+const deleteGanttTask = (id) => {
+    try {
+        const query = `DELETE FROM GanttTasks WHERE TaskID = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(id);
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to delete Gantt task.");
+    }
+};
+
+
+const deleteSchedulerEvent = (id) => {
+    try {
+        const query = `DELETE FROM SchedulerEvents WHERE EventID = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(id);
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to delete scheduler event.");
+    }
+};
+
 module.exports = {
     addCollaboratore,
     addCommessa,
@@ -216,6 +288,10 @@ module.exports = {
     deleteCommessa,
     addGanttTask,
     getAllGanttTasks,
+    updateGanttTask,
+    deleteGanttTask,
     addSchedulerEvent,
-    getAllSchedulerEvents
+    getAllSchedulerEvents,
+    updateSchedulerEvent,
+    deleteSchedulerEvent
 };
