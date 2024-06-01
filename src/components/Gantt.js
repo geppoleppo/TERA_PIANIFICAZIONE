@@ -1,14 +1,22 @@
 import React from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD } from '@syncfusion/ej2-react-gantt';
 import axios from 'axios';
-//import commesse, { getCommessaColor } from './commesse';
 
 const Gantt = ({ data, onDataChange }) => {
-  console.log('Gantt data received:', data); // Log dei dati ricevuti
+  console.log('Gantt data received:', data);
+
+  const getCommessaColor = (commessaId) => {
+   
+    const color = '#000000';
+    
+    return color;
+  };
+
+
 
   const taskbarTemplate = (props) => {
     const commessaColor = getCommessaColor(props.CommessaId);
-    console.log(`taskbarTemplate: TaskID=${props.TaskID}, CommessaId=${props.CommessaId}, Color=${commessaColor}`); // Log per debug
+    console.log(`taskbarTemplate: TaskID=${props.TaskID}, CommessaId=${props.CommessaId}, Color=${commessaColor}`);
     return (
       <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
         {props.TaskName}
@@ -16,25 +24,23 @@ const Gantt = ({ data, onDataChange }) => {
     );
   };
 
-const saveDataToDB = async (task) => {
+  const saveDataToDB = async (task) => {
     try {
-        await axios.post('http://localhost:3001/gantttasks', task);
-        console.log('Task saved:', task);
+      await axios.post('http://localhost:3001/gantttasks', task);
+      console.log('Task saved:', task);
     } catch (error) {
-        if (error.response && error.response.status === 409) { // Conflict error for duplicate TaskID
-            try {
-                await axios.put(`http://localhost:3001/gantttasks/${task.TaskID}`, task);
-                console.log('Task updated:', task);
-            } catch (updateError) {
-                console.error('Error updating task:', updateError);
-            }
-        } else {
-            console.error('Error saving task:', error);
+      if (error.response && error.response.status === 409) {
+        try {
+          await axios.put(`http://localhost:3001/gantttasks/${task.TaskID}`, task);
+          console.log('Task updated:', task);
+        } catch (updateError) {
+          console.error('Error updating task:', updateError);
         }
+      } else {
+        console.error('Error saving task:', error);
+      }
     }
-};
-
-
+  };
 
   const onActionComplete = (args) => {
     console.log('Gantt Action Complete:', args);
@@ -57,7 +63,7 @@ const saveDataToDB = async (task) => {
       allowSelection={true}
       allowSorting={true}
       editSettings={{ allowEditing: true, allowAdding: true, allowDeleting: true, allowTaskbarEditing: true }}
-      taskbarTemplate={taskbarTemplate} // Assicurati che il template sia associato
+      taskbarTemplate={taskbarTemplate}
       timelineSettings={{
         timelineViewMode: 'Month',
         topTier: {
@@ -72,7 +78,7 @@ const saveDataToDB = async (task) => {
         }
       }}
       actionComplete={onActionComplete}
-      allowRowDragAndDrop={true} // Abilita il drag and drop delle righe
+      allowRowDragAndDrop={true}
     >
       <ColumnsDirective>
         <ColumnDirective field='TaskID' visible={false} />
@@ -80,7 +86,7 @@ const saveDataToDB = async (task) => {
         <ColumnDirective field='StartDate' headerText='Data Inizio' width='150' />
         <ColumnDirective field='EndDate' headerText='Data Fine' width='150' />
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' />
-        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' /> {/* Aggiungi questa colonna per debug */}
+        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD]} />
     </GanttComponent>

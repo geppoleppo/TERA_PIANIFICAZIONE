@@ -4,9 +4,8 @@ import { createElement } from '@syncfusion/ej2-base';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import axios from 'axios';
-import '../index.css';  // Ensure this is correctly imported
+import '../index.css';
 
-// Load the required CLDR data
 import { loadCldr, L10n } from '@syncfusion/ej2-base';
 import * as numberingSystems from 'cldr-data/main/it/numbers.json';
 import * as gregorian from 'cldr-data/main/it/ca-gregorian.json';
@@ -14,7 +13,6 @@ import * as timeZoneNames from 'cldr-data/main/it/timeZoneNames.json';
 import * as weekData from 'cldr-data/supplemental/weekData.json';
 loadCldr(numberingSystems, gregorian, timeZoneNames, weekData);
 
-// Load Italian locale
 L10n.load({
   'it': {
     'schedule': {
@@ -36,8 +34,7 @@ L10n.load({
   }
 });
 
-const Scheduler = ({ onDataChange }) => {
-  const [data, setData] = useState([]);
+const Scheduler = ({ data, onDataChange }) => {
   const [resources, setResources] = useState([]);
   const [commesse, setCommesse] = useState([]);
   const [selectedResources, setSelectedResources] = useState([]);
@@ -47,7 +44,6 @@ const Scheduler = ({ onDataChange }) => {
   useEffect(() => {
     fetchResources();
     fetchCommesse();
-    fetchSchedulerEvents();
   }, []);
 
   const fetchResources = async () => {
@@ -65,16 +61,6 @@ const Scheduler = ({ onDataChange }) => {
       setCommesse(response.data);
     } catch (error) {
       console.error('Error fetching commesse:', error);
-    }
-  };
-
-  const fetchSchedulerEvents = async () => {
-    try {
-      const response = await axios.get('http://localhost:3001/schedulerevents');
-      console.log('Fetched scheduler events:', response.data); // Log per debug
-      setData(response.data);
-    } catch (error) {
-      console.error('Error fetching scheduler events:', error);
     }
   };
 
@@ -116,7 +102,7 @@ const Scheduler = ({ onDataChange }) => {
     const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
     const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
     const subjectText = props.Subject ? props.Subject : '';
-    const color = commessa ? commessa.Colore : '#000000'; // Usa il colore della commessa
+    const color = commessa ? commessa.Colore : '#000000';
 
     return (
       <div className="template-wrap" style={{ backgroundColor: color }}>
@@ -150,27 +136,25 @@ const Scheduler = ({ onDataChange }) => {
 
   const onActionComplete = async (args) => {
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-        if (args.data) {
-            console.log('Event data before sending to server:', args.data); // Log per debug
-            const eventData = Array.isArray(args.data) ? args.data[0] : args.data; // Assicurati di avere un singolo evento
-            console.log('Formatted event data:', eventData); // Log per debug
-            try {
-                if (args.requestType === 'eventCreated') {
-                    await axios.post('http://localhost:3001/schedulerevents', eventData);
-                } else if (args.requestType === 'eventChanged') {
-                    await axios.put(`http://localhost:3001/schedulerevents/${eventData.Id}`, eventData);
-                } else if (args.requestType === 'eventRemoved') {
-                    await axios.delete(`http://localhost:3001/schedulerevents/${eventData.Id}`);
-                }
-                onDataChange(args);
-            } catch (error) {
-                console.error('Error handling scheduler event:', error);
-            }
+      if (args.data) {
+        console.log('Event data before sending to server:', args.data);
+        const eventData = Array.isArray(args.data) ? args.data[0] : args.data;
+        console.log('Formatted event data:', eventData);
+        try {
+          if (args.requestType === 'eventCreated') {
+            await axios.post('http://localhost:3001/schedulerevents', eventData);
+          } else if (args.requestType === 'eventChanged') {
+            await axios.put(`http://localhost:3001/schedulerevents/${eventData.Id}`, eventData);
+          } else if (args.requestType === 'eventRemoved') {
+            await axios.delete(`http://localhost:3001/schedulerevents/${eventData.Id}`);
+          }
+          onDataChange(args);
+        } catch (error) {
+          console.error('Error handling scheduler event:', error);
         }
+      }
     }
-};
-
-
+  };
 
   const handleViewChange = (args) => {
     setCurrentView(args.currentView);
@@ -194,61 +178,61 @@ const Scheduler = ({ onDataChange }) => {
 
   const onPopupOpen = (args) => {
     if (args.type === 'Editor') {
-        if (!args.element.querySelector('.custom-field-row')) {
-            let row = createElement('div', { className: 'custom-field-row' });
-            let formElement = args.element.querySelector('.e-schedule-form');
-            formElement.firstChild.insertBefore(row, args.element.querySelector('.e-title-location-row'));
+      if (!args.element.querySelector('.custom-field-row')) {
+        let row = createElement('div', { className: 'custom-field-row' });
+        let formElement = args.element.querySelector('.e-schedule-form');
+        formElement.firstChild.insertBefore(row, args.element.querySelector('.e-title-location-row'));
 
-            // Commessa dropdown
-            let commessaContainer = createElement('div', { className: 'custom-field-container' });
-            let commessaInput = createElement('input', {
-                className: 'e-field', attrs: { name: 'CommessaId' }
-            });
-            commessaContainer.appendChild(commessaInput);
-            row.appendChild(commessaContainer);
-            let commessaDropDown = new DropDownList({
-                dataSource: commesse,
-                fields: { text: 'Descrizione', value: 'Id' },
-                value: args.data.CommessaId,
-                floatLabelType: 'Always', placeholder: 'Commessa'
-            });
-            commessaDropDown.appendTo(commessaInput);
+        // Commessa dropdown
+        let commessaContainer = createElement('div', { className: 'custom-field-container' });
+        let commessaInput = createElement('input', {
+          className: 'e-field', attrs: { name: 'CommessaId' }
+        });
+        commessaContainer.appendChild(commessaInput);
+        row.appendChild(commessaContainer);
+        let commessaDropDown = new DropDownList({
+          dataSource: commesse,
+          fields: { text: 'Descrizione', value: 'Id' },
+          value: args.data.CommessaId,
+          floatLabelType: 'Always', placeholder: 'Commessa'
+        });
+        commessaDropDown.appendTo(commessaInput);
 
-            // Responsabile dropdown
-            let responsabileContainer = createElement('div', { className: 'custom-field-container' });
-            let responsabileInput = createElement('input', {
-                className: 'e-field', attrs: { name: 'ResponsabileId' }
-            });
-            responsabileContainer.appendChild(responsabileInput);
-            row.appendChild(responsabileContainer);
-            let responsabileDropDown = new DropDownList({
-                dataSource: resources,
-                fields: { text: 'Nome', value: 'Id' },
-                value: args.data.ResponsabileId,
-                floatLabelType: 'Always', placeholder: 'Responsabile'
-            });
-            responsabileDropDown.appendTo(responsabileInput);
+        // Responsabile dropdown
+        let responsabileContainer = createElement('div', { className: 'custom-field-container' });
+        let responsabileInput = createElement('input', {
+          className: 'e-field', attrs: { name: 'ResponsabileId' }
+        });
+        responsabileContainer.appendChild(responsabileInput);
+        row.appendChild(responsabileContainer);
+        let responsabileDropDown = new DropDownList({
+          dataSource: resources,
+          fields: { text: 'Nome', value: 'Id' },
+          value: args.data.ResponsabileId,
+          floatLabelType: 'Always', placeholder: 'Responsabile'
+        });
+        responsabileDropDown.appendTo(responsabileInput);
 
-            // Incaricati dropdown (multi-select)
-            let incaricatiContainer = createElement('div', { className: 'custom-field-container' });
-            let incaricatiInput = createElement('input', {
-                className: 'e-field', attrs: { name: 'IncaricatiIds' }
-            });
-            incaricatiContainer.appendChild(incaricatiInput);
-            row.appendChild(incaricatiContainer);
-            let incaricatiDropDown = new DropDownList({
-                dataSource: resources,
-                fields: { text: 'Nome', value: 'Id' },
-                value: args.data.IncaricatiIds,
-                floatLabelType: 'Always', placeholder: 'Incaricati',
-                mode: 'CheckBox',
-                showSelectAll: true,
-                showDropDownIcon: true
-            });
-            incaricatiDropDown.appendTo(incaricatiInput);
-        }
+        // Incaricati dropdown (multi-select)
+        let incaricatiContainer = createElement('div', { className: 'custom-field-container' });
+        let incaricatiInput = createElement('input', {
+          className: 'e-field', attrs: { name: 'IncaricatiIds' }
+        });
+        incaricatiContainer.appendChild(incaricatiInput);
+        row.appendChild(incaricatiContainer);
+        let incaricatiDropDown = new DropDownList({
+          dataSource: resources,
+          fields: { text: 'Nome', value: 'Id' },
+          value: args.data.IncaricatiIds,
+          floatLabelType: 'Always', placeholder: 'Incaricati',
+          mode: 'CheckBox',
+          showSelectAll: true,
+          showDropDownIcon: true
+        });
+        incaricatiDropDown.appendTo(incaricatiInput);
+      }
     }
-};
+  };
 
   return (
     <div>
@@ -268,15 +252,15 @@ const Scheduler = ({ onDataChange }) => {
           className="filter-dropdown"
         />
       </div>
-      <div className="scroll-container"> {/* Aggiungi la classe per lo scorrimento */}
+      <div className="scroll-container">
         <ScheduleComponent
           cssClass='group-editing'
           width='100%'
           height='550px'
           selectedDate={new Date()}
           currentView={currentView}
-          locale='it'  // Set locale to Italian
-          dateFormat='dd/MM/yyyy'  // Set date format
+          locale='it'
+          dateFormat='dd/MM/yyyy'
           resourceHeaderTemplate={resourceHeaderTemplate}
           eventSettings={{
             dataSource: data,
@@ -289,9 +273,8 @@ const Scheduler = ({ onDataChange }) => {
               IncaricatiId: { title: 'Collaboratori', name: 'IncaricatiId', validation: { required: true } },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
-            template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
+            template: monthEventTemplate,
           }}
-          //popupOpen={onPopupOpen}
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
@@ -300,7 +283,7 @@ const Scheduler = ({ onDataChange }) => {
             <ViewDirective option='Day' allowVirtualScrolling={true} />
             <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
             <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
-            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 3 mesi */}
+            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} />
           </ViewsDirective>
           <ResourcesDirective>
             <ResourceDirective

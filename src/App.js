@@ -2,94 +2,57 @@ import React, { useState, useEffect } from 'react';
 import Scheduler from './components/Scheduler';
 import Gantt from './components/Gantt';
 import { extend } from '@syncfusion/ej2-base';
-//import commesse, { getCommessaColor } from './components/commesse';
-
-
-const initialData = []; // Rimuovi le attività predefinite
 
 const App = () => {
-  const [scheduleData, setScheduleData] = useState(extend([], initialData, null, true));
-  const [ganttData, setGanttData] = useState(initialData);
+  const [scheduleData, setScheduleData] = useState(extend([], [], null, true));
+  const [ganttData, setGanttData] = useState([]);
 
   useEffect(() => {
-    console.log('Initial Gantt Data:', ganttData);
-  }, []);
-
-  const handleSchedulerDataChange = (args) => {
-    console.log('Scheduler Data Change:', args);
-    let updatedScheduleData = [...scheduleData];
-  
-    const updateData = (data, isCreation = false) => {
-      return data.map(item => {
-        if (isCreation || item.Id === args.data.Id) {
-          return { ...item, ...args.data };
-        }
-        return item;
-      });
-    };
-  
-    switch (args.requestType) {
-      case 'eventCreated':
-        updatedScheduleData = updateData(updatedScheduleData, true);
-        break;
-      case 'eventChanged':
-        updatedScheduleData = updateData(updatedScheduleData);
-        break;
-      case 'eventRemoved':
-        updatedScheduleData = updatedScheduleData.filter(event => !args.data.map(data => data.Id).includes(event.Id));
-        break;
-      default:
-        break;
-    }
-  
-    setScheduleData(updatedScheduleData);
-  
-    const updatedGanttData = updatedScheduleData.map(event => ({
+    const ganttDataFromScheduler = scheduleData.map(event => ({
       TaskID: event.Id,
       TaskName: event.Subject,
       StartDate: event.StartTime,
       EndDate: event.EndTime,
       CommessaId: event.CommessaId
     }));
-  
-    setGanttData(updatedGanttData);
-  };
-  
-  const handleGanttDataChange = (args) => {
-    console.log('Gantt Data Change:', args);
-    let updatedGanttData = [...ganttData];
-  
-    const updateData = (data, isCreation = false) => {
-      return data.map(task => {
-        if (isCreation || task.TaskID === args.data.TaskID) {
-          return { ...task, ...args.data };
-        }
-        return task;
-      });
-    };
-  
+    setGanttData(ganttDataFromScheduler);
+  }, [scheduleData]);
+
+  const handleSchedulerDataChange = (args) => {
+    console.log('Scheduler Data Change:', args);
+    let updatedScheduleData = [...scheduleData];
+    const eventData = Array.isArray(args.data) ? args.data : [args.data];
+
     switch (args.requestType) {
-      case 'save':
-        updatedGanttData = updateData(updatedGanttData, true);
+      case 'eventCreated':
+      case 'eventChanged':
+        updatedScheduleData = updateData(updatedScheduleData, eventData);
         break;
-      case 'delete':
-        updatedGanttData = updatedGanttData.filter(task => !args.data.map(data => data.TaskID).includes(task.TaskID));
+      case 'eventRemoved':
+        updatedScheduleData = updatedScheduleData.filter(event => !eventData.map(data => data.Id).includes(event.Id));
         break;
       default:
         break;
     }
-  
-    setGanttData(updatedGanttData);
-  
-    const updatedScheduleData = updatedGanttData.map(task => ({
-      Id: task.TaskID,
-      Subject: task.TaskName,
-      StartTime: task.StartDate,
-      EndDate: task.EndDate,
-      CommessaId: task.CommessaId
-    }));
-  
+
     setScheduleData(updatedScheduleData);
+  };
+
+  const handleGanttDataChange = (args) => {
+    console.log('Gantt Data Change:', args);
+    let updatedGanttData = [...ganttData];
+    const taskData = Array.isArray(args.data) ? args.data : [args.data];
+
+    switch (args.requestType) {
+      case 'save':
+      case 'delete':
+        updatedGanttData = updateData(updatedGanttData, taskData, true);
+        break;
+      default:
+        break;
+    }
+
+    setGanttData(updatedGanttData);
   };
 
   return (
@@ -99,5 +62,11 @@ const App = () => {
     </div>
   );
 };
+
+const updateData = (data, changes, isTaskData = false) => data.map(item => {
+  const itemId = isTaskData ? item.TaskID : item.Id;
+  const changedItem = changes.find(change => change.Id === itemId);
+  return changedItem ? { ...item, ...changedItem } : item;
+});
 
 export default App;
