@@ -64,15 +64,15 @@ verifyTables();
 
 const addGanttTask = (task) => {
     try {
-        const query = `INSERT INTO GanttTasks (TaskID, TaskName, StartDate, EndDate, Predecessor, Progress, CommessaId) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-        const stmt = db.prepare(query);
-        const info = stmt.run(task.TaskID, task.TaskName, task.StartDate, task.EndDate, task.Predecessor, task.Progress, task.CommessaId);
-        return info.lastInsertRowid;
+      const query = `INSERT INTO GanttTasks (TaskID, TaskName, StartDate, EndDate, Predecessor, Progress, CommessaId) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      const stmt = db.prepare(query);
+      const info = stmt.run(task.TaskID, task.TaskName, task.StartDate, task.EndDate, task.Predecessor, task.Progress, task.CommessaId);
+      return info.lastInsertRowid;
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to add Gantt task.");
+      console.error("Database error:", error);
+      throw new Error("Failed to add Gantt task.");
     }
-};
+  };
 
 const getAllGanttTasks = () => {
     try {
@@ -86,14 +86,17 @@ const getAllGanttTasks = () => {
 
 const updateGanttTask = (id, task) => {
     try {
-        const query = `UPDATE GanttTasks SET TaskName = ?, StartDate = ?, EndDate = ?, Predecessor = ?, Progress = ?, CommessaId = ? WHERE TaskID = ?`;
-        const stmt = db.prepare(query);
-        stmt.run(task.TaskName, task.StartDate, task.EndDate, task.Predecessor, task.Progress, task.CommessaId, id);
+      const query = `UPDATE GanttTasks SET TaskName = ?, StartDate = ?, EndDate = ?, Predecessor = ?, Progress = ?, CommessaId = ? WHERE TaskID = ?`;
+      const stmt = db.prepare(query);
+      stmt.run(task.TaskName, task.StartDate, task.EndDate, task.Predecessor, task.Progress, task.CommessaId, id);
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update Gantt task.");
+      console.error("Database error:", error);
+      throw new Error("Failed to update Gantt task.");
     }
-};
+  };
+
+  
+  
 
 const deleteGanttTask = (id) => {
     try {
@@ -138,14 +141,16 @@ const getAllSchedulerEvents = () => {
 
 const updateSchedulerEvent = (id, event) => {
     try {
-        const IncaricatiId = event.IncaricatiId ? event.IncaricatiId.join(',') : null;
+        // Assicuriamoci che IncaricatiId sia un array o null
+        const IncaricatiId = Array.isArray(event.IncaricatiId) ? event.IncaricatiId.join(',') : null;
+
         const query = `UPDATE SchedulerEvents SET Subject = ?, StartTime = ?, EndTime = ?, IsAllDay = ?, CommessaId = ?, IncaricatiId = ? WHERE EventID = ?`;
         const stmt = db.prepare(query);
         stmt.run(
             event.Subject, 
             event.StartTime, 
             event.EndTime, 
-            event.IsAllDay ? 1 : 0,
+            event.IsAllDay ? 1 : 0, // Convert boolean to integer
             event.CommessaId,
             IncaricatiId,
             id

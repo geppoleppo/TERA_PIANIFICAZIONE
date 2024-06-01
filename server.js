@@ -107,6 +107,7 @@ app.post('/gantttasks', (req, res) => {
     }
 });
 
+// Route for updating Gantt tasks
 app.put('/gantttasks/:id', (req, res) => {
     try {
         db.updateGanttTask(req.params.id, req.body);
@@ -115,6 +116,7 @@ app.put('/gantttasks/:id', (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+  
 
 app.delete('/gantttasks/:id', (req, res) => {
     try {
@@ -146,7 +148,6 @@ app.post('/schedulerevents', (req, res) => {
 });
 
 app.put('/schedulerevents/:id', (req, res) => {
-    console.log('Received update data:', req.body); // Log per debug
     try {
         db.updateSchedulerEvent(req.params.id, req.body);
         res.sendStatus(200);
