@@ -1,7 +1,6 @@
 const Database = require('better-sqlite3');
 const db = new Database('TERA_GESTIONALE_DB.db', { verbose: console.log });
 
-// Creazione delle tabelle se non esistono
 const createTables = () => {
     const queryCollaboratori = `
         CREATE TABLE IF NOT EXISTS Collaboratori (
@@ -42,7 +41,6 @@ const createTables = () => {
         CommessaId INTEGER,
         IncaricatiId TEXT
     );
-    
     `;
 
     db.prepare(queryCollaboratori).run();
@@ -53,7 +51,6 @@ const createTables = () => {
 
 createTables();
 
-// Funzione di debug per verificare la creazione delle tabelle
 const verifyTables = () => {
     try {
         const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
@@ -65,7 +62,6 @@ const verifyTables = () => {
 
 verifyTables();
 
-// Funzioni per GanttTasks
 const addGanttTask = (task) => {
     try {
         const query = `INSERT INTO GanttTasks (TaskID, TaskName, StartDate, EndDate, Predecessor, Progress, CommessaId) VALUES (?, ?, ?, ?, ?, ?, ?)`;
@@ -87,161 +83,6 @@ const getAllGanttTasks = () => {
         throw new Error("Failed to retrieve Gantt tasks.");
     }
 };
-
-// Funzioni per SchedulerEvents
-const addSchedulerEvent = (event) => {
-    try {
-        // Convert array values to a format suitable for SQLite
-        const IncaricatiId = event.IncaricatiId ? event.IncaricatiId.join(',') : null;
-        
-        const query = `INSERT INTO SchedulerEvents (Subject, StartTime, EndTime, IsAllDay, CommessaId, IncaricatiId) VALUES (?, ?, ?, ?, ?, ?)`;
-        const stmt = db.prepare(query);
-        const info = stmt.run(
-            event.Subject, 
-            event.StartTime, 
-            event.EndTime, 
-            event.IsAllDay ? 1 : 0, // Convert boolean to integer
-            event.CommessaId,
-            IncaricatiId
-        );
-        return info.lastInsertRowid;
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to add scheduler event.");
-    }
-};
-
-
-const updateSchedulerEvent = (id, event) => {
-    try {
-        // Convert array values to a format suitable for SQLite
-        const IncaricatiId = event.IncaricatiId ? event.IncaricatiId.join(',') : null;
-
-        const query = `UPDATE SchedulerEvents SET Subject = ?, StartTime = ?, EndTime = ?, IsAllDay = ?, CommessaId = ?, IncaricatiId = ? WHERE EventID = ?`;
-        const stmt = db.prepare(query);
-        stmt.run(
-            event.Subject, 
-            event.StartTime, 
-            event.EndTime, 
-            event.IsAllDay ? 1 : 0, // Convert boolean to integer
-            event.CommessaId,
-            IncaricatiId,
-            id
-        );
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update scheduler event.");
-    }
-};
-
-
-
-const getAllSchedulerEvents = () => {
-    try {
-        const query = `SELECT * FROM SchedulerEvents`;
-        return db.prepare(query).all();
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve scheduler events.");
-    }
-};
-
-// Funzione per aggiungere un nuovo collaboratore
-const addCollaboratore = (nome, colore, immagine) => {
-    try {
-        const query = `INSERT INTO Collaboratori (Nome, Colore, Immagine) VALUES (?, ?, ?)`;
-        const stmt = db.prepare(query);
-        const info = stmt.run(nome, colore, immagine);
-        return info.lastInsertRowid;
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to add collaborator.");
-    }
-};
-
-// Funzione per aggiungere una nuova commessa
-const addCommessa = (descrizione, colore) => {
-    try {
-        const query = `INSERT INTO Commesse (Descrizione, Colore) VALUES (?, ?)`;
-        const stmt = db.prepare(query);
-        const info = stmt.run(descrizione, colore);
-        return info.lastInsertRowid;
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to add project.");
-    }
-};
-
-// Funzione per ottenere tutti i collaboratori
-const getAllCollaboratori = () => {
-    try {
-        const query = `SELECT * FROM Collaboratori`;
-        return db.prepare(query).all();
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve collaborators.");
-    }
-};
-
-// Funzione per ottenere tutte le commesse
-const getAllCommesse = () => {
-    try {
-        const query = `SELECT * FROM Commesse`;
-        return db.prepare(query).all();
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve projects.");
-    }
-};
-
-// Funzione per aggiornare un collaboratore
-const updateCollaboratore = (id, nome, colore, immagine) => {
-    try {
-        const query = `UPDATE Collaboratori SET Nome = ?, Colore = ?, Immagine = ? WHERE Id = ?`;
-        const stmt = db.prepare(query);
-        stmt.run(nome, colore, immagine, id);
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update collaborator.");
-    }
-};
-
-// Funzione per aggiornare una commessa
-const updateCommessa = (id, descrizione, colore) => {
-    try {
-        const query = `UPDATE Commesse SET Descrizione = ?, Colore = ? WHERE Id = ?`;
-        const stmt = db.prepare(query);
-        stmt.run(descrizione, colore, id);
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update project.");
-    }
-};
-
-// Funzione per eliminare un collaboratore
-const deleteCollaboratore = (id) => {
-    try {
-        const query = `DELETE FROM Collaboratori WHERE Id = ?`;
-        const stmt = db.prepare(query);
-        stmt.run(id);
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to delete collaborator.");
-    }
-};
-
-// Funzione per eliminare una commessa
-const deleteCommessa = (id) => {
-    try {
-        const query = `DELETE FROM Commesse WHERE Id = ?`;
-        const stmt = db.prepare(query);
-        stmt.run(id);
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to delete project.");
-    }
-};
-
 
 const updateGanttTask = (id, task) => {
     try {
@@ -265,6 +106,55 @@ const deleteGanttTask = (id) => {
     }
 };
 
+const addSchedulerEvent = (event) => {
+    try {
+        const IncaricatiId = event.IncaricatiId ? event.IncaricatiId.join(',') : null;
+        const query = `INSERT INTO SchedulerEvents (Subject, StartTime, EndTime, IsAllDay, CommessaId, IncaricatiId) VALUES (?, ?, ?, ?, ?, ?)`;
+        const stmt = db.prepare(query);
+        const info = stmt.run(
+            event.Subject, 
+            event.StartTime, 
+            event.EndTime, 
+            event.IsAllDay ? 1 : 0,
+            event.CommessaId,
+            IncaricatiId
+        );
+        return info.lastInsertRowid;
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to add scheduler event.");
+    }
+};
+
+const getAllSchedulerEvents = () => {
+    try {
+        const query = `SELECT * FROM SchedulerEvents`;
+        return db.prepare(query).all();
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to retrieve scheduler events.");
+    }
+};
+
+const updateSchedulerEvent = (id, event) => {
+    try {
+        const IncaricatiId = event.IncaricatiId ? event.IncaricatiId.join(',') : null;
+        const query = `UPDATE SchedulerEvents SET Subject = ?, StartTime = ?, EndTime = ?, IsAllDay = ?, CommessaId = ?, IncaricatiId = ? WHERE EventID = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(
+            event.Subject, 
+            event.StartTime, 
+            event.EndTime, 
+            event.IsAllDay ? 1 : 0,
+            event.CommessaId,
+            IncaricatiId,
+            id
+        );
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to update scheduler event.");
+    }
+};
 
 const deleteSchedulerEvent = (id) => {
     try {
@@ -274,6 +164,94 @@ const deleteSchedulerEvent = (id) => {
     } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to delete scheduler event.");
+    }
+};
+
+const addCollaboratore = (nome, colore, immagine) => {
+    try {
+        const query = `INSERT INTO Collaboratori (Nome, Colore, Immagine) VALUES (?, ?, ?)`;
+        const stmt = db.prepare(query);
+        const info = stmt.run(nome, colore, immagine);
+        return info.lastInsertRowid;
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to add collaborator.");
+    }
+};
+
+const getAllCollaboratori = () => {
+    try {
+        const query = `SELECT * FROM Collaboratori`;
+        return db.prepare(query).all();
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to retrieve collaborators.");
+    }
+};
+
+const updateCollaboratore = (id, nome, colore, immagine) => {
+    try {
+        const query = `UPDATE Collaboratori SET Nome = ?, Colore = ?, Immagine = ? WHERE Id = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(nome, colore, immagine, id);
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to update collaborator.");
+    }
+};
+
+const deleteCollaboratore = (id) => {
+    try {
+        const query = `DELETE FROM Collaboratori WHERE Id = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(id);
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to delete collaborator.");
+    }
+};
+
+const addCommessa = (descrizione, colore) => {
+    try {
+        const query = `INSERT INTO Commesse (Descrizione, Colore) VALUES (?, ?)`;
+        const stmt = db.prepare(query);
+        const info = stmt.run(descrizione, colore);
+        return info.lastInsertRowid;
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to add project.");
+    }
+};
+
+const getAllCommesse = () => {
+    try {
+        const query = `SELECT * FROM Commesse`;
+        return db.prepare(query).all();
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to retrieve projects.");
+    }
+};
+
+const updateCommessa = (id, descrizione, colore) => {
+    try {
+        const query = `UPDATE Commesse SET Descrizione = ?, Colore = ? WHERE Id = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(descrizione, colore, id);
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to update project.");
+    }
+};
+
+const deleteCommessa = (id) => {
+    try {
+        const query = `DELETE FROM Commesse WHERE Id = ?`;
+        const stmt = db.prepare(query);
+        stmt.run(id);
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to delete project.");
     }
 };
 

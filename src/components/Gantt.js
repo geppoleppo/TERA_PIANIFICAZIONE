@@ -2,21 +2,13 @@ import React from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD } from '@syncfusion/ej2-react-gantt';
 import axios from 'axios';
 
-const Gantt = ({ data, onDataChange }) => {
-  console.log('Gantt data received:', data);
-
-  const getCommessaColor = (commessaId) => {
-   
-    const color = '#000000';
-    
-    return color;
-  };
-
-
+const Gantt = ({ data, onDataChange, commesse }) => {
+  console.log('Gantt data received:', data); // Log dei dati ricevuti
 
   const taskbarTemplate = (props) => {
-    const commessaColor = getCommessaColor(props.CommessaId);
-    console.log(`taskbarTemplate: TaskID=${props.TaskID}, CommessaId=${props.CommessaId}, Color=${commessaColor}`);
+   // const commessa = commesse.find(c => c.Id === props.CommessaId);
+    const commessaColor = '#000000';
+    console.log(`taskbarTemplate: TaskID=${props.TaskID}, CommessaId=${props.CommessaId}, Color=${commessaColor}`); // Log per debug
     return (
       <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
         {props.TaskName}
@@ -29,7 +21,7 @@ const Gantt = ({ data, onDataChange }) => {
       await axios.post('http://localhost:3001/gantttasks', task);
       console.log('Task saved:', task);
     } catch (error) {
-      if (error.response && error.response.status === 409) {
+      if (error.response && error.response.status === 409) { // Conflict error for duplicate TaskID
         try {
           await axios.put(`http://localhost:3001/gantttasks/${task.TaskID}`, task);
           console.log('Task updated:', task);
