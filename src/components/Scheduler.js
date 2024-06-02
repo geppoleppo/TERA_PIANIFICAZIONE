@@ -173,63 +173,7 @@ const Scheduler = ({ data, onDataChange }) => {
     label: commessa.Descrizione
   }))];
 
-  const onPopupOpen = (args) => {
-    if (args.type === 'Editor') {
-      if (!args.element.querySelector('.custom-field-row')) {
-        let row = createElement('div', { className: 'custom-field-row' });
-        let formElement = args.element.querySelector('.e-schedule-form');
-        formElement.firstChild.insertBefore(row, args.element.querySelector('.e-title-location-row'));
 
-        // Commessa dropdown
-        let commessaContainer = createElement('div', { className: 'custom-field-container' });
-        let commessaInput = createElement('input', {
-          className: 'e-field', attrs: { name: 'CommessaId' }
-        });
-        commessaContainer.appendChild(commessaInput);
-        row.appendChild(commessaContainer);
-        let commessaDropDown = new DropDownList({
-          dataSource: commesse,
-          fields: { text: 'Descrizione', value: 'Id' },
-          value: args.data.CommessaId,
-          floatLabelType: 'Always', placeholder: 'Commessa'
-        });
-        commessaDropDown.appendTo(commessaInput);
-
-        // Responsabile dropdown
-        let responsabileContainer = createElement('div', { className: 'custom-field-container' });
-        let responsabileInput = createElement('input', {
-          className: 'e-field', attrs: { name: 'ResponsabileId' }
-        });
-        responsabileContainer.appendChild(responsabileInput);
-        row.appendChild(responsabileContainer);
-        let responsabileDropDown = new DropDownList({
-          dataSource: resources,
-          fields: { text: 'Nome', value: 'Id' },
-          value: args.data.ResponsabileId,
-          floatLabelType: 'Always', placeholder: 'Responsabile'
-        });
-        responsabileDropDown.appendTo(responsabileInput);
-
-        // Incaricati dropdown (multi-select)
-        let incaricatiContainer = createElement('div', { className: 'custom-field-container' });
-        let incaricatiInput = createElement('input', {
-          className: 'e-field', attrs: { name: 'IncaricatiIds' }
-        });
-        incaricatiContainer.appendChild(incaricatiInput);
-        row.appendChild(incaricatiContainer);
-        let incaricatiDropDown = new DropDownList({
-          dataSource: resources,
-          fields: { text: 'Nome', value: 'Id' },
-          value: args.data.IncaricatiIds,
-          floatLabelType: 'Always', placeholder: 'Incaricati',
-          mode: 'CheckBox',
-          showSelectAll: true,
-          showDropDownIcon: true
-        });
-        incaricatiDropDown.appendTo(incaricatiInput);
-      }
-    }
-  };
 
   return (
     <div>
@@ -267,12 +211,12 @@ const Scheduler = ({ data, onDataChange }) => {
               startTime: { title: 'From', name: 'StartTime' },
               endTime: { title: 'To', name: 'EndTime' },
               color: { name: 'Color' },
-              conferenceId: { title: 'Attendees', name: 'ConferenceId', validation: { required: true } },
+              IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
             template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
           }}
-          popupOpen={onPopupOpen}
+       
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
@@ -285,7 +229,7 @@ const Scheduler = ({ data, onDataChange }) => {
           </ViewsDirective>
           <ResourcesDirective>
             <ResourceDirective
-              field='ConferenceId'
+              field='IncaricatoId'
               title='Attendees'
               name='Conferences'
               allowMultiple={true}
