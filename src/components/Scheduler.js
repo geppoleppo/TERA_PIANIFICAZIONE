@@ -99,14 +99,17 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const onActionComplete = (args) => {
+    console.log('Action Complete:', args);
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
             event.Color = commessaColors[event.CommessaId] || '#000000';
+            console.log(`Updated Event: ${JSON.stringify(event)}`);
           });
         } else {
           args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
+          console.log(`Updated Event: ${JSON.stringify(args.data)}`);
         }
       }
       onDataChange(args);
@@ -223,7 +226,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
           <ResourcesDirective>
             <ResourceDirective
               field='IncaricatoId'
-              title='Attendees'
+              title='Incaricato'
               name='Conferences'
               allowMultiple={true}
               dataSource={getFilteredResources()}

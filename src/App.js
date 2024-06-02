@@ -114,9 +114,29 @@ const App = () => {
     setScheduleData(finalScheduleData);
   };
 
+  const onDataChange = (args) => {
+    console.log('Data Change:', args);
+    if (args.requestType === 'eventChanged') {
+      if (Array.isArray(args.data)) {
+        args.data.forEach(event => {
+          if (!event.CommessaId && event.PreviousData) {
+            event.CommessaId = event.PreviousData.CommessaId;
+            console.log(`Reassigned CommessaId for Event: ${JSON.stringify(event)}`);
+          }
+        });
+      } else {
+        if (!args.data.CommessaId && args.data.PreviousData) {
+          args.data.CommessaId = args.data.PreviousData.CommessaId;
+          console.log(`Reassigned CommessaId for Event: ${JSON.stringify(args.data)}`);
+        }
+      }
+    }
+    handleSchedulerDataChange(args);
+  };
+
   return (
     <div className="app-container">
-      <Scheduler data={scheduleData} onDataChange={handleSchedulerDataChange} commessaColors={commessaColors} />
+      <Scheduler data={scheduleData} onDataChange={onDataChange} commessaColors={commessaColors} />
       <Gantt data={ganttData} onDataChange={handleGanttDataChange} commessaColors={commessaColors} />
     </div>
   );
