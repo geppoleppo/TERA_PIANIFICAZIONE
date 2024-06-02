@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { createElement } from '@syncfusion/ej2-base';
-import { DropDownList } from '@syncfusion/ej2-dropdowns';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import axios from 'axios';
-import '../index.css';  // Ensure this is correctly imported
+import '../index.css';
 
 // Load the required CLDR data
 import { loadCldr, L10n } from '@syncfusion/ej2-base';
@@ -36,7 +34,7 @@ L10n.load({
   }
 });
 
-const Scheduler = ({ data, onDataChange }) => {
+const Scheduler = ({ data, onDataChange, commessaColors }) => {
   const [resources, setResources] = useState([]);
   const [commesse, setCommesse] = useState([]);
   const [selectedResources, setSelectedResources] = useState([]);
@@ -100,17 +98,19 @@ const Scheduler = ({ data, onDataChange }) => {
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
 
-  const monthEventTemplate = (props) => {
-    const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
-    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
-    const subjectText = props.Subject ? props.Subject : '';
-    const color = props.Color ? props.Color : '#000000'; // Default to black if no color
-
-    return (
-      <div className="template-wrap" style={{ backgroundColor: color }}>
-        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
-      </div>
-    );
+  const onActionComplete = (args) => {
+    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
+      if (args.data) {
+        if (Array.isArray(args.data)) {
+          args.data.forEach(event => {
+            event.Color = commessaColors[event.CommessaId] || '#000000';
+          });
+        } else {
+          args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
+        }
+      }
+      onDataChange(args);
+    }
   };
 
   const resourceHeaderTemplate = (props) => {
@@ -136,21 +136,17 @@ const Scheduler = ({ data, onDataChange }) => {
     );
   };
 
-  const onActionComplete = (args) => {
-    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        if (Array.isArray(args.data)) {
-          args.data.forEach(event => {
-            const commessa = commesse.find(commessa => commessa.Id === event.CommessaId);
-            event.Color = commessa ? commessa.Colore : '#000000';
-          });
-        } else {
-          const commessa = commesse.find(commessa => commessa.Id === args.data.CommessaId);
-          args.data.Color = commessa ? commessa.Colore : '#000000';
-        }
-      }
-      onDataChange(args);
-    }
+  const monthEventTemplate = (props) => {
+    const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
+    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
+    const subjectText = props.Subject ? props.Subject : '';
+    const color = commessaColors[props.CommessaId] || '#000000'; // Use color from state
+
+    return (
+      <div className="template-wrap" style={{ backgroundColor: color }}>
+        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
+      </div>
+    );
   };
 
   const handleViewChange = (args) => {
@@ -172,8 +168,6 @@ const Scheduler = ({ data, onDataChange }) => {
     value: commessa.Id,
     label: commessa.Descrizione
   }))];
-
-
 
   return (
     <div>
@@ -216,7 +210,6 @@ const Scheduler = ({ data, onDataChange }) => {
             },
             template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
           }}
-       
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
