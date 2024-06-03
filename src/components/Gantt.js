@@ -7,8 +7,6 @@ const Gantt = ({ data, onDataChange, commessaColors }) => {
     console.log('Gantt component mounted');
     console.log('commessaColors in Gantt:', commessaColors); // Log the commessaColors object
     console.log('data in Gantt:', data); // Log the data passed to Gantt
-
-    
   }, [data, commessaColors]);
 
   const getCommessaColor = (commessaId) => {

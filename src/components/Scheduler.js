@@ -104,10 +104,18 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
       if (args.data) {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
+            if (!event.CommessaId && event.PreviousData) {
+              event.CommessaId = event.PreviousData.CommessaId;
+              console.log(`Reassigned CommessaId for Event: ${JSON.stringify(event)}`);
+            }
             event.Color = commessaColors[event.CommessaId] || '#000000';
             console.log(`Updated Event: ${JSON.stringify(event)}`);
           });
         } else {
+          if (!args.data.CommessaId && args.data.PreviousData) {
+            args.data.CommessaId = args.data.PreviousData.CommessaId;
+            console.log(`Reassigned CommessaId for Event: ${JSON.stringify(args.data)}`);
+          }
           args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
           console.log(`Updated Event: ${JSON.stringify(args.data)}`);
         }
