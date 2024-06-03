@@ -216,7 +216,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
         <ScheduleComponent
           cssClass='group-editing'
           width='100%'
-          height='550px'
+          height='650px'
           selectedDate={new Date()}
           currentView={currentView} // Set default view to 'Month'
           locale='it'  // Set locale to Italian
@@ -235,6 +235,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
             },
             template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
           }}
+          rowAutoHeight={true} // Enable row auto height
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
@@ -243,7 +244,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
             <ViewDirective option='Day' allowVirtualScrolling={true} />
             <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
             <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
-            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 6 mesi */}
+            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 3 mesi */}
           </ViewsDirective>
           <ResourcesDirective>
             <ResourceDirective
