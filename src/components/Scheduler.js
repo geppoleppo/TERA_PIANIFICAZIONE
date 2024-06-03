@@ -243,7 +243,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
             <ViewDirective option='Day' allowVirtualScrolling={true} />
             <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
             <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
-            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 3 mesi */}
+            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 6 mesi */}
           </ViewsDirective>
           <ResourcesDirective>
             <ResourceDirective
