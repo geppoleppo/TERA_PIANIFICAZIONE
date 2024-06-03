@@ -9,15 +9,8 @@ const Gantt = ({ data, onDataChange, commessaColors }) => {
     console.log('data in Gantt:', data); // Log the data passed to Gantt
   }, [data, commessaColors]);
 
-  const getCommessaColor = (commessaId) => {
-    const color = commessaColors[commessaId] || '#000000'; // Default to black if not found
-    console.log(`getCommessaColor: CommessaId=${commessaId}, Color=${color}`);
-    console.log(`commessaColors[${commessaId}]:`, commessaColors[commessaId]); // Log specifico per commessaColors[commessaId]
-    return color;
-  };
-
   const taskbarTemplate = (props) => {
-    const commessaColor = getCommessaColor(props.CommessaId);
+    const commessaColor = props.Color;
     console.log(`taskbarTemplate: TaskID=${props.TaskID}, CommessaId=${props.CommessaId}, Color=${commessaColor}`); // Log per debug
     return (
       <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
@@ -38,7 +31,7 @@ const Gantt = ({ data, onDataChange, commessaColors }) => {
   return (
     <GanttComponent
       dataSource={data}
-      taskFields={{ id: 'TaskID', name: 'TaskName', startDate: 'StartDate', endDate: 'EndDate', dependency: 'Predecessor', CommessaId: 'CommessaId' }}
+      taskFields={{ id: 'TaskID', name: 'TaskName', startDate: 'StartDate', endDate: 'EndDate', dependency: 'Predecessor', CommessaId: 'CommessaId', color: 'Color' }}
       height='650px'
       allowSelection={true}
       allowSorting={true}
@@ -67,6 +60,7 @@ const Gantt = ({ data, onDataChange, commessaColors }) => {
         <ColumnDirective field='EndDate' headerText='Data Fine' width='150' />
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' />
         <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' />
+        <ColumnDirective field='Color' visible={false} />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD]} />
     </GanttComponent>

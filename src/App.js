@@ -59,7 +59,7 @@ const App = () => {
       EndDate: event.EndTime,
       Predecessor: event.Predecessor || '',
       CommessaId: event.CommessaId,
-      Color: commessaColors[event.CommessaId] || '#000000'
+      Color: event.Color
     }));
     console.log('Updated Gantt Data:', updatedGanttData);
     setGanttData(updatedGanttData);
@@ -94,7 +94,7 @@ const App = () => {
       EndTime: task.EndDate,
       Predecessor: task.Predecessor,
       CommessaId: task.CommessaId,
-      Color: commessaColors[task.CommessaId] || '#000000'
+      Color: task.Color
     }));
 
     console.log('Updated Schedule Data from Gantt:', updatedScheduleData);
