@@ -103,9 +103,11 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
       if (args.data) {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
+            event.CommessaId = event.CommessaId || event.CommessaId; // Assicurati che CommessaId non venga perso
             event.Color = commessaColors[event.CommessaId] || '#000000';
           });
         } else {
+          args.data.CommessaId = args.data.CommessaId || args.data.CommessaId; // Assicurati che CommessaId non venga perso
           args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
         }
       }
@@ -135,19 +137,27 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
       </div>
     );
   };
-
+  
   const monthEventTemplate = (props) => {
-    const commessa = commesse.find(commessa => commessa.Id === props.CommessaId);
+    console.log('Event props:', props);
+    console.log('Commesse array:', commesse);
+
+    // Controlla se props.CommessaId è un array o un singolo valore e gestiscilo di conseguenza
+    const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
+    const commessa = commesse.find(commessa => commessa.Id === commessaId);
+
     const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
     const subjectText = props.Subject ? props.Subject : '';
-    const color = commessaColors[props.CommessaId] || '#000000'; // Use color from state
+    const color = commessaColors[commessaId] || '#000000'; // Use color from state
 
     return (
       <div className="template-wrap" style={{ backgroundColor: color }}>
         <div className="subject">{`${commessaText} - ${subjectText}`}</div>
       </div>
     );
-  };
+};
+
+
 
   const handleViewChange = (args) => {
     setCurrentView(args.currentView);
