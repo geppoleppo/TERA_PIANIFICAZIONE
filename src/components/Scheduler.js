@@ -39,7 +39,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   const [commesse, setCommesse] = useState([]);
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
-  const [currentView, setCurrentView] = useState('Day');
+  const [currentView, setCurrentView] = useState('Month'); // Set default view to 'Month'
 
   useEffect(() => {
     fetchResources();
@@ -99,20 +99,37 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const onActionComplete = (args) => {
+    console.log('Action Start: ', args);
+
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
-            event.CommessaId = event.CommessaId || event.CommessaId; // Assicurati che CommessaId non venga perso
+            if (args.requestType === 'eventCreated') {
+              // Quando un evento viene creato
+              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId; // Assicurati che CommessaId non venga perso
+            } else if (args.requestType === 'eventChanged') {
+              // Quando un evento viene trascinato o modificato
+              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId; // Assicurati che CommessaId non venga perso
+            }
             event.Color = commessaColors[event.CommessaId] || '#000000';
+            console.log('Event After Change: ', event);
           });
         } else {
-          args.data.CommessaId = args.data.CommessaId || args.data.CommessaId; // Assicurati che CommessaId non venga perso
+          if (args.requestType === 'eventCreated') {
+            // Quando un evento viene creato
+            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId; // Assicurati che CommessaId non venga perso
+          } else if (args.requestType === 'eventChanged') {
+            // Quando un evento viene trascinato o modificato
+            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId; // Assicurati che CommessaId non venga perso
+          }
           args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
+          console.log('Event After Change: ', args.data);
         }
       }
       onDataChange(args);
     }
+    console.log('Action End: ', args);
   };
 
   const resourceHeaderTemplate = (props) => {
@@ -137,7 +154,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
       </div>
     );
   };
-  
+
   const monthEventTemplate = (props) => {
     console.log('Event props:', props);
     console.log('Commesse array:', commesse);
@@ -155,9 +172,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
         <div className="subject">{`${commessaText} - ${subjectText}`}</div>
       </div>
     );
-};
-
-
+  };
 
   const handleViewChange = (args) => {
     setCurrentView(args.currentView);
@@ -166,7 +181,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   const group = {
     allowGroupEdit: true, 
     byGroupID: false,
-    resources: currentView === 'Month' ? [] : ['Conferences', 'Commesse']
+    resources: ['Conferences', 'Commesse']
   };
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
@@ -203,7 +218,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
           width='100%'
           height='550px'
           selectedDate={new Date()}
-          currentView={currentView}
+          currentView={currentView} // Set default view to 'Month'
           locale='it'  // Set locale to Italian
           dateFormat='dd/MM/yyyy'  // Set date format
           resourceHeaderTemplate={resourceHeaderTemplate}
