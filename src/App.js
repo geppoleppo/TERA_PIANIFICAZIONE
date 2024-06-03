@@ -7,6 +7,7 @@ const App = () => {
   const [scheduleData, setScheduleData] = useState([]);
   const [ganttData, setGanttData] = useState([]);
   const [commessaColors, setCommessaColors] = useState({});
+  const [commesse, setCommesse] = useState([]);
 
   useEffect(() => {
     const fetchCommesse = async () => {
@@ -16,6 +17,7 @@ const App = () => {
           acc[commessa.Id] = commessa.Colore;
           return acc;
         }, {});
+        setCommesse(response.data);
         setCommessaColors(colors);
         console.log('commessaColors:', colors); // Log the commessaColors object
       } catch (error) {
@@ -52,15 +54,19 @@ const App = () => {
     console.log('Updated Schedule Data:', updatedScheduleData);
     setScheduleData(updatedScheduleData);
 
-    const updatedGanttData = updatedScheduleData.map(event => ({
-      TaskID: event.Id,
-      TaskName: event.Subject,
-      StartDate: event.StartTime,
-      EndDate: event.EndTime,
-      Predecessor: event.Predecessor || '',
-      CommessaId: event.CommessaId,
-      Color: event.Color
-    }));
+    const updatedGanttData = updatedScheduleData.map(event => {
+      const commessa = commesse.find(c => c.Id === event.CommessaId);
+      return {
+        TaskID: event.Id,
+        TaskName: event.Subject,
+        StartDate: event.StartTime,
+        EndDate: event.EndTime,
+        Predecessor: event.Predecessor || '',
+        CommessaId: event.CommessaId,
+        CommessaName: commessa ? commessa.Descrizione : 'N/A',
+        Color: event.Color
+      };
+    });
     console.log('Updated Gantt Data:', updatedGanttData);
     setGanttData(updatedGanttData);
   };
@@ -87,15 +93,19 @@ const App = () => {
     console.log('Updated Gantt Data after change:', updatedGanttData);
     setGanttData(updatedGanttData);
 
-    const updatedScheduleData = updatedGanttData.map(task => ({
-      Id: task.TaskID,
-      Subject: task.TaskName,
-      StartTime: task.StartDate,
-      EndTime: task.EndDate,
-      Predecessor: task.Predecessor,
-      CommessaId: task.CommessaId,
-      Color: task.Color
-    }));
+    const updatedScheduleData = updatedGanttData.map(task => {
+      const commessa = commesse.find(c => c.Id === task.CommessaId);
+      return {
+        Id: task.TaskID,
+        Subject: task.TaskName,
+        StartTime: task.StartDate,
+        EndTime: task.EndDate,
+        Predecessor: task.Predecessor,
+        CommessaId: task.CommessaId,
+        CommessaName: commessa ? commessa.Descrizione : 'N/A',
+        Color: task.Color
+      };
+    });
 
     console.log('Updated Schedule Data from Gantt:', updatedScheduleData);
 
@@ -117,7 +127,7 @@ const App = () => {
   return (
     <div className="app-container">
       <Scheduler data={scheduleData} onDataChange={handleSchedulerDataChange} commessaColors={commessaColors} />
-      <Gantt data={ganttData} onDataChange={handleGanttDataChange} commessaColors={commessaColors} />
+      <Gantt data={ganttData} onDataChange={handleGanttDataChange} commessaColors={commessaColors} commesse={commesse} />
     </div>
   );
 };

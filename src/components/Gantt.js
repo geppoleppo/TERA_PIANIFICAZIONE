@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ data, onDataChange, commessaColors }) => {
+const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
 
   useEffect(() => {
     console.log('Gantt component mounted');
@@ -28,14 +28,25 @@ const Gantt = ({ data, onDataChange, commessaColors }) => {
     }
   };
 
+  const taskFields = {
+    id: 'TaskID',
+    name: 'TaskName',
+    startDate: 'StartDate',
+    endDate: 'EndDate',
+    dependency: 'Predecessor',
+    duration: 'Duration',
+    color: 'Color',
+    CommessaId: 'CommessaId'
+  };
+
   return (
     <GanttComponent
       dataSource={data}
-      taskFields={{ id: 'TaskID', name: 'TaskName', startDate: 'StartDate', endDate: 'EndDate', dependency: 'Predecessor', CommessaId: 'CommessaId', color: 'Color' }}
+      taskFields={taskFields}
       height='650px'
       allowSelection={true}
       allowSorting={true}
-      editSettings={{ allowEditing: true, allowAdding: true, allowDeleting: true, allowTaskbarEditing: true }}
+      editSettings={{ allowEditing: true, allowAdding: true, allowDeleting: true, allowTaskbarEditing: true, mode: 'Dialog' }}
       taskbarTemplate={taskbarTemplate}
       timelineSettings={{
         timelineViewMode: 'Month',
@@ -54,13 +65,14 @@ const Gantt = ({ data, onDataChange, commessaColors }) => {
       allowRowDragAndDrop={true}
     >
       <ColumnsDirective>
-        <ColumnDirective field='TaskID' visible={false} />
-        <ColumnDirective field='TaskName' headerText='TASK' width='250' />
-        <ColumnDirective field='StartDate' headerText='Data Inizio' width='150'  visible={false} />
-        <ColumnDirective field='EndDate' headerText='Data Fine' width='150'  visible={false} />
+      <ColumnDirective field='TaskID' visible={false} />
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150'  visible={false} />
         <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150'  visible={false} />
         <ColumnDirective field='Color' visible={false} />
+        <ColumnDirective field='CommessaName' headerText='Commessa' width='250' />
+        <ColumnDirective field='TaskName' headerText='Task' width='250' />
+        <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' />
+        <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD]} />
     </GanttComponent>
