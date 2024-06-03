@@ -55,11 +55,11 @@ const Gantt = ({ data, onDataChange, commessaColors }) => {
     >
       <ColumnsDirective>
         <ColumnDirective field='TaskID' visible={false} />
-        <ColumnDirective field='TaskName' headerText='Nome Compito' width='250' />
-        <ColumnDirective field='StartDate' headerText='Data Inizio' width='150' />
-        <ColumnDirective field='EndDate' headerText='Data Fine' width='150' />
-        <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' />
-        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' />
+        <ColumnDirective field='TaskName' headerText='TASK' width='250' />
+        <ColumnDirective field='StartDate' headerText='Data Inizio' width='150'  visible={false} />
+        <ColumnDirective field='EndDate' headerText='Data Fine' width='150'  visible={false} />
+        <ColumnDirective field='Predecessor' headerText='Predecessore' width='150'  visible={false} />
+        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150'  visible={false} />
         <ColumnDirective field='Color' visible={false} />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD]} />
