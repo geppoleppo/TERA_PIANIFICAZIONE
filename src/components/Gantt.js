@@ -15,25 +15,32 @@ const Gantt = ({ data, onDataChange, commessaColors }) => {
     console.log(`commessaColors[${commessaId}]:`, commessaColors[commessaId]); // Log specifico per commessaColors[commessaId]
     return color;
   };
-
   const taskbarTemplate = (props) => {
-    const commessaColor = getCommessaColor(props.CommessaId);
-    console.log(`taskbarTemplate: TaskID=${props.TaskID}, CommessaId=${props.CommessaId}, Color=${commessaColor}`); // Log per debug
     return (
-      <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
-        {props.TaskName}
-      </div>
+        <div style={{ backgroundColor: props.Color, width: '100%', height: '100%' }}>
+            {props.TaskName}
+        </div>
     );
-  };
+};
 
-  const onActionComplete = (args) => {
+const onActionComplete = (args) => {
+    console.log('Action completed with args:', args);
     if (args.requestType === 'save' || args.requestType === 'delete') {
-      onDataChange({
-        requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
-        data: args.data
-      });
+        let updatedEvents = [...data];
+        args.data.forEach(event => {
+            const updatedEvent = {
+                ...event,
+                Color: commessaColors[event.CommessaId] || '#000000'
+            };
+            if (args.requestType === 'save') {
+                updatedEvents = updatedEvents.map(e => e.TaskID === event.TaskID ? updatedEvent : e);
+            } else {
+                updatedEvents = updatedEvents.filter(e => e.TaskID !== event.TaskID);
+            }
+        });
+        onDataChange(updatedEvents);
     }
-  };
+};
 
   return (
     <GanttComponent

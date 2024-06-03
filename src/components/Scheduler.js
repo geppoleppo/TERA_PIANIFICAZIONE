@@ -99,30 +99,27 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const onActionComplete = (args) => {
-    console.log('Action Complete:', args);
+    console.log('Azione completata:', args);
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        if (Array.isArray(args.data)) {
-          args.data.forEach(event => {
-            if (!event.CommessaId && event.PreviousData) {
-              event.CommessaId = event.PreviousData.CommessaId;
-              console.log(`Reassigned CommessaId for Event: ${JSON.stringify(event)}`);
-            }
-            event.Color = commessaColors[event.CommessaId] || '#000000';
-            console.log(`Updated Event: ${JSON.stringify(event)}`);
-          });
-        } else {
-          if (!args.data.CommessaId && args.data.PreviousData) {
-            args.data.CommessaId = args.data.PreviousData.CommessaId;
-            console.log(`Reassigned CommessaId for Event: ${JSON.stringify(args.data)}`);
-          }
-          args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
-          console.log(`Updated Event: ${JSON.stringify(args.data)}`);
+        let updatedEvents = [...data];
+        if (['eventCreated', 'eventChanged'].includes(args.requestType)) {
+            args.data.forEach(event => {
+                const updatedEvent = {
+                    ...event,
+                    Color: commessaColors[event.CommessaId] || '#000000'
+                };
+                if (args.requestType === 'eventCreated') {
+                    updatedEvents.push(updatedEvent);
+                } else {
+                    updatedEvents = updatedEvents.map(e => e.Id === event.Id ? updatedEvent : e);
+                }
+            });
+        } else if (args.requestType === 'eventRemoved') {
+            updatedEvents = updatedEvents.filter(event => !args.data.some(deletedEvent => deletedEvent.Id === event.Id));
         }
-      }
-      onDataChange(args);
+        onDataChange(updatedEvents);
     }
-  };
+};
 
   const resourceHeaderTemplate = (props) => {
     const commessa = props.resourceData.Descrizione;
@@ -199,62 +196,62 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
         />
       </div>
       <div className="scroll-container"> {/* Aggiungi la classe per lo scorrimento */}
-        <ScheduleComponent
-          cssClass='group-editing'
-          width='100%'
-          height='550px'
-          selectedDate={new Date()}
-          currentView={currentView}
-          locale='it'  // Set locale to Italian
-          dateFormat='dd/MM/yyyy'  // Set date format
-          resourceHeaderTemplate={resourceHeaderTemplate}
-          eventSettings={{
-            dataSource: data,
-            fields: {
-              subject: { title: 'Task', name: 'Subject', default: '' },
-              description: { title: 'Summary', name: 'Description' },
-              startTime: { title: 'From', name: 'StartTime' },
-              endTime: { title: 'To', name: 'EndTime' },
-              color: { name: 'Color' },
-              IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
-              commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
-            },
-            template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
-          }}
-          group={group}
-          actionComplete={onActionComplete}
-          viewChanged={handleViewChange}
-        >
-          <ViewsDirective>
-            <ViewDirective option='Day' allowVirtualScrolling={true} />
-            <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
-            <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
-            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 3 mesi */}
-          </ViewsDirective>
-          <ResourcesDirective>
-            <ResourceDirective
-              field='IncaricatoId'
-              title='Incaricato'
-              name='Conferences'
-              allowMultiple={true}
-              dataSource={getFilteredResources()}
-              textField='Nome'
-              idField='Id'
-              colorField='Colore'
-            />
-            <ResourceDirective
-              field='CommessaId'
-              title='Commessa'
-              name='Commesse'
-              allowMultiple={false}
-              dataSource={getFilteredCommesse()}
-              textField='Descrizione'
-              idField='Id'
-              colorField='Colore'
-            />
-          </ResourcesDirective>
-          <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
-        </ScheduleComponent>
+      <ScheduleComponent
+  cssClass='group-editing'
+  width='100%'
+  height='550px'
+  selectedDate={new Date()}
+  currentView={currentView}
+  locale='it'  // Setta il locale in italiano
+  dateFormat='dd/MM/yyyy'  // Formato della data
+  resourceHeaderTemplate={resourceHeaderTemplate}
+  eventSettings={{
+    dataSource: data,
+    fields: {
+      subject: { title: 'Task', name: 'Subject', default: '' },
+      description: { title: 'Summary', name: 'Description' },
+      startTime: { title: 'From', name: 'StartTime' },
+      endTime: { title: 'To', name: 'EndTime' },
+      color: { name: 'Color' },
+      IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
+      commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
+    },
+    template: monthEventTemplate,
+  }}
+  group={group}
+  actionComplete={onActionComplete}
+>
+  <ViewsDirective>
+    <ViewDirective option='Day' allowVirtualScrolling={true} />
+    <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
+    <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
+    <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} />
+  </ViewsDirective>
+  <ResourcesDirective>
+    <ResourceDirective
+      field='IncaricatoId'
+      title='Incaricato'
+      name='Conferences'
+      allowMultiple={true}
+      dataSource={getFilteredResources()}
+      textField='Nome'
+      idField='Id'
+      colorField='Colore'
+    />
+    <ResourceDirective
+      field='CommessaId'
+      title='Commessa'
+      name='Commesse'
+      allowMultiple={false}
+      dataSource={getFilteredCommesse()}
+      textField='Descrizione'
+      idField='Id'
+      colorField='Colore'
+    />
+  </ResourcesDirective>
+  <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
+</ScheduleComponent>
+
       </div>
     </div>
   );

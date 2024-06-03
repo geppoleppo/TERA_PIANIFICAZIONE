@@ -30,89 +30,52 @@ const App = () => {
     console.log('Scheduler Data Change:', args);
     let updatedScheduleData = [...scheduleData];
 
-    if (args.requestType === 'eventCreated') {
-      const newEvents = Array.isArray(args.data) ? args.data : [args.data];
-      newEvents.forEach(newEvent => {
-        newEvent.Color = commessaColors[newEvent.CommessaId] || '#000000';
-        updatedScheduleData = [...updatedScheduleData.filter(event => event.Id !== newEvent.Id), newEvent];
-      });
-    } else if (args.requestType === 'eventChanged') {
-      const updatedEvents = Array.isArray(args.data) ? args.data : [args.data];
-      updatedEvents.forEach(updatedEvent => {
-        updatedEvent.Color = commessaColors[updatedEvent.CommessaId] || '#000000';
-        updatedScheduleData = updatedScheduleData.map(event =>
-          event.Id === updatedEvent.Id ? updatedEvent : event
-        );
+    // Gestione della creazione e modifica degli eventi
+    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged') {
+      args.data.forEach(event => {
+        event.Color = commessaColors[event.CommessaId] || '#000000';  // Imposta il colore basato su CommessaId
+        if (args.requestType === 'eventCreated' && !updatedScheduleData.find(e => e.Id === event.Id)) {
+          updatedScheduleData.push(event);  // Aggiungi l'evento se è nuovo
+        } else {
+          updatedScheduleData = updatedScheduleData.map(e => e.Id === event.Id ? {...e, ...event} : e);
+        }
       });
     } else if (args.requestType === 'eventRemoved') {
-      const removedEventIds = Array.isArray(args.data) ? args.data.map(event => event.Id) : [args.data.Id];
-      updatedScheduleData = updatedScheduleData.filter(event => !removedEventIds.includes(event.Id));
+      // Rimozione degli eventi
+      const idsToRemove = args.data.map(event => event.Id);
+      updatedScheduleData = updatedScheduleData.filter(event => !idsToRemove.includes(event.Id));
     }
 
     console.log('Updated Schedule Data:', updatedScheduleData);
     setScheduleData(updatedScheduleData);
+    setGanttData(updatedScheduleData.map(event => ({...event, TaskID: event.Id})));  // Mappa gli eventi di Schedule per Gantt
+};
 
-    const updatedGanttData = updatedScheduleData.map(event => ({
-      TaskID: event.Id,
-      TaskName: event.Subject,
-      StartDate: event.StartTime,
-      EndDate: event.EndTime,
-      Predecessor: event.Predecessor || '',
-      CommessaId: event.CommessaId,
-      Color: commessaColors[event.CommessaId] || '#000000'
-    }));
-    console.log('Updated Gantt Data:', updatedGanttData);
-    setGanttData(updatedGanttData);
-  };
-
-  const handleGanttDataChange = (args) => {
+const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
     let updatedGanttData = [...ganttData];
 
-    if (args.requestType === 'save' || args.requestType === 'delete') {
-      const updatedTasks = Array.isArray(args.data) ? args.data : [args.data];
-      updatedTasks.forEach(updatedTask => {
-        if (args.requestType === 'save') {
-          updatedTask.Color = commessaColors[updatedTask.CommessaId] || '#000000';
-          console.log('Updated Task:', updatedTask);
-          updatedGanttData = updatedGanttData.map(task =>
-            task.TaskID === updatedTask.TaskID ? { ...task, ...updatedTask } : task
-          );
-        } else if (args.requestType === 'delete') {
-          updatedGanttData = updatedGanttData.filter(task => task.TaskID !== updatedTask.TaskID);
-        }
-      });
+    // Gestione della creazione e modifica degli eventi
+    args.data.forEach(event => {
+      event.Color = commessaColors[event.CommessaId] || '#000000';  // Imposta il colore basato su CommessaId
+      if (args.requestType === 'save' && !updatedGanttData.find(e => e.TaskID === event.TaskID)) {
+        updatedGanttData.push(event);  // Aggiungi l'evento se è nuovo
+      } else {
+        updatedGanttData = updatedGanttData.map(e => e.TaskID === event.TaskID ? {...e, ...event} : e);
+      }
+    });
+
+    if (args.requestType === 'delete') {
+      // Rimozione degli eventi
+      const idsToRemove = args.data.map(event => event.TaskID);
+      updatedGanttData = updatedGanttData.filter(event => !idsToRemove.includes(event.TaskID));
     }
 
     console.log('Updated Gantt Data after change:', updatedGanttData);
     setGanttData(updatedGanttData);
+    setScheduleData(updatedGanttData.map(event => ({...event, Id: event.TaskID})));  // Mappa gli eventi di Gantt per Schedule
+};
 
-    const updatedScheduleData = updatedGanttData.map(task => ({
-      Id: task.TaskID,
-      Subject: task.TaskName,
-      StartTime: task.StartDate,
-      EndTime: task.EndDate,
-      Predecessor: task.Predecessor,
-      CommessaId: task.CommessaId,
-      Color: commessaColors[task.CommessaId] || '#000000'
-    }));
-
-    console.log('Updated Schedule Data from Gantt:', updatedScheduleData);
-
-    const finalScheduleData = scheduleData.map(event => {
-      const ganttTask = updatedScheduleData.find(task => task.Id === event.Id);
-      return ganttTask ? { ...event, ...ganttTask } : event;
-    });
-
-    updatedScheduleData.forEach(task => {
-      if (!finalScheduleData.find(event => event.Id === task.Id)) {
-        finalScheduleData.push(task);
-      }
-    });
-
-    console.log('Final Schedule Data:', finalScheduleData);
-    setScheduleData(finalScheduleData);
-  };
 
   const onDataChange = (args) => {
     console.log('Data Change:', args);

@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./database.db');
+const db = new sqlite3.Database('./TERA_GESTIONALE_DB.db');
 
 app.use(cors());
 app.use(express.json());
@@ -34,4 +34,23 @@ app.get('/commesse/:id', (req, res) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+app.get('/collaboratori', (req, res) => {
+  db.all('SELECT * FROM Collaboratori', [], (err, rows) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
+app.get('/commessa-colors', (req, res) => {
+  db.all('SELECT Id, Colore FROM Commesse', [], (err, rows) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
 });
