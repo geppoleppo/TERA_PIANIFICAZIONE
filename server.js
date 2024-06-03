@@ -17,6 +17,7 @@ app.get('/commesse', (req, res) => {
   });
 });
 
+
 app.get('/commesse/:id', (req, res) => {
   const id = req.params.id;
   db.get('SELECT * FROM Commesse WHERE Id = ?', [id], (err, row) => {
