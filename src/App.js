@@ -76,26 +76,29 @@ const App = () => {
   const handleGanttDataChange = async (args) => {
     console.log('Gantt Data Change:', args);
     let updatedGanttData = [...ganttData];
-
+  
     if (args.requestType === 'save' || args.requestType === 'delete') {
       const updatedTasks = Array.isArray(args.data) ? args.data : [args.data];
-      updatedTasks.forEach(async (updatedTask) => {
-        if (args.requestType === 'save') {
-          updatedTask.Color = commessaColors[updatedTask.CommessaId] || '#000000';
-          console.log('Updated Task:', updatedTask);
-          updatedGanttData = updatedGanttData.map(task =>
-            task.TaskID === updatedTask.TaskID ? { ...task, ...updatedTask } : task
-          );
-          setGanttData(updatedGanttData);
-          updateScheduleData(updatedGanttData, resources);
-        } else if (args.requestType === 'delete') {
-          updatedGanttData = updatedGanttData.filter(task => task.TaskID !== updatedTask.TaskID);
-          setGanttData(updatedGanttData);
-          updateScheduleData(updatedGanttData, resources);
+  
+      for (const updatedTask of updatedTasks) {
+        if (typeof updatedTask === 'object' && updatedTask !== null) {
+          if (args.requestType === 'save') {
+            updatedTask.Color = commessaColors[updatedTask.CommessaId] || '#000000';
+            console.log('Updated Task:', updatedTask);
+            updatedGanttData = updatedGanttData.map(task =>
+              task.TaskID === updatedTask.TaskID ? { ...task, ...updatedTask } : task
+            );
+          } else if (args.requestType === 'delete') {
+            updatedGanttData = updatedGanttData.filter(task => task.TaskID !== updatedTask.TaskID);
+          }
         }
-      });
+      }
+  
+      setGanttData(updatedGanttData);
+      updateScheduleData(updatedGanttData, resources);
     }
   };
+  
 
   const updateGanttData = (scheduleData, resources) => {
     const updatedGanttData = scheduleData.map(event => {

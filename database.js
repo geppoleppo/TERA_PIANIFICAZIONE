@@ -140,19 +140,12 @@ const addEvento = (subject, startTime, endTime, isAllDay, commessaId, color) => 
     if (color === undefined) {
         color = '#ff33a6'; // Sostituisci 'defaultColor' con un valore valido
     }
-    console.log("Parameter types:", {
-        subject: typeof subject,
-        startTime: typeof startTime,
-        endTime: typeof endTime,
-        isAllDay: typeof isAllDay,
-        commessaId: typeof commessaId,
-        color: typeof color
-    });
-
     const query = `INSERT INTO Eventi (Subject, StartTime, EndTime, IsAllDay, CommessaId, Color) VALUES (?, ?, ?, ?, ?, ?)`;
     const stmt = db.prepare(query);
     try {
+        
         const result = stmt.run(subject, startTime, endTime, isAllDay, commessaId, color);
+         
         console.log("New event added with ID:", result.lastInsertRowid);
         return result.lastInsertRowid;
     } catch (error) {

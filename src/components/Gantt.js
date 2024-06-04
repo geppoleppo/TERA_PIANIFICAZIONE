@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD } from '@syncfusion/ej2-react-gantt';
-
+import axios from 'axios';
 const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
 
   useEffect(() => {
@@ -20,14 +20,53 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     );
   };
 
-  const onActionComplete = (args) => {
+  const onActionComplete = async (args) => {
+    console.log('Action Start:', args);
+  
     if (args.requestType === 'save' || args.requestType === 'delete') {
-      onDataChange({
-        requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
-        data: args.data
-      });
+      let endpoint = '';
+      let method = '';
+      let data = {};
+  
+      // Determina l'endpoint e il metodo in base al tipo di azione
+      if (args.requestType === 'save') {
+        const taskData = args.data; // Assicurati che args.data contenga i dati corretti
+        endpoint = taskData.TaskID ? `/eventi/${taskData.TaskID}` : '/eventi';
+        method = taskData.TaskID ? 'put' : 'post';
+  
+        // Preparazione dei dati per la richiesta, con conversione di isAllDay
+        data = {
+          subject: taskData.TaskName,
+          startTime: taskData.StartDate,
+          endTime: taskData.EndDate,
+          isAllDay: taskData.isAllDay ? 1 : 0, // Converti booleano in intero
+          commessaId: taskData.CommessaId,
+          color: taskData.Color
+        };
+      } else if (args.requestType === 'delete') {
+        endpoint = `/eventi/${args.data.TaskID}`;
+        method = 'delete';
+      }
+  
+      // Effettua la chiamata API se necessario
+      if (endpoint) {
+        try {
+          const response = await axios({
+            method: method,
+            url: `http://localhost:3001${endpoint}`,
+            data: method !== 'delete' ? data : {}
+          });
+          console.log('API response:', response);
+          onDataChange({ ...args, data: response.data }); // Pass updated data to onDataChange
+        } catch (error) {
+          console.error('Failed to interact with API:', error);
+        }
+      }
     }
+  
+    console.log('Action End:', args);
   };
+  
 
   const taskFields = {
     id: 'TaskID',

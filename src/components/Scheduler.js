@@ -105,33 +105,24 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
     let method = '';
     let data = {};
 
-    if (args.requestType === 'eventCreated') {
-      endpoint = '/eventi';
-      method = 'post';
+    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged') {
+      const isCreation = args.requestType === 'eventCreated';
       const eventData = args.data[0]; // Accedi al primo elemento se `data` è un array
+
+      // Converti il valore booleano isAllDay in 1 o 0
+      const isAllDayValue = eventData.IsAllDay ? 1 : 0;
+
+      endpoint = isCreation ? '/eventi' : `/eventi/${eventData.Id}`;
+      method = isCreation ? 'post' : 'put';
       data = {
           subject: eventData.Subject,
           startTime: eventData.StartTime,
           endTime: eventData.EndTime,
-          isAllDay: eventData.IsAllDay,
+          isAllDay: isAllDayValue,  // Usa il valore convertito
           commessaId: eventData.CommessaId,
-          color:  '#ff33a6' 
+          color: eventData.Color || '#ff33a6'  // Assicurati che il colore sia sempre definito
       };
-  } else if (args.requestType === 'eventChanged') {
-      endpoint = `/eventi/${args.data[0].Id}`; // Assicurati che sia corretto
-      method = 'put';
-      const eventData = args.data[0]; // Accedi al primo elemento
-      data = {
-          subject: eventData.Subject,
-          startTime: eventData.StartTime,
-          endTime: eventData.EndTime,
-          isAllDay: eventData.IsAllDay,
-          commessaId: eventData.CommessaId,
-          color: eventData.Color
-          
-      };
-      
-  }  else if (args.requestType === 'eventRemoved') {
+    } else if (args.requestType === 'eventRemoved') {
         endpoint = `/eventi/${args.data[0].Id}`;
         method = 'delete';
     }
@@ -144,7 +135,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
                 data: data
             });
             console.log('API response:', response);
-            onDataChange(args); // Call this only on successful API interaction
+            onDataChange(args); // Refresh data on successful API interaction
         } catch (error) {
             console.error('Failed to interact with API:', error);
         }
@@ -152,6 +143,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
 
     console.log('Action End:', args);
 };
+
 
 
   const resourceHeaderTemplate = (props) => {
