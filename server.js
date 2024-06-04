@@ -94,3 +94,61 @@ app.delete('/commesse/:id', (req, res) => {
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
+
+// Route per aggiungere un nuovo evento
+app.post('/eventi', (req, res) => {
+    const { subject, startTime, endTime, isAllDay, commessaId, color } = req.body;
+    console.log("POST request to add event received:", req.body);
+    try {
+        const eventId = db.addEvento(subject, startTime, endTime, isAllDay, commessaId, color);
+        console.log("Event added, responding with ID:", eventId);
+        res.json({ id: eventId });
+    } catch (error) {
+        console.error("Failed to add event:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Route per aggiornare un evento esistente
+app.put('/eventi/:id', (req, res) => {
+    const { id } = req.params;
+    const { subject, startTime, endTime, isAllDay, commessaId, color } = req.body;
+    console.log("PUT request to update event received:", {id, ...req.body});
+    try {
+        db.updateEvento(id, subject, startTime, endTime, isAllDay, commessaId, color);
+        console.log("Event updated:", id);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error("Failed to update event:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Route per eliminare un evento
+app.delete('/eventi/:id', (req, res) => {
+    const { id } = req.params;
+    console.log("DELETE request for event ID:", id);
+    try {
+        db.deleteEvento(id);
+        console.log("Event deleted:", id);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error("Failed to delete event:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Route per ottenere i dati dello scheduler
+app.get('/schedulerData', (req, res) => {
+    try {
+        console.log("Fetching scheduler data...");
+        const eventData = db.getAllEvents(); // Assumi che questa funzione esista in database.js
+        console.log("Scheduler data retrieved:", eventData);
+        res.json(eventData);
+    } catch (error) {
+        console.error("Error retrieving scheduler data:", error);
+        res.status(500).json({ error: "Errore nel recupero dei dati degli eventi" });
+    }
+});
+
+

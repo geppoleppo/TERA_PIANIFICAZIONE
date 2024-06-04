@@ -98,39 +98,61 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
 
-  const onActionComplete = (args) => {
-    console.log('Action Start: ', args);
+  const onActionComplete = async (args) => {
+    console.log('Action Start:', args);
 
-    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        if (Array.isArray(args.data)) {
-          args.data.forEach(event => {
-            if (args.requestType === 'eventCreated') {
-              // Quando un evento viene creato
-              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId; // Assicurati che CommessaId non venga perso
-            } else if (args.requestType === 'eventChanged') {
-              // Quando un evento viene trascinato o modificato
-              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId; // Assicurati che CommessaId non venga perso
-            }
-            event.Color = commessaColors[event.CommessaId] || '#000000';
-            console.log('Event After Change: ', event);
-          });
-        } else {
-          if (args.requestType === 'eventCreated') {
-            // Quando un evento viene creato
-            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId; // Assicurati che CommessaId non venga perso
-          } else if (args.requestType === 'eventChanged') {
-            // Quando un evento viene trascinato o modificato
-            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId; // Assicurati che CommessaId non venga perso
-          }
-          args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
-          console.log('Event After Change: ', args.data);
-        }
-      }
-      onDataChange(args);
+    let endpoint = '';
+    let method = '';
+    let data = {};
+
+    if (args.requestType === 'eventCreated') {
+      endpoint = '/eventi';
+      method = 'post';
+      const eventData = args.data[0]; // Accedi al primo elemento se `data` è un array
+      data = {
+          subject: eventData.Subject,
+          startTime: eventData.StartTime,
+          endTime: eventData.EndTime,
+          isAllDay: eventData.IsAllDay,
+          commessaId: eventData.CommessaId,
+          color:  '#ff33a6' 
+      };
+  } else if (args.requestType === 'eventChanged') {
+      endpoint = `/eventi/${args.data[0].Id}`; // Assicurati che sia corretto
+      method = 'put';
+      const eventData = args.data[0]; // Accedi al primo elemento
+      data = {
+          subject: eventData.Subject,
+          startTime: eventData.StartTime,
+          endTime: eventData.EndTime,
+          isAllDay: eventData.IsAllDay,
+          commessaId: eventData.CommessaId,
+          color: eventData.Color
+          
+      };
+      
+  }  else if (args.requestType === 'eventRemoved') {
+        endpoint = `/eventi/${args.data[0].Id}`;
+        method = 'delete';
     }
-    console.log('Action End: ', args);
-  };
+
+    if (endpoint) {
+        try {
+            const response = await axios({
+                method: method,
+                url: `http://localhost:3001${endpoint}`,
+                data: data
+            });
+            console.log('API response:', response);
+            onDataChange(args); // Call this only on successful API interaction
+        } catch (error) {
+            console.error('Failed to interact with API:', error);
+        }
+    }
+
+    console.log('Action End:', args);
+};
+
 
   const resourceHeaderTemplate = (props) => {
     const commessa = props.resourceData.Descrizione;

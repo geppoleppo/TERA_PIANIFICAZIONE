@@ -12,30 +12,36 @@ const App = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const [commesseResponse, schedulerResponse, resourcesResponse] = await Promise.all([
-          axios.get('http://localhost:3001/commesse'),
-          axios.get('http://localhost:3001/schedulerData'),
-          axios.get('http://localhost:3001/collaboratori') // Assuming resources are fetched from this endpoint
-        ]);
+        console.log("Fetching data from server...");
+        try {
+            const [commesseResponse, schedulerResponse, resourcesResponse] = await Promise.all([
+                axios.get('http://localhost:3001/commesse'),
+                axios.get('http://localhost:3001/schedulerData'), // Ecco dove viene chiamata la route
+                axios.get('http://localhost:3001/collaboratori')
+            ]);
 
-        const colors = commesseResponse.data.reduce((acc, commessa) => {
-          acc[commessa.Id] = commessa.Colore;
-          return acc;
-        }, {});
+            console.log("Data received from /commesse:", commesseResponse.data);
+            console.log("Data received from /schedulerData:", schedulerResponse.data);
+            console.log("Data received from /collaboratori:", resourcesResponse.data);
 
-        setCommesse(commesseResponse.data);
-        setCommessaColors(colors);
-        setScheduleData(schedulerResponse.data);
-        setResources(resourcesResponse.data); // Set resources data
-        updateGanttData(schedulerResponse.data, resourcesResponse.data); // Ensure Gantt data is also updated
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
+            const colors = commesseResponse.data.reduce((acc, commessa) => {
+                acc[commessa.Id] = commessa.Colore;
+                return acc;
+            }, {});
+
+            setCommesse(commesseResponse.data);
+            setCommessaColors(colors);
+            setScheduleData(schedulerResponse.data);
+            setResources(resourcesResponse.data);
+            // Assicurati di aggiornare i dati di Gantt corrispondenti
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     };
 
     fetchData();
-  }, []);
+}, []);
+
 
   const handleSchedulerDataChange = async (args) => {
     console.log('Scheduler Data Change:', args);
