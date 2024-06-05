@@ -50,62 +50,93 @@ useEffect(() => {
   console.log("Updated Scheduler Data:", scheduleData);
 }, [scheduleData]);
 
-  const handleSchedulerDataChange = async (args) => {
-    console.log('Scheduler Data Change:', args);
-    let updatedScheduleData = [...scheduleData];
+const handleSchedulerDataChange = async (args) => {
+  console.log('Scheduler Data Change:', args);
+  let updatedScheduleData = [...scheduleData];
 
-    if (args.requestType === 'eventCreated') {
-      const newEvents = Array.isArray(args.data) ? args.data : [args.data];
-      newEvents.forEach(async (newEvent) => {
-        newEvent.Color = commessaColors[newEvent.CommessaId] || '#000000';
-        updatedScheduleData = [...updatedScheduleData.filter(event => event.Id !== newEvent.Id), newEvent];
-        setScheduleData(updatedScheduleData);
-        updateGanttData(updatedScheduleData, resources);
-      });
-    } else if (args.requestType === 'eventChanged') {
-      const updatedEvents = Array.isArray(args.data) ? args.data : [args.data];
-      updatedEvents.forEach(async (updatedEvent) => {
-        updatedEvent.Color = commessaColors[updatedEvent.CommessaId] || '#000000';
-        updatedScheduleData = updatedScheduleData.map(event =>
-          event.Id === updatedEvent.Id ? updatedEvent : event
-        );
-        setScheduleData(updatedScheduleData);
-        updateGanttData(updatedScheduleData, resources);
-      });
-    } else if (args.requestType === 'eventRemoved') {
-      const removedEventIds = Array.isArray(args.data) ? args.data.map(event => event.Id) : [args.data.Id];
-      updatedScheduleData = updatedScheduleData.filter(event => !removedEventIds.includes(event.Id));
-      setScheduleData(updatedScheduleData);
-      updateGanttData(updatedScheduleData, resources);
-    }
-  };
+  args.data.forEach(async (eventData) => {
+    const { Id, Subject, StartTime, EndTime, IsAllDay, CommessaId, Color, ResourceIDs } = eventData;
+    const url = Id ? `/eventi/${Id}` : '/eventi';
+    const method = Id ? 'put' : 'post';
+    const data = {
+      subject: Subject,
+      startTime: StartTime,
+      endTime: EndTime,
+      isAllDay: IsAllDay ? 1 : 0, // Converte il booleano in intero
+      commessaId: CommessaId,
+      color: Color || '#000000',
+      resourceIDs: ResourceIDs ? ResourceIDs.join(',') : ''
+    };
 
-  const handleGanttDataChange = async (args) => {
-    console.log('Gantt Data Change:', args);
-    let updatedGanttData = [...ganttData];
-  
-    if (args.requestType === 'save' || args.requestType === 'delete') {
-      const updatedTasks = Array.isArray(args.data) ? args.data : [args.data];
-  
-      for (const updatedTask of updatedTasks) {
-        if (typeof updatedTask === 'object' && updatedTask !== null) {
-          if (args.requestType === 'save') {
-            updatedTask.Color = commessaColors[updatedTask.CommessaId] || '#000000';
-            console.log('Updated Task:', updatedTask);
-            updatedGanttData = updatedGanttData.map(task =>
-              task.TaskID === updatedTask.TaskID ? { ...task, ...updatedTask } : task
-            );
-          } else if (args.requestType === 'delete') {
-            updatedGanttData = updatedGanttData.filter(task => task.TaskID !== updatedTask.TaskID);
-          }
-        }
+    try {
+      const response = await axios({ method, url: `http://localhost:3001${url}`, data });
+      console.log('API response:', response);
+      if (method === 'post') {
+        eventData.Id = response.data.id; // Assume new ID is returned
       }
-  
-      setGanttData(updatedGanttData);
-      updateScheduleData(updatedGanttData, resources);
+      updateSchedulerDataOnSuccess(eventData, args.requestType);
+    } catch (error) {
+      console.error('Failed to save event:', error);
     }
-  };
-  
+  });
+};
+
+
+const updateSchedulerDataOnSuccess = (updatedEvent, requestType) => {
+  let updatedEvents = [...scheduleData];
+  if (requestType === 'eventCreated') {
+    updatedEvents.push(updatedEvent);
+  } else if (requestType === 'eventChanged') {
+    updatedEvents = updatedEvents.map(event => event.Id === updatedEvent.Id ? updatedEvent : event);
+  }
+  setScheduleData(updatedEvents);
+  updateGanttData(updatedEvents, resources);
+};
+
+
+const handleGanttDataChange = async (args) => {
+  console.log('Gantt Data Change:', args);
+  let updatedGanttData = [...ganttData];
+
+  args.data.forEach(async (taskData) => {
+    const { TaskID, TaskName, StartDate, EndDate, isAllDay, CommessaId, Color, ResourceIDs } = taskData;
+    const url = TaskID ? `/eventi/${TaskID}` : '/eventi';
+    const method = TaskID ? 'put' : 'post';
+    const data = {
+      subject: TaskName,
+      startTime: StartDate,
+      endTime: EndDate,
+      isAllDay: IsAllDay ? 1 : 0, // Converte il booleano in intero
+      commessaId: CommessaId,
+      color: Color || '#000000',
+      resourceIDs: ResourceIDs ? ResourceIDs.join(',') : ''
+    };
+
+    try {
+      const response = await axios({ method, url: `http://localhost:3001${url}`, data });
+      console.log('API response:', response);
+      if (method === 'post') {
+        taskData.TaskID = response.data.id;
+      }
+      updateGanttDataOnSuccess(taskData, args.requestType);
+    } catch (error) {
+      console.error('Failed to update Gantt:', error);
+    }
+  });
+};
+
+const updateGanttDataOnSuccess = (updatedTask, requestType) => {
+  let updatedTasks = [...ganttData];
+  if (requestType === 'save') {
+    updatedTasks = updatedTasks.map(task => task.TaskID === updatedTask.TaskID ? updatedTask : task);
+  } else if (requestType === 'delete') {
+    updatedTasks = updatedTasks.filter(task => task.TaskID !== updatedTask.TaskID);
+  }
+  setGanttData(updatedTasks);
+  updateScheduleData(updatedTasks, resources);
+};
+
+
 
   const updateGanttData = (scheduleData, resources) => {
     const updatedGanttData = scheduleData.map(event => {

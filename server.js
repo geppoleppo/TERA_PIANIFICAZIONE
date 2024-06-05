@@ -97,10 +97,10 @@ app.listen(port, () => {
 
 // Route per aggiungere un nuovo evento
 app.post('/eventi', (req, res) => {
-    const { subject, startTime, endTime, isAllDay, commessaId, color,ResourceIDs } = req.body;
     console.log("POST request to add event received:", req.body);
+    const { subject, startTime, endTime, isAllDay, commessaId, color, resourceIDs } = req.body;
     try {
-        const eventId = db.addEvento(subject, startTime, endTime, isAllDay, commessaId, color);
+        const eventId = db.addEvento(subject, startTime, endTime, isAllDay, commessaId, color, resourceIDs);
         console.log("Event added, responding with ID:", eventId);
         res.json({ id: eventId });
     } catch (error) {
@@ -109,13 +109,14 @@ app.post('/eventi', (req, res) => {
     }
 });
 
+
 // Route per aggiornare un evento esistente
 app.put('/eventi/:id', (req, res) => {
     const { id } = req.params;
-    const { subject, startTime, endTime, isAllDay, commessaId, color } = req.body;
+    const { subject, startTime, endTime, isAllDay, commessaId, color,resourceIDs } = req.body;
     console.log("PUT request to update event received:", {id, ...req.body});
     try {
-        db.updateEvento(id, subject, startTime, endTime, isAllDay, commessaId, color);
+        db.updateEvento(id, subject, startTime, endTime, isAllDay, commessaId, color,resourceIDs);
         console.log("Event updated:", id);
         res.sendStatus(200);
     } catch (error) {

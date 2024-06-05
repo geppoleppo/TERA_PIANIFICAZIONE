@@ -136,17 +136,12 @@ const deleteCommessa = (id) => {
         throw new Error("Failed to delete project.");
     }
 };
-const addEvento = (subject, startTime, endTime, isAllDay, commessaId, color) => {
-    if (color === undefined) {
-        color = '#ff33a6'; // Sostituisci 'defaultColor' con un valore valido
-    }
-    const query = `INSERT INTO Eventi (Subject, StartTime, EndTime, IsAllDay, CommessaId, Color) VALUES (?, ?, ?, ?, ?, ?)`;
+const addEvento = (subject, startTime, endTime, isAllDay, commessaId, color, resourceIDs) => {
+    const query = `INSERT INTO Eventi (Subject, StartTime, EndTime, IsAllDay, CommessaId, Color, ResourceIDs) VALUES (?, ?, ?, ?, ?, ?, ?)`;
     const stmt = db.prepare(query);
     try {
-        
-        const result = stmt.run(subject, startTime, endTime, isAllDay, commessaId, color);
-         
-        console.log("New event added with ID:", result.lastInsertRowid);
+        const result = stmt.run(subject, startTime, endTime, isAllDay, commessaId, color, resourceIDs);
+        //console.log("New event added with ID:", result.lastInsertRowid);
         return result.lastInsertRowid;
     } catch (error) {
         console.error("Failed to add event:", error);
@@ -154,28 +149,29 @@ const addEvento = (subject, startTime, endTime, isAllDay, commessaId, color) => 
     }
 };
 
-const updateEvento = (id, subject, startTime, endTime, isAllDay, commessaId, color) => {
-    console.log("Updating event:", {id, subject, startTime, endTime, isAllDay, commessaId, color});
-    const query = `UPDATE Eventi SET Subject = ?, StartTime = ?, EndTime = ?, IsAllDay = ?, CommessaId = ?, Color = ? WHERE Id = ?`;
+const updateEvento = (id, subject, startTime, endTime, isAllDay, commessaId, color,resourceIDs) => {
+    //console.log("Updating event:", {id, subject, startTime, endTime, isAllDay, commessaId, color,ResourceIDs});
+    const query = `UPDATE Eventi SET Subject = ?, StartTime = ?, EndTime = ?, IsAllDay = ?, CommessaId = ?, color = ?, ResourceIDs = ? WHERE Id = ?`;
+    console.log('QUERY:',query)
     const stmt = db.prepare(query);
-    stmt.run(subject, startTime, endTime, isAllDay, commessaId, color, id);
-    console.log("Event updated:", id);
+    stmt.run(subject, startTime, endTime, isAllDay, commessaId, color, resourceIDs,id);
+    //console.log("Event updated:", id);
 };
 
 const deleteEvento = (id) => {
-    console.log("Deleting event with ID:", id);
+    //console.log("Deleting event with ID:", id);
     const query = `DELETE FROM Eventi WHERE Id = ?`;
     const stmt = db.prepare(query);
     stmt.run(id);
-    console.log("Event deleted:", id);
+    //console.log("Event deleted:", id);
 };
 
 const getAllEvents = () => {
     try {
         const query = `SELECT * FROM Eventi`;  // Assicurati che il nome della tabella sia corretto
-        console.log("Executing query to fetch all events...");
+        //console.log("Executing query to fetch all events...");
         const result = db.prepare(query).all();
-        console.log("Events fetched:", result);
+        //console.log("Events fetched:", result);
         return result;
     } catch (error) {
         console.error("Database error while fetching events:", error);

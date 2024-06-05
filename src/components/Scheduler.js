@@ -47,7 +47,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   }, []);
 
   useEffect(() => {
-    console.log('Scheduler data updated:', data);
+    //console.log('Scheduler data updated:', data);
 }, [data]);
 
 
@@ -104,7 +104,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const onActionComplete = async (args) => {
-    console.log('Action Start:', args);
+    //console.log('Action Start:', args);
 
     let endpoint = '';
     let method = '';
@@ -125,7 +125,8 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
           endTime: eventData.EndTime,
           isAllDay: isAllDayValue,  // Usa il valore convertito
           commessaId: eventData.CommessaId,
-          color: eventData.Color || '#ff33a6'  // Assicurati che il colore sia sempre definito
+          color: eventData.Color || '#ff33a6',
+          resourceIDs: eventData.resourceIDs   // Assicurati che il colore sia sempre definito
       };
     } else if (args.requestType === 'eventRemoved') {
         endpoint = `/eventi/${args.data[0].Id}`;
@@ -139,14 +140,14 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
                 url: `http://localhost:3001${endpoint}`,
                 data: data
             });
-            console.log('API response:', response);
+            //console.log('API response:', response);
             onDataChange(args); // Refresh data on successful API interaction
         } catch (error) {
             console.error('Failed to interact with API:', error);
         }
     }
 
-    console.log('Action End:', args);
+    //console.log('Action End:', args);
 };
 
 
@@ -174,8 +175,8 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const monthEventTemplate = (props) => {
-    console.log('Event props:', props);
-    console.log('Commesse array:', commesse);
+    //console.log('Event props:', props);
+    //console.log('Commesse array:', commesse);
 
     // Controlla se props.CommessaId è un array o un singolo valore e gestiscilo di conseguenza
     const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
@@ -199,7 +200,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   const group = {
     allowGroupEdit: true, 
     byGroupID: false,
-    resources: ['Conferences', 'Commesse']
+    resources: ['Incaricati', 'Commesse']
   };
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
@@ -213,14 +214,14 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   }))];
 
   useEffect(() => {
-    console.log('Scheduler data updated:', data);
+    //console.log('Scheduler data updated:', data);
     if (!Array.isArray(data) || data.length === 0 || !data[0].hasOwnProperty('Subject')) {
       console.error('Data is empty or not in the expected format:', data);
     }
   }, [data]);
 
   useEffect(() => {
-    console.log("Dati caricati: ", data);
+    //console.log("Dati caricati: ", data);
   }, [data]);
 
   return (
@@ -259,6 +260,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
               startTime: { title: 'From', name: 'StartTime' },
               endTime: { title: 'To', name: 'EndTime' },
               color: { name: 'Color' },
+              resourceIDs:{ name: 'ResourceIDs' },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
             template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
@@ -286,6 +288,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
               idField='Id'
               colorField='Colore'
             />
+
           </ResourcesDirective>
           <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
         </ScheduleComponent>
