@@ -10,13 +10,15 @@ const App = () => {
   const [commesse, setCommesse] = useState([]);
   const [resources, setResources] = useState([]);
 
+
+  
   useEffect(() => {
     const fetchData = async () => {
         console.log("Fetching data from server...");
         try {
             const [commesseResponse, schedulerResponse, resourcesResponse] = await Promise.all([
                 axios.get('http://localhost:3001/commesse'),
-                axios.get('http://localhost:3001/schedulerData'), // Ecco dove viene chiamata la route
+                axios.get('http://localhost:3001/Eventi'), // Ecco dove viene chiamata la route
                 axios.get('http://localhost:3001/collaboratori')
             ]);
 
@@ -37,11 +39,16 @@ const App = () => {
         } catch (error) {
             console.error('Error fetching data:', error);
         }
+        console.log("Schedule Data set:", scheduleData);
+        console.log("Gantt Data set:", ganttData);
     };
 
     fetchData();
 }, []);
 
+useEffect(() => {
+  console.log("Updated Scheduler Data:", scheduleData);
+}, [scheduleData]);
 
   const handleSchedulerDataChange = async (args) => {
     console.log('Scheduler Data Change:', args);

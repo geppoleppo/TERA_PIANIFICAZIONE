@@ -139,7 +139,7 @@ app.delete('/eventi/:id', (req, res) => {
 });
 
 // Route per ottenere i dati dello scheduler
-app.get('/schedulerData', (req, res) => {
+app.get('/Eventi', (req, res) => {
     try {
         console.log("Fetching scheduler data...");
         const eventData = db.getAllEvents(); // Assumi che questa funzione esista in database.js

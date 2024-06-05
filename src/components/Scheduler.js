@@ -46,6 +46,11 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
     fetchCommesse();
   }, []);
 
+  useEffect(() => {
+    console.log('Scheduler data updated:', data);
+}, [data]);
+
+
   const fetchResources = async () => {
     try {
       const response = await axios.get('http://localhost:3001/collaboratori');
@@ -145,7 +150,6 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
 };
 
 
-
   const resourceHeaderTemplate = (props) => {
     const commessa = props.resourceData.Descrizione;
     if (commessa) {
@@ -207,6 +211,13 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
     value: commessa.Id,
     label: commessa.Descrizione
   }))];
+
+  useEffect(() => {
+    console.log('Scheduler data updated:', data);
+    if (!Array.isArray(data) || data.length === 0 || !data[0].hasOwnProperty('Subject')) {
+      console.error('Data is empty or not in the expected format:', data);
+    }
+  }, [data]);
 
   return (
     <div>
