@@ -97,7 +97,7 @@ app.listen(port, () => {
 
 // Route per aggiungere un nuovo evento
 app.post('/eventi', (req, res) => {
-    const { subject, startTime, endTime, isAllDay, commessaId, color } = req.body;
+    const { subject, startTime, endTime, isAllDay, commessaId, color,ResourceIDs } = req.body;
     console.log("POST request to add event received:", req.body);
     try {
         const eventId = db.addEvento(subject, startTime, endTime, isAllDay, commessaId, color);
