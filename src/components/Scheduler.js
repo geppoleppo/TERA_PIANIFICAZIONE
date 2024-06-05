@@ -219,6 +219,10 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
     }
   }, [data]);
 
+  useEffect(() => {
+    console.log("Dati caricati: ", data);
+  }, [data]);
+
   return (
     <div>
       <div className="filter-selectors">
@@ -238,7 +242,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
         />
       </div>
       <div className="scroll-container"> {/* Aggiungi la classe per lo scorrimento */}
-        <ScheduleComponent
+      <ScheduleComponent
           cssClass='group-editing'
           width='100%'
           height='650px'
@@ -255,7 +259,6 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
               startTime: { title: 'From', name: 'StartTime' },
               endTime: { title: 'To', name: 'EndTime' },
               color: { name: 'Color' },
-              IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
             template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
@@ -272,16 +275,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
             <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 3 mesi */}
           </ViewsDirective>
           <ResourcesDirective>
-            <ResourceDirective
-              field='IncaricatoId'
-              title='Attendees'
-              name='Conferences'
-              allowMultiple={true}
-              dataSource={getFilteredResources()}
-              textField='Nome'
-              idField='Id'
-              colorField='Colore'
-            />
+
             <ResourceDirective
               field='CommessaId'
               title='Commessa'
