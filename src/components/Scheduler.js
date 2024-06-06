@@ -288,7 +288,16 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
               idField='Id'
               colorField='Colore'
             />
-
+            <ResourceDirective
+              field='ResourceIDs'
+              title='Incaricati'
+              name='Incaricati'
+              allowMultiple={true}
+              dataSource={getFilteredResources()}
+              textField='Nome'
+              idField='Id'
+              colorField='Colore'
+            />
           </ResourcesDirective>
           <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
         </ScheduleComponent>
