@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { createElement } from '@syncfusion/ej2-base';
-import { DropDownList } from '@syncfusion/ej2-dropdowns';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import axios from 'axios';
 import '../index.css';
 
+// Load the required CLDR data
 import { loadCldr, L10n } from '@syncfusion/ej2-base';
 import * as numberingSystems from 'cldr-data/main/it/numbers.json';
 import * as gregorian from 'cldr-data/main/it/ca-gregorian.json';
@@ -13,6 +12,7 @@ import * as timeZoneNames from 'cldr-data/main/it/timeZoneNames.json';
 import * as weekData from 'cldr-data/supplemental/weekData.json';
 loadCldr(numberingSystems, gregorian, timeZoneNames, weekData);
 
+// Load Italian locale
 L10n.load({
   'it': {
     'schedule': {
@@ -34,16 +34,16 @@ L10n.load({
   }
 });
 
-const Scheduler = ({ onDataChange, commessaList }) => {
-  const [data, setData] = useState([]);
+const Scheduler = ({ data, onDataChange, commessaColors }) => {
   const [resources, setResources] = useState([]);
+  const [commesse, setCommesse] = useState([]);
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
-  const [currentView, setCurrentView] = useState('Day');
+  const [currentView, setCurrentView] = useState('Month'); // Set default view to 'Month'
 
   useEffect(() => {
     fetchResources();
-    fetchSchedulerEvents();
+    fetchCommesse();
   }, []);
 
   const fetchResources = async () => {
@@ -55,13 +55,12 @@ const Scheduler = ({ onDataChange, commessaList }) => {
     }
   };
 
-  const fetchSchedulerEvents = async () => {
+  const fetchCommesse = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/schedulerevents');
-      console.log('Fetched scheduler events:', response.data); // Log per debug
-      setData(response.data);
+      const response = await axios.get('http://localhost:3001/commesse');
+      setCommesse(response.data);
     } catch (error) {
-      console.error('Error fetching scheduler events:', error);
+      console.error('Error fetching commesse:', error);
     }
   };
 
@@ -80,7 +79,7 @@ const Scheduler = ({ onDataChange, commessaList }) => {
   const handleCommessaChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
       if (selectedOptions.length === 1) {
-        setSelectedCommesse(commessaList.map(commessa => commessa.Id));
+        setSelectedCommesse(commesse.map(commessa => commessa.Id));
       } else {
         setSelectedCommesse([]);
       }
@@ -96,20 +95,41 @@ const Scheduler = ({ onDataChange, commessaList }) => {
 
   const getFilteredCommesse = () => {
     if (selectedCommesse.length === 0) return [];
-    return commessaList.filter(commessa => selectedCommesse.includes(commessa.Id));
+    return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
 
-  const monthEventTemplate = (props) => {
-    const commessa = commessaList.find(commessa => commessa.Id === props.CommessaId);
-    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
-    const subjectText = props.Subject ? props.Subject : '';
-    const color = commessa ? commessa.Colore : '#000000'; // Usa il colore della commessa
+  const onActionComplete = (args) => {
+    console.log('Action Start: ', args);
 
-    return (
-      <div className="template-wrap" style={{ backgroundColor: color }}>
-        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
-      </div>
-    );
+    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
+      if (args.data) {
+        if (Array.isArray(args.data)) {
+          args.data.forEach(event => {
+            if (args.requestType === 'eventCreated') {
+              // Quando un evento viene creato
+              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId; // Assicurati che CommessaId non venga perso
+            } else if (args.requestType === 'eventChanged') {
+              // Quando un evento viene trascinato o modificato
+              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId; // Assicurati che CommessaId non venga perso
+            }
+            event.Color = commessaColors[event.CommessaId] || '#000000';
+            console.log('Event After Change: ', event);
+          });
+        } else {
+          if (args.requestType === 'eventCreated') {
+            // Quando un evento viene creato
+            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId; // Assicurati che CommessaId non venga perso
+          } else if (args.requestType === 'eventChanged') {
+            // Quando un evento viene trascinato o modificato
+            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId; // Assicurati che CommessaId non venga perso
+          }
+          args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
+          console.log('Event After Change: ', args.data);
+        }
+      }
+      onDataChange(args);
+    }
+    console.log('Action End: ', args);
   };
 
   const resourceHeaderTemplate = (props) => {
@@ -135,36 +155,33 @@ const Scheduler = ({ onDataChange, commessaList }) => {
     );
   };
 
-  const onActionComplete = async (args) => {
-    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-        if (args.data) {
-            console.log('Event data before sending to server:', args.data);
-            const eventData = Array.isArray(args.data) ? args.data[0] : args.data;
-            console.log('Formatted event data:', eventData);
-            try {
-                if (args.requestType === 'eventCreated') {
-                    await axios.post('http://localhost:3001/schedulerevents', eventData);
-                } else if (args.requestType === 'eventChanged') {
-                    await axios.put(`http://localhost:3001/schedulerevents/${eventData.Id}`, eventData);
-                } else if (args.requestType === 'eventRemoved') {
-                    await axios.delete(`http://localhost:3001/schedulerevents/${eventData.Id}`);
-                }
-                onDataChange(args);
-            } catch (error) {
-                console.error('Error handling scheduler event:', error);
-            }
-        }
-    }
-};
+  const monthEventTemplate = (props) => {
+    console.log('Event props:', props);
+    console.log('Commesse array:', commesse);
+
+    // Controlla se props.CommessaId è un array o un singolo valore e gestiscilo di conseguenza
+    const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
+    const commessa = commesse.find(commessa => commessa.Id === commessaId);
+
+    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
+    const subjectText = props.Subject ? props.Subject : '';
+    const color = commessaColors[commessaId] || '#000000'; // Use color from state
+
+    return (
+      <div className="template-wrap" style={{ backgroundColor: color }}>
+        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
+      </div>
+    );
+  };
 
   const handleViewChange = (args) => {
     setCurrentView(args.currentView);
   };
 
   const group = {
-    allowGroupEdit: true,
+    allowGroupEdit: true, 
     byGroupID: false,
-    resources: currentView === 'Month' ? [] : ['Conferences', 'Commesse']
+    resources: ['Conferences', 'Commesse']
   };
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
@@ -172,12 +189,10 @@ const Scheduler = ({ onDataChange, commessaList }) => {
     label: resource.Nome
   }))];
 
-  const commessaOptions = [{ value: 'select-all', label: 'Select All' }, ...commessaList.map(commessa => ({
+  const commessaOptions = [{ value: 'select-all', label: 'Select All' }, ...commesse.map(commessa => ({
     value: commessa.Id,
     label: commessa.Descrizione
   }))];
-
-
 
   return (
     <div>
@@ -201,26 +216,26 @@ const Scheduler = ({ onDataChange, commessaList }) => {
         <ScheduleComponent
           cssClass='group-editing'
           width='100%'
-          height='550px'
+          height='650px'
           selectedDate={new Date()}
-          currentView={currentView}
+          currentView={currentView} // Set default view to 'Month'
           locale='it'  // Set locale to Italian
           dateFormat='dd/MM/yyyy'  // Set date format
           resourceHeaderTemplate={resourceHeaderTemplate}
           eventSettings={{
-            dataSource: data,
+            dataSource: data, // Usa i dati passati come props
             fields: {
               subject: { title: 'Task', name: 'Subject', default: '' },
               description: { title: 'Summary', name: 'Description' },
               startTime: { title: 'From', name: 'StartTime' },
               endTime: { title: 'To', name: 'EndTime' },
               color: { name: 'Color' },
-              IncaricatiId: { title: 'Collaboratori', name: 'IncaricatiId', validation: { required: true } },
+              IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
-            template: monthEventTemplate,
+            template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
           }}
-         
+          rowAutoHeight={true} // Enable row auto height
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
@@ -233,7 +248,7 @@ const Scheduler = ({ onDataChange, commessaList }) => {
           </ViewsDirective>
           <ResourcesDirective>
             <ResourceDirective
-              field='IncaricatiId'
+              field='IncaricatoId'
               title='Attendees'
               name='Conferences'
               allowMultiple={true}
