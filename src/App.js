@@ -16,8 +16,8 @@ const App = () => {
     {
       Id: 1,
       Subject: 'Task 1',
-      StartTime: new Date('2023-06-01'),
-      EndTime: new Date('2023-06-02'),
+      StartTime: new Date('2024-06-01'),
+      EndTime: new Date('2024-06-02'),
       CommessaId: 1,
       Predecessor: '',
       Color: '#ff0000',
@@ -26,8 +26,8 @@ const App = () => {
     {
       Id: 2,
       Subject: 'Task 2',
-      StartTime: new Date('2023-06-03'),
-      EndTime: new Date('2023-06-04'),
+      StartTime: new Date('2024-06-03'),
+      EndTime: new Date('2024-06-04'),
       CommessaId: 2,
       Predecessor: '',
       Color: '#00ff00',

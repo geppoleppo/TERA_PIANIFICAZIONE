@@ -119,7 +119,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
     }
     console.log('Action End: ', args);
   };
-  
+
   const resourceHeaderTemplate = (props) => {
     const commessa = props.resourceData.Descrizione;
     if (commessa) {
@@ -167,9 +167,9 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const group = {
-    allowGroupEdit: true, 
+    allowGroupEdit: true,
     byGroupID: false,
-    resources: ['Conferences', 'Commesse']
+    resources: ['Commesse']
   };
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
@@ -238,7 +238,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
             <ResourceDirective
               field='IncaricatoId'
               title='Attendees'
-              name='Conferences'
+              name='Resources'
               allowMultiple={true}
               dataSource={getFilteredResources()}
               textField='Nome'
