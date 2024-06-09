@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
-import axios from 'axios';
 import '../index.css';
 
 // Load the required CLDR data
@@ -42,27 +41,16 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   const [currentView, setCurrentView] = useState('Month'); // Set default view to 'Month'
 
   useEffect(() => {
-    fetchResources();
-    fetchCommesse();
+    // Simulate fetching static data for resources and commesse
+    setResources([
+      { Id: 1, Nome: 'Risorsa 1', Colore: '#ff0000', Immagine: '' },
+      { Id: 2, Nome: 'Risorsa 2', Colore: '#00ff00', Immagine: '' },
+    ]);
+    setCommesse([
+      { Id: 1, Descrizione: 'Commessa 1', Colore: '#ff0000' },
+      { Id: 2, Descrizione: 'Commessa 2', Colore: '#00ff00' },
+    ]);
   }, []);
-
-  const fetchResources = async () => {
-    try {
-      const response = await axios.get('http://localhost:3001/collaboratori');
-      setResources(response.data);
-    } catch (error) {
-      console.error('Error fetching resources:', error);
-    }
-  };
-
-  const fetchCommesse = async () => {
-    try {
-      const response = await axios.get('http://localhost:3001/commesse');
-      setCommesse(response.data);
-    } catch (error) {
-      console.error('Error fetching commesse:', error);
-    }
-  };
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
@@ -100,7 +88,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
 
   const onActionComplete = (args) => {
     console.log('Action Start: ', args);
-
+  
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
         if (Array.isArray(args.data)) {
@@ -131,7 +119,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
     }
     console.log('Action End: ', args);
   };
-
+  
   const resourceHeaderTemplate = (props) => {
     const commessa = props.resourceData.Descrizione;
     if (commessa) {
