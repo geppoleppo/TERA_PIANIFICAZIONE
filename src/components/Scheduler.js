@@ -88,28 +88,24 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
 
   const onActionComplete = (args) => {
     console.log('Action Start: ', args);
-  
+
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
         if (Array.isArray(args.data)) {
           args.data.forEach(event => {
             if (args.requestType === 'eventCreated') {
-              // Quando un evento viene creato
-              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId; // Assicurati che CommessaId non venga perso
+              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
             } else if (args.requestType === 'eventChanged') {
-              // Quando un evento viene trascinato o modificato
-              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId; // Assicurati che CommessaId non venga perso
+              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
             }
             event.Color = commessaColors[event.CommessaId] || '#000000';
             console.log('Event After Change: ', event);
           });
         } else {
           if (args.requestType === 'eventCreated') {
-            // Quando un evento viene creato
-            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId; // Assicurati che CommessaId non venga perso
+            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
           } else if (args.requestType === 'eventChanged') {
-            // Quando un evento viene trascinato o modificato
-            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId; // Assicurati che CommessaId non venga perso
+            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
           }
           args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
           console.log('Event After Change: ', args.data);
@@ -121,6 +117,9 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const resourceHeaderTemplate = (props) => {
+    if (!props.resourceData) {
+      return null;
+    }
     const commessa = props.resourceData.Descrizione;
     if (commessa) {
       return (
@@ -147,13 +146,12 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
     console.log('Event props:', props);
     console.log('Commesse array:', commesse);
 
-    // Controlla se props.CommessaId è un array o un singolo valore e gestiscilo di conseguenza
     const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
     const commessa = commesse.find(commessa => commessa.Id === commessaId);
 
-    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata'; 
+    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
     const subjectText = props.Subject ? props.Subject : '';
-    const color = commessaColors[commessaId] || '#000000'; // Use color from state
+    const color = commessaColors[commessaId] || '#000000';
 
     return (
       <div className="template-wrap" style={{ backgroundColor: color }}>
@@ -169,7 +167,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   const group = {
     allowGroupEdit: true,
     byGroupID: false,
-    resources: ['Commesse']
+    resources: ['Resources', 'Commesse']
   };
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
@@ -200,18 +198,18 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
           className="filter-dropdown"
         />
       </div>
-      <div className="scroll-container"> {/* Aggiungi la classe per lo scorrimento */}
+      <div className="scroll-container">
         <ScheduleComponent
           cssClass='group-editing'
           width='100%'
           height='650px'
           selectedDate={new Date()}
-          currentView={currentView} // Set default view to 'Month'
-          locale='it'  // Set locale to Italian
-          dateFormat='dd/MM/yyyy'  // Set date format
+          currentView={currentView}
+          locale='it'
+          dateFormat='dd/MM/yyyy'
           resourceHeaderTemplate={resourceHeaderTemplate}
           eventSettings={{
-            dataSource: data, // Usa i dati passati come props
+            dataSource: data,
             fields: {
               subject: { title: 'Task', name: 'Subject', default: '' },
               description: { title: 'Summary', name: 'Description' },
@@ -221,9 +219,9 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
               IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
               commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
             },
-            template: monthEventTemplate, // Aggiunto qui per assicurarsi che il template sia usato
+            template: monthEventTemplate,
           }}
-          rowAutoHeight={true} // Enable row auto height
+          rowAutoHeight={true}
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
@@ -232,7 +230,7 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
             <ViewDirective option='Day' allowVirtualScrolling={true} />
             <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
             <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
-            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} /> {/* Copre 3 mesi */}
+            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} />
           </ViewsDirective>
           <ResourcesDirective>
             <ResourceDirective
