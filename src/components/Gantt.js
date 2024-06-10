@@ -39,14 +39,31 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     dependency: 'Predecessor',
     duration: 'Duration',
     progress: 'Progress',
+    resourceInfo: 'resources', // Aggiungi questa linea
     color: 'Color',
     CommessaId: 'CommessaId'
   };
+
+  const resourceFields = {
+    id: 'resourceId',
+    name: 'resourceName'
+  };
+
+  const resources = [
+    { resourceId: 1, resourceName: 'Risorsa 1' },
+    { resourceId: 2, resourceName: 'Risorsa 2' }
+  ];
 
   return (
     <GanttComponent
       dataSource={filteredData}
       taskFields={taskFields}
+      resources={resources} // Aggiungi questa linea
+      resourceFields={resourceFields} // Aggiungi questa linea
+      labelSettings={{
+        leftLabel: 'TaskName',
+        rightLabel: 'resources'
+      }}
       height='650px'
       allowSelection={true}
       allowSorting={true}
@@ -68,21 +85,14 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       }}
       actionComplete={onActionComplete}
       allowRowDragAndDrop={true}
-      filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
-      highlightWeekends= {true}
-      allowSelection = {true}
-
+      allowResizing = {true}
+      allowSelection= {true}
+      filterSettings={{ type: 'Menu' }}
+      
     >
       <ColumnsDirective>
-        <ColumnDirective field='TaskID' visible={false} />
-        <ColumnDirective field='CommessaName' headerText='Commessa' width='100' allowFiltering={true} />
-        <ColumnDirective field='TaskName' headerText='Task' width='250' allowFiltering={true} />
-        <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={false} />
-        <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={false}/>
-        <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={true} visible={false}/>
-        <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={false} visible={false}/>
-        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} visible={false}/>
-        <ColumnDirective field='Color' visible={false} />
+        <ColumnDirective field='CommessaName' headerText='Commessa' width='250' allowFiltering={true} visible={false} />
+        <ColumnDirective field='CommessaName' headerText='Commessa' width='250' allowFiltering={true} />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD, Filter]} />
     </GanttComponent>
