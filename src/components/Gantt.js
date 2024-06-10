@@ -68,18 +68,16 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       }}
       actionComplete={onActionComplete}
       allowRowDragAndDrop={true}
-      filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
+      allowResizing = {true}
+      allowSelection= {true}
+      filterSettings={{ type: 'Menu' }}
+      
     >
       <ColumnsDirective>
-        <ColumnDirective field='TaskID' visible={false} />
+      
+        <ColumnDirective field='CommessaName' headerText='Commessa' width='250' allowFiltering={true} visible = {false} />
         <ColumnDirective field='CommessaName' headerText='Commessa' width='250' allowFiltering={true} />
-        <ColumnDirective field='TaskName' headerText='Task' width='250' allowFiltering={true} />
-        <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={true} />
-        <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true} />
-        <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={true} />
-        <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={false} />
-        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} />
-        <ColumnDirective field='Color' visible={false} />
+
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD, Filter]} />
     </GanttComponent>
