@@ -19,10 +19,27 @@ const createTables = () => {
         );
     `;
 
+    const queryEventi = `
+    CREATE TABLE IF NOT EXISTS Eventi (
+        Id INTEGER PRIMARY KEY,
+        Descrizione TEXT NOT NULL,
+        Inizio DATETIME NOT NULL,
+        Fine DATETIME NOT NULL,
+        CommessaId INTEGER,
+        IncaricatoId INTEGER,
+        Colore TEXT NOT NULL,
+        Progresso INTEGER,
+        FOREIGN KEY (CommessaId) REFERENCES Commesse(Id),
+        FOREIGN KEY (IncaricatoId) REFERENCES Collaboratori(Id)
+    );
+`;
+
 
     db.prepare(queryCollaboratori).run();
     db.prepare(queryCommesse).run();
+    db.prepare(queryEventi).run();
 };
+
 
 createTables();
 
@@ -59,9 +76,33 @@ const getAllCommesse = () => {
     }
 };
 
+const getAllEventi = () => {
+    const query = 'SELECT * FROM Eventi';
+    return db.prepare(query).all();
+};
+
+const addEvento = (evento) => {
+    const query = 'INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaId, IncaricatoId, Colore, Progresso) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    db.prepare(query).run(evento.Descrizione, evento.Inizio, evento.Fine, evento.CommessaId, evento.IncaricatoId, evento.Colore, evento.Progresso);
+};
+
+const updateEvento = (evento) => {
+    const query = 'UPDATE Eventi SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, IncaricatoId = ?, Colore = ?, Progresso = ? WHERE Id = ?';
+    db.prepare(query).run(evento.Descrizione, evento.Inizio, evento.Fine, evento.CommessaId, evento.IncaricatoId, evento.Colore, evento.Progresso, evento.Id);
+};
+
+const deleteEvento = (id) => {
+    const query = 'DELETE FROM Eventi WHERE Id = ?';
+    db.prepare(query).run(id);
+};
+
 
 module.exports = {
 
+    getAllEventi,
+    addEvento,
+    updateEvento,
+    deleteEvento ,
     getAllCollaboratori,
     getAllCommesse,
 
