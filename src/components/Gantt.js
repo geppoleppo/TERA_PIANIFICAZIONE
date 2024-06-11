@@ -5,6 +5,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
   const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
+    console.log('Gantt data:', data);
     setFilteredData(data);
   }, [data]);
 
@@ -18,6 +19,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
   };
 
   const onActionComplete = (args) => {
+    console.log('Gantt action complete:', args);
     if (args.requestType === 'save' || args.requestType === 'delete') {
       onDataChange({
         requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
@@ -38,9 +40,34 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     CommessaId: 'CommessaId'
   };
 
+  const staticData = [
+    {
+      TaskID: 1,
+      TaskName: 'Task 1',
+      StartDate: new Date('2024-06-01'),
+      EndDate: new Date('2024-06-02'),
+      Predecessor: '',
+      Duration: 1,
+      Progress: 50,
+      Color: '#ff5733',
+      CommessaId: 1
+    },
+    {
+      TaskID: 2,
+      TaskName: 'Task 2',
+      StartDate: new Date('2024-06-03'),
+      EndDate: new Date('2024-06-04'),
+      Predecessor: '',
+      Duration: 1,
+      Progress: 75,
+      Color: '#33ff57',
+      CommessaId: 2
+    }
+  ];
+
   return (
     <GanttComponent
-      dataSource={filteredData}
+      dataSource={filteredData.length > 0 ? filteredData : staticData}
       taskFields={taskFields}
       height='650px'
       allowSelection={true}
@@ -64,19 +91,18 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       actionComplete={onActionComplete}
       allowRowDragAndDrop={true}
       filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
-      highlightWeekends= {true}
-      allowSelection = {true}
-
+      highlightWeekends={true}
+      allowSelection={true}
     >
       <ColumnsDirective>
         <ColumnDirective field='TaskID' visible={false} />
         <ColumnDirective field='CommessaName' headerText='Commessa' width='100' allowFiltering={true} />
         <ColumnDirective field='TaskName' headerText='Task' width='250' allowFiltering={true} />
         <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={true} />
-        <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true}/>
+        <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true} />
         <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={true} />
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' />
-        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false}/>
+        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} />
         <ColumnDirective field='Color' visible={false} />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD, Filter]} />

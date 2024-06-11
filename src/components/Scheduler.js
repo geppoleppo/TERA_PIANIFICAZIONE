@@ -3,6 +3,7 @@ import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import '../index.css';
 
+// Load the required CLDR data
 import { loadCldr, L10n } from '@syncfusion/ej2-base';
 import * as numberingSystems from 'cldr-data/main/it/numbers.json';
 import * as gregorian from 'cldr-data/main/it/ca-gregorian.json';
@@ -10,6 +11,7 @@ import * as timeZoneNames from 'cldr-data/main/it/timeZoneNames.json';
 import * as weekData from 'cldr-data/supplemental/weekData.json';
 loadCldr(numberingSystems, gregorian, timeZoneNames, weekData);
 
+// Load Italian locale
 L10n.load({
   'it': {
     'schedule': {
@@ -35,6 +37,13 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [currentView, setCurrentView] = useState('Month'); 
+
+  useEffect(() => {
+    console.log('Scheduler data:', data);
+    console.log('Scheduler resources:', resources);
+    console.log('Scheduler commesse:', commesse);
+    console.log('Scheduler commessaColors:', commessaColors);
+  }, [data, resources, commesse, commessaColors]);
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
@@ -71,6 +80,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const onActionComplete = (args) => {
+    console.log('Scheduler action complete:', args);
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       onDataChange(args);
     }

@@ -28,7 +28,7 @@ const App = () => {
         setCommesse(commesseData);
         setResources(collaboratoriData);
         setScheduleData(eventiData);
-        setGanttData(eventiData);
+        setGanttData(eventiData.map(event => formatGanttData(event)));
 
         const colors = commesseData.reduce((acc, commessa) => {
           acc[commessa.Id] = commessa.Colore;
@@ -45,9 +45,11 @@ const App = () => {
 
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
+    const event = formatEventData(args.data[0]);
+    console.log('Formatted Event Data:', event);
     switch (args.requestType) {
       case 'eventCreated':
-        axios.post('http://localhost:3001/eventi', args.data)
+        axios.post('http://localhost:3001/eventi', event)
           .then(response => {
             console.log('Event created:', response.data);
             updateLocalData(response.data, 'add');
@@ -55,18 +57,18 @@ const App = () => {
           .catch(error => console.error('Failed to create event:', error));
         break;
       case 'eventChanged':
-        axios.put(`http://localhost:3001/eventi/${args.data.Id}`, args.data)
+        axios.put(`http://localhost:3001/eventi/${event.Id}`, event)
           .then(response => {
             console.log('Event updated:', response.data);
-            updateLocalData(args.data, 'update');
+            updateLocalData(event, 'update');
           })
           .catch(error => console.error('Failed to update event:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`http://localhost:3001/eventi/${args.data.Id}`)
+        axios.delete(`http://localhost:3001/eventi/${event.Id}`)
           .then(response => {
             console.log('Event deleted:', response.data);
-            updateLocalData(args.data, 'delete');
+            updateLocalData(event, 'delete');
           })
           .catch(error => console.error('Failed to delete event:', error));
         break;
@@ -77,20 +79,22 @@ const App = () => {
 
   const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
+    const task = formatGanttData(args.data);
+    console.log('Formatted Gantt Data:', task);
     switch (args.requestType) {
       case 'save':
-        axios.put(`http://localhost:3001/eventi/${args.data.Id}`, args.data)
+        axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
           .then(response => {
             console.log('Task updated:', response.data);
-            updateLocalData(args.data, 'update');
+            updateLocalData(task, 'update');
           })
           .catch(error => console.error('Failed to update task:', error));
         break;
       case 'delete':
-        axios.delete(`http://localhost:3001/eventi/${args.data.Id}`)
+        axios.delete(`http://localhost:3001/eventi/${task.Id}`)
           .then(response => {
             console.log('Task deleted:', response.data);
-            updateLocalData(args.data, 'delete');
+            updateLocalData(task, 'delete');
           })
           .catch(error => console.error('Failed to delete task:', error));
         break;
@@ -115,17 +119,42 @@ const App = () => {
         break;
     }
     setScheduleData(updatedScheduleData);
-    setGanttData(updatedScheduleData.map(item => ({
-      ...item,
-      TaskID: item.Id,
-      TaskName: item.Descrizione,
-      StartDate: item.Inizio,
-      EndDate: item.Fine,
-      CommessaId: item.CommessaId,
-      CommessaName: commesse.find(c => c.Id === item.CommessaId)?.Descrizione,
-      Color: item.Colore,
-      Progress: item.Progresso
-    })));
+    setGanttData(updatedScheduleData.map(item => formatGanttData(item)));
+    console.log('Updated Schedule Data:', updatedScheduleData);
+    console.log('Updated Gantt Data:', updatedScheduleData);
+  };
+
+  const formatEventData = (event) => {
+    const commessa = commesse.find(c => c.Id === event.CommessaId);
+    const formattedEvent = {
+      Id: event.Id,
+      Descrizione: event.Subject || '',
+      Inizio: event.StartTime ? new Date(event.StartTime).toISOString() : '',
+      Fine: event.EndTime ? new Date(event.EndTime).toISOString() : '',
+      CommessaId: event.CommessaId || '',
+      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId[0] : event.IncaricatoId || '',
+      Colore: commessa ? commessa.Colore : '#000000',
+      Progresso: event.Progress || 0
+    };
+    console.log('Formatted Event Data:', formattedEvent);
+    return formattedEvent;
+  };
+
+  const formatGanttData = (task) => {
+    const commessa = commesse.find(c => c.Id === task.CommessaId);
+    const formattedTask = {
+      TaskID: task.Id,
+      TaskName: task.Descrizione || '',
+      StartDate: task.Inizio ? new Date(task.Inizio) : new Date(),
+      EndDate: task.Fine ? new Date(task.Fine) : new Date(),
+      Predecessor: task.Predecessor || '',
+      Duration: task.Duration || 1,  // Assuming duration of 1 if not provided
+      Progress: task.Progresso || 0,
+      Color: task.Colore || commessa ? commessa.Colore : '#000000',
+      CommessaId: task.CommessaId || ''
+    };
+    console.log('Formatted Gantt Task:', formattedTask);
+    return formattedTask;
   };
 
   return (
