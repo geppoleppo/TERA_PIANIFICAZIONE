@@ -40,23 +40,10 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   const [modifiedData, setModifiedData] = useState([]);
 
   useEffect(() => {
-    //console.log('Scheduler component mounted');
-    //console.log('Scheduler data:', data);
-    //console.log('Resources:', resources);
-    //console.log('Commesse:', commesse);
-  
-    // Log dettagliato per ogni evento
-    data.forEach((event, index) => {
-      //console.log(`Event ${index}:`);
-      //console.log('Id:', event.Id);
-      //console.log('Subject:', event.Subject);
-      //console.log('StartTime:', event.StartTime);
-      //console.log('EndTime:', event.EndTime);
-      //console.log('Color:', event.Color);
-      //console.log('CommessaId:', event.CommessaId);
-      //console.log('IncaricatoId:', event.IncaricatoId);
-      //console.log('Progress:', event.Progress);
-    });
+    console.log('Scheduler component mounted');
+    console.log('Scheduler data:', data);
+    console.log('Resources:', resources);
+    console.log('Commesse:', commesse);
   
     // Convertiamo l'array IncaricatoId da stringhe a numeri
     const newData = data.map(event => ({
@@ -64,8 +51,9 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
       IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.map(id => parseInt(id)) : event.IncaricatoId
     }));
     setModifiedData(newData);
-    //console.log('Modified Scheduler data:', newData);
+    console.log('Modified Scheduler data:', newData);
   }, [data, resources, commesse]);
+  
   
   
 
@@ -105,7 +93,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const onActionComplete = (args) => {
-    //console.log('Action Start: ', args);
+    console.log('Action Start: ', args);
 
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
@@ -117,7 +105,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
               event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
             }
             event.Color = commessaColors[event.CommessaId] || '#000000';
-            //console.log('Event After Change: ', event);
+            console.log('Event After Change: ', event);
           });
         } else {
           if (args.requestType === 'eventCreated') {
@@ -126,12 +114,12 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
             args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
           }
           args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
-          //console.log('Event After Change: ', args.data);
+          console.log('Event After Change: ', args.data);
         }
       }
       onDataChange(args);
     }
-    //console.log('Action End: ', args);
+    console.log('Action End: ', args);
   };
 
   const resourceHeaderTemplate = (props) => {
@@ -161,8 +149,8 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const monthEventTemplate = (props) => {
-    //console.log('Event props:', props);
-    //console.log('Commesse array:', commesse);
+    console.log('Event props:', props);
+    console.log('Commesse array:', commesse);
 
     const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
     const commessa = commesse.find(commessa => commessa.Id === commessaId);

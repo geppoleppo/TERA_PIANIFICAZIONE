@@ -10,25 +10,34 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     console.log('data in Gantt:', data);
 
     // Verifica la corrispondenza tra i campi dei dati e taskFields
-    const verifyData = data.map(event => ({
-      ...event,
-      TaskID: event.TaskID || event.Id,
-      TaskName: event.TaskName || event.Subject,
-      StartDate: event.StartDate || event.StartTime,
-      EndDate: event.EndDate || event.EndTime,
-      Predecessor: event.Predecessor || '',
-      Duration: event.Duration || 1,
-      Progress: event.Progress || 0,
-      Color: event.Color || commessaColors[event.CommessaId] || '#000000',
-      CommessaId: event.CommessaId || ''
-    }));
+    const verifyData = data.map(event => {
+      const startDate = new Date(event.StartTime);
+      const endDate = new Date(event.EndTime);
+      
+      // Verifica se le date sono valide
+      const isValidStartDate = !isNaN(startDate.getTime());
+      const isValidEndDate = !isNaN(endDate.getTime());
+
+      return {
+        ...event,
+        Id: event.Id || '',
+        TaskName: event.Subject,
+        StartDate: isValidStartDate ? startDate : null,
+        EndDate: isValidEndDate ? endDate : null,
+        Predecessor: event.Predecessor || '',
+        Duration: event.Duration || 1,
+        Progress: event.Progress || 0,
+        Color: event.Color || commessaColors[event.CommessaId] || '#000000',
+        CommessaId: event.CommessaId || ''
+      };
+    });
     console.log('Verified Data for Gantt:', verifyData);
     setFilteredData(verifyData);
   }, [data, commessaColors]);
 
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';
-    console.log(`taskbarTemplate: TaskID=${props.TaskID}, CommessaId=${props.CommessaId}, Color=${commessaColor}`);
+    console.log('taskbarTemplate props:', props); // Stampa tutte le proprietà di `props`
     return (
       <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
         {props.TaskName}
@@ -46,7 +55,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
   };
 
   const taskFields = {
-    id: 'TaskID',
+    id: 'Id',
     name: 'TaskName',
     startDate: 'StartDate',
     endDate: 'EndDate',
@@ -83,11 +92,10 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       actionComplete={onActionComplete}
       allowRowDragAndDrop={true}
       filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
-      highlightWeekends= {true}
-      allowSelection = {true}
+      highlightWeekends={true}
     >
       <ColumnsDirective>
-        <ColumnDirective field='TaskID' visible={false} />
+        <ColumnDirective field='Id' visible={false} />
         <ColumnDirective field='CommessaName' headerText='Commessa' width='100' allowFiltering={true} />
         <ColumnDirective field='TaskName' headerText='Task' width='250' allowFiltering={true} />
         <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={false} />
