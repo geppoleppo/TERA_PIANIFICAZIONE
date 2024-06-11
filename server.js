@@ -27,6 +27,41 @@ app.get('/commesse', (req, res) => {
     }
 });
 
+app.get('/eventi', (req, res) => {
+    try {
+        const eventi = db.getAllEventi();
+        res.json(eventi);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/eventi', (req, res) => {
+    try {
+        const newEvento = db.createEvento(req.body);
+        res.json(newEvento);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/eventi/:id', (req, res) => {
+    try {
+        const updatedEvento = db.updateEvento(req.params.id, req.body);
+        res.json(updatedEvento);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/eventi/:id', (req, res) => {
+    try {
+        db.deleteEvento(req.params.id);
+        res.json({ message: 'Event deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

@@ -33,24 +33,17 @@ L10n.load({
   }
 });
 
-const Scheduler = ({ data, onDataChange, commessaColors }) => {
-  const [resources, setResources] = useState([]);
-  const [commesse, setCommesse] = useState([]);
+const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) => {
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [currentView, setCurrentView] = useState('Month'); // Set default view to 'Month'
 
   useEffect(() => {
-    // Simulate fetching static data for resources and commesse
-    setResources([
-      { Id: 1, Nome: 'Risorsa 1', Colore: '#ff0000', Immagine: '' },
-      { Id: 2, Nome: 'Risorsa 2', Colore: '#00ff00', Immagine: '' },
-    ]);
-    setCommesse([
-      { Id: 1, Descrizione: 'Commessa 1', Colore: '#ff0000' },
-      { Id: 2, Descrizione: 'Commessa 2', Colore: '#00ff00' },
-    ]);
-  }, []);
+    console.log('Scheduler component mounted');
+    console.log('Scheduler data:', data);
+    console.log('Resources:', resources);
+    console.log('Commesse:', commesse);
+  }, [data, resources, commesse]);
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
