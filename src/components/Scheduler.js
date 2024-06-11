@@ -37,13 +37,38 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [currentView, setCurrentView] = useState('Month'); // Set default view to 'Month'
+  const [modifiedData, setModifiedData] = useState([]);
 
   useEffect(() => {
     console.log('Scheduler component mounted');
     console.log('Scheduler data:', data);
     console.log('Resources:', resources);
     console.log('Commesse:', commesse);
+  
+    // Log dettagliato per ogni evento
+    data.forEach((event, index) => {
+      console.log(`Event ${index}:`);
+      console.log('Id:', event.Id);
+      console.log('Subject:', event.Subject);
+      console.log('StartTime:', event.StartTime);
+      console.log('EndTime:', event.EndTime);
+      console.log('Color:', event.Color);
+      console.log('CommessaId:', event.CommessaId);
+      console.log('IncaricatoId:', event.IncaricatoId);
+      console.log('Progress:', event.Progress);
+    });
+  
+    // Convertiamo l'array IncaricatoId da stringhe a numeri
+    const newData = data.map(event => ({
+      ...event,
+      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.map(id => parseInt(id)) : event.IncaricatoId
+    }));
+    setModifiedData(newData);
+    console.log('Modified Scheduler data:', newData);
   }, [data, resources, commesse]);
+  
+  
+
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
@@ -202,8 +227,9 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
           dateFormat='dd/MM/yyyy'
           resourceHeaderTemplate={resourceHeaderTemplate}
           eventSettings={{
-            dataSource: data,
+            dataSource: modifiedData,
             fields: {
+              id: 'Id',
               subject: { title: 'Task', name: 'Subject', default: '' },
               description: { title: 'Summary', name: 'Description' },
               startTime: { title: 'From', name: 'StartTime' },
