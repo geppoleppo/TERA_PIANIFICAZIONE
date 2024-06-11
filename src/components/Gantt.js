@@ -9,7 +9,21 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     console.log('commessaColors in Gantt:', commessaColors);
     console.log('data in Gantt:', data);
 
-    setFilteredData(data);
+    // Verifica la corrispondenza tra i campi dei dati e taskFields
+    const verifyData = data.map(event => ({
+      ...event,
+      TaskID: event.TaskID || event.Id,
+      TaskName: event.TaskName || event.Subject,
+      StartDate: event.StartDate || event.StartTime,
+      EndDate: event.EndDate || event.EndTime,
+      Predecessor: event.Predecessor || '',
+      Duration: event.Duration || 1,
+      Progress: event.Progress || 0,
+      Color: event.Color || commessaColors[event.CommessaId] || '#000000',
+      CommessaId: event.CommessaId || ''
+    }));
+    console.log('Verified Data for Gantt:', verifyData);
+    setFilteredData(verifyData);
   }, [data, commessaColors]);
 
   const taskbarTemplate = (props) => {
@@ -71,7 +85,6 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
       highlightWeekends= {true}
       allowSelection = {true}
-
     >
       <ColumnsDirective>
         <ColumnDirective field='TaskID' visible={false} />
@@ -80,8 +93,8 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
         <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={false} />
         <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={false}/>
         <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={true} visible={false}/>
-        <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={false} visible={false}/>
-        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} visible={false}/>
+        <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={false} />
+        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} />
         <ColumnDirective field='Color' visible={false} />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD, Filter]} />

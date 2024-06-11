@@ -43,7 +43,7 @@ createTables();
 const verifyTables = () => {
     try {
         const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-        console.log("Tables in the database:", tables);
+        //console.log("Tables in the database:", tables);
     } catch (error) {
         console.error("Error verifying tables:", error);
     }
