@@ -3,7 +3,6 @@ import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import '../index.css';
 
-// Load the required CLDR data
 import { loadCldr, L10n } from '@syncfusion/ej2-base';
 import * as numberingSystems from 'cldr-data/main/it/numbers.json';
 import * as gregorian from 'cldr-data/main/it/ca-gregorian.json';
@@ -11,7 +10,6 @@ import * as timeZoneNames from 'cldr-data/main/it/timeZoneNames.json';
 import * as weekData from 'cldr-data/supplemental/weekData.json';
 loadCldr(numberingSystems, gregorian, timeZoneNames, weekData);
 
-// Load Italian locale
 L10n.load({
   'it': {
     'schedule': {
@@ -33,24 +31,10 @@ L10n.load({
   }
 });
 
-const Scheduler = ({ data, onDataChange, commessaColors }) => {
-  const [resources, setResources] = useState([]);
-  const [commesse, setCommesse] = useState([]);
+const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) => {
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
-  const [currentView, setCurrentView] = useState('Month'); // Set default view to 'Month'
-
-  useEffect(() => {
-    // Simulate fetching static data for resources and commesse
-    setResources([
-      { Id: 1, Nome: 'Risorsa 1', Colore: '#ff0000', Immagine: '' },
-      { Id: 2, Nome: 'Risorsa 2', Colore: '#00ff00', Immagine: '' },
-    ]);
-    setCommesse([
-      { Id: 1, Descrizione: 'Commessa 1', Colore: '#ff0000' },
-      { Id: 2, Descrizione: 'Commessa 2', Colore: '#00ff00' },
-    ]);
-  }, []);
+  const [currentView, setCurrentView] = useState('Month'); 
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
@@ -87,39 +71,13 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const onActionComplete = (args) => {
-    console.log('Action Start: ', args);
-
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        if (Array.isArray(args.data)) {
-          args.data.forEach(event => {
-            if (args.requestType === 'eventCreated') {
-              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
-            } else if (args.requestType === 'eventChanged') {
-              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
-            }
-            event.Color = commessaColors[event.CommessaId] || '#000000';
-            console.log('Event After Change: ', event);
-          });
-        } else {
-          if (args.requestType === 'eventCreated') {
-            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
-          } else if (args.requestType === 'eventChanged') {
-            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
-          }
-          args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
-          console.log('Event After Change: ', args.data);
-        }
-      }
       onDataChange(args);
     }
-    console.log('Action End: ', args);
   };
 
   const resourceHeaderTemplate = (props) => {
-    if (!props.resourceData) {
-      return null;
-    }
+    if (!props.resourceData) return null;
     const commessa = props.resourceData.Descrizione;
     if (commessa) {
       return (
@@ -130,7 +88,6 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
         </div>
       );
     }
-
     const resource = resources.find(resource => resource.Id === props.resourceData.Id);
     return (
       <div className="template-wrap">
@@ -143,12 +100,8 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   };
 
   const monthEventTemplate = (props) => {
-    console.log('Event props:', props);
-    console.log('Commesse array:', commesse);
-
     const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
     const commessa = commesse.find(commessa => commessa.Id === commessaId);
-
     const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
     const subjectText = props.Subject ? props.Subject : '';
     const color = commessaColors[commessaId] || '#000000';
