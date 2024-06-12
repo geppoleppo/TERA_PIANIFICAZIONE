@@ -89,7 +89,7 @@ const App = () => {
   const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
     const task = formatGanttData(args.data, commesse);
-    //console.log('Formatted Gantt Data:', task);
+    console.log('Formatted Gantt Data:', task);
     switch (args.requestType) {
       case 'save':
         axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
@@ -111,6 +111,7 @@ const App = () => {
         break;
     }
   };
+  
 
   const updateLocalData = (data, type) => {
     let updatedScheduleData = [...scheduleData];
@@ -129,9 +130,11 @@ const App = () => {
     }
     setScheduleData(updatedScheduleData);
     setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
+
     console.log('Updated Schedule Data:', updatedScheduleData);
     console.log('Updated Gantt Data:', updatedScheduleData);
   };
+
 
   const formatEventData = (event) => {
     const commessa = commesse.find(c => c.Id === event.CommessaId);

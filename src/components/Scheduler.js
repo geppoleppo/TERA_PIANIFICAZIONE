@@ -53,10 +53,6 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     setModifiedData(newData);
     console.log('Modified Scheduler data:', newData);
   }, [data, resources, commesse]);
-  
-  
-  
-
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
