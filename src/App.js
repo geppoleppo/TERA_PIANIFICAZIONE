@@ -14,7 +14,7 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Fetching collaborators and projects...');
+        //console.log('Fetching collaborators and projects...');
         const [collaboratoriResponse, commesseResponse] = await Promise.all([
           axios.get('http://localhost:3001/collaboratori'),
           axios.get('http://localhost:3001/commesse')
@@ -36,7 +36,7 @@ const App = () => {
         console.log('Commessa Colors:', colors);
 
         // Carica gli eventi dal server solo dopo che le commesse sono state impostate
-        console.log('Fetching events...');
+        //console.log('Fetching events...');
         const eventiResponse = await axios.get('http://localhost:3001/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event));
         console.log('Events:', staticSchedulerData);
@@ -55,7 +55,7 @@ const App = () => {
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
     const event = formatEventData(args.data[0]);
-    console.log('Formatted Event Data:', event);
+    //console.log('Formatted Event Data:', event);
     switch (args.requestType) {
       case 'eventCreated':
         axios.post('http://localhost:3001/eventi', event)
@@ -89,10 +89,10 @@ const App = () => {
   const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
     const task = formatGanttData(args.data, commesse);
-    console.log('Formatted Gantt Data:', task);
+    //console.log('Formatted Gantt Data:', task);
     switch (args.requestType) {
       case 'save':
-        axios.put(`http://localhost:3001/eventi/${task.TaskID}`, task)
+        axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
           .then(response => {
             console.log('Task updated:', response.data);
             updateLocalData(task, 'update');
@@ -100,7 +100,7 @@ const App = () => {
           .catch(error => console.error('Failed to update task:', error));
         break;
       case 'delete':
-        axios.delete(`http://localhost:3001/eventi/${task.TaskID}`)
+        axios.delete(`http://localhost:3001/eventi/${task.Id}`)
           .then(response => {
             console.log('Task deleted:', response.data);
             updateLocalData(task, 'delete');
@@ -165,17 +165,17 @@ const App = () => {
   const formatGanttData = (task, commesse) => {
     const commessa = commesse.find(c => c.Id === task.CommessaId);
     const formattedTask = {
-      TaskID: task.Id,
+      Id: task.Id,
       TaskName: task.Descrizione || '',
-      StartDate: task.Inizio ? new Date(task.Inizio) : new Date(),
-      EndDate: task.Fine ? new Date(task.Fine) : new Date(),
+      StartTime: task.Inizio ? new Date(task.Inizio) : new Date(),
+      EndTime: task.Fine ? new Date(task.Fine) : new Date(),
       Predecessor: task.Predecessor || '',
       Duration: task.Duration || 1,
       Progress: task.Progresso || 0,
       Color: (commessa && commessa.Colore) || '#000000',
       CommessaId: task.CommessaId || ''
     };
-    console.log('Formatted Gantt Task:', formattedTask);
+    //console.log('Formatted Gantt Task:', formattedTask);
     return formattedTask;
   };
 

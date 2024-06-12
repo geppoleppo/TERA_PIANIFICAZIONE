@@ -42,8 +42,8 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   useEffect(() => {
     console.log('Scheduler component mounted');
     console.log('Scheduler data:', data);
-    console.log('Resources:', resources);
-    console.log('Commesse:', commesse);
+    //console.log('Resources:', resources);
+    //console.log('Commesse:', commesse);
   
     // Convertiamo l'array IncaricatoId da stringhe a numeri
     const newData = data.map(event => ({
@@ -149,8 +149,8 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const monthEventTemplate = (props) => {
-    console.log('Event props:', props);
-    console.log('Commesse array:', commesse);
+    // console.log('Event props:', props);
+    //console.log('Commesse array:', commesse);
 
     const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
     const commessa = commesse.find(commessa => commessa.Id === commessaId);
