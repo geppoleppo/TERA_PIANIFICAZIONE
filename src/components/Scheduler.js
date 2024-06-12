@@ -87,7 +87,6 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     if (selectedCommesse.length === 0) return [];
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
-
   const onActionComplete = (args) => {
     console.log('Action Start: ', args);
   
@@ -95,9 +94,9 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
       if (args.data) {
         const updatedEvent = {
           ...args.data,
-          StartDate: args.data.StartTime,
-          EndDate: args.data.EndTime,
-          IncaricatoId: Array.isArray(args.data.IncaricatoId) ? args.data.IncaricatoId.join(',') : '' // Convert array to comma-separated string
+          Inizio: args.data.StartTime,
+          Fine: args.data.EndTime,
+          IncaricatoId: Array.isArray(args.data.IncaricatoId) ? args.data.IncaricatoId.map(id => parseInt(id, 10)) : [] // Convert array of strings to array of integers
         };
   
         onDataChange({
@@ -108,6 +107,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     }
     console.log('Action End: ', args);
   };
+  
   
   
   

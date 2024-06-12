@@ -52,34 +52,9 @@ const App = () => {
     fetchData();
   }, []);
 
-  const handleGanttDataChange = (args) => {
-    console.log('Gantt Data Change:', args);
-    const task = formatGanttData(args.data);
-    switch (args.requestType) {
-      case 'save':
-        axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
-          .then(response => {
-            console.log('Task updated:', response.data);
-            updateLocalData(task, 'update');
-          })
-          .catch(error => console.error('Failed to update task:', error));
-        break;
-      case 'delete':
-        axios.delete(`http://localhost:3001/eventi/${task.Id}`)
-          .then(response => {
-            console.log('Task deleted:', response.data);
-            updateLocalData(task, 'delete');
-          })
-          .catch(error => console.error('Failed to delete task:', error));
-        break;
-      default:
-        break;
-    }
-  };
-
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
-    const event = formatEventData(args.data[0]);
+    const event = convertToStandardFormat(args.data[0]);
     switch (args.requestType) {
       case 'eventCreated':
         axios.post('http://localhost:3001/eventi', event)
@@ -108,6 +83,52 @@ const App = () => {
       default:
         break;
     }
+  };
+  
+  const handleGanttDataChange = (args) => {
+    console.log('Gantt Data Change:', args);
+    const task = convertToStandardFormat(args.data);
+    switch (args.requestType) {
+      case 'save':
+        axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
+          .then(response => {
+            console.log('Task updated:', response.data);
+            updateLocalData(task, 'update');
+          })
+          .catch(error => console.error('Failed to update task:', error));
+        break;
+      case 'delete':
+        axios.delete(`http://localhost:3001/eventi/${task.Id}`)
+          .then(response => {
+            console.log('Task deleted:', response.data);
+            updateLocalData(task, 'delete');
+          })
+          .catch(error => console.error('Failed to delete task:', error));
+        break;
+      default:
+        break;
+    }
+  };
+  
+  const updateLocalData = (data, type) => {
+    let updatedScheduleData = [...scheduleData];
+    switch (type) {
+      case 'add':
+        updatedScheduleData = [...updatedScheduleData, convertToSchedulerFormat(data)];
+        break;
+      case 'update':
+        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? convertToSchedulerFormat(data) : item);
+        break;
+      case 'delete':
+        updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
+        break;
+      default:
+        break;
+    }
+    setScheduleData(updatedScheduleData);
+    setGanttData(updatedScheduleData.map(item => convertToGanttFormat(item)));
+    console.log('Updated Schedule Data:', updatedScheduleData);
+    console.log('Updated Gantt Data:', updatedScheduleData);
   };
   
   const formatEventData = (event) => {
@@ -140,45 +161,48 @@ const App = () => {
   };
   
   const formatGanttData = (task) => {
+    console.log('pippo', task);
     const commessa = commesse.find(c => c.Id === task.CommessaId);
     const formattedTask = {
       Id: task.Id,
       TaskName: task.Descrizione || '',
-      StartDate: task.StartTime ? new Date(task.StartTime) : new Date(task.Inizio),
-      EndDate: task.EndTime ? new Date(task.EndTime) : new Date(task.Fine),
+      StartTime: task.StartTime ? new Date(task.StartTime) : new Date(task.StartTime),
+      EndTime: task.EndTime ? new Date(task.EndTime) : new Date(task.EndTime),
       Predecessor: task.Predecessor || '',
-      Duration: task.Duration || 1,
       Progress: task.Progresso || 0,
       Color: (commessa && commessa.Colore) || '#000000',
       CommessaId: task.CommessaId || '',
-      IncaricatoId: typeof task.IncaricatoId === 'string' ? task.IncaricatoId.split(',').map(id => parseInt(id, 10)) : [], // Convert comma-separated string to array of integers
+      IncaricatoId: Array.isArray(task.IncaricatoId) ? task.IncaricatoId.map(id => parseInt(id, 10)) : [] // Convert array of strings to array of integers
     };
     console.log('Formatted Gantt Task:', formattedTask);
     return formattedTask;
   };
   
-  const updateLocalData = (data, type) => {
-    let updatedScheduleData = [...scheduleData];
-    switch (type) {
-      case 'add':
-        updatedScheduleData = [...updatedScheduleData, formatEventForScheduler(data)];
-        break;
-      case 'update':
-        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? formatEventForScheduler(data) : item);
-        break;
-      case 'delete':
-        updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
-        break;
-      default:
-        break;
-    }
-    setScheduleData(updatedScheduleData);
-    setGanttData(updatedScheduleData.map(item => formatGanttData(item)));
-    console.log('Updated Schedule Data:', updatedScheduleData);
-    console.log('Updated Gantt Data:', updatedScheduleData);
+  
+  
+  const convertToStandardFormat = (event) => {
+    return {
+      ...event,
+      Inizio: event.StartTime || event.StartDate,
+      Fine: event.EndTime || event.EndDate,
+    };
   };
   
+  const convertToSchedulerFormat = (event) => {
+    return {
+      ...event,
+      StartTime: event.Inizio,
+      EndTime: event.Fine,
+    };
+  };
   
+  const convertToGanttFormat = (task) => {
+    return {
+      ...task,
+      StartDate: task.Inizio,
+      EndDate: task.Fine,
+    };
+  };
 
   return (
     <div className="app-container">

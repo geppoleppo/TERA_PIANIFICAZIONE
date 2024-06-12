@@ -23,7 +23,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       const isValidEndDate = !isNaN(endDate.getTime());
 
       // Rimuove la durata se la data di fine è valida
-      const duration = isValidEndDate ? null : event.Duration || 1;
+      const duration = isValidEndDate ? null : event.Duration
       
       const verifiedEvent = {
         ...event,
@@ -64,16 +64,18 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     if (args.requestType === 'save' || args.requestType === 'delete') {
       const updatedEvent = {
         ...args.data,
-        StartTime: args.data.StartDate,
-        EndTime: args.data.EndDate,
+        Inizio: args.data.StartDate,
+        Fine: args.data.EndDate,
         IncaricatoId: Array.isArray(args.data.IncaricatoId) ? args.data.IncaricatoId.join(',') : '' // Convert array to comma-separated string
       };
       onDataChange({
         requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
-        data: [updatedEvent] // Ensure data is an array
+        data: updatedEvent
       });
     }
   };
+  
+  
   
   
 
