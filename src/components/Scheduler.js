@@ -1,3 +1,4 @@
+// Scheduler.js
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
@@ -42,9 +43,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   useEffect(() => {
     console.log('Scheduler component mounted');
     console.log('Scheduler data:', data);
-    //console.log('Resources:', resources);
-    //console.log('Commesse:', commesse);
-  
+
     // Convertiamo l'array IncaricatoId da stringhe a numeri
     const newData = data.map(event => ({
       ...event,
@@ -87,9 +86,10 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     if (selectedCommesse.length === 0) return [];
     return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
   };
+
   const onActionComplete = (args) => {
     console.log('Action Start: ', args);
-  
+
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
         const updatedEvent = {
@@ -98,7 +98,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
           Fine: args.data.EndTime,
           IncaricatoId: Array.isArray(args.data.IncaricatoId) ? args.data.IncaricatoId.map(id => parseInt(id, 10)) : [] // Convert array of strings to array of integers
         };
-  
+
         onDataChange({
           requestType: args.requestType,
           data: updatedEvent
@@ -107,10 +107,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     }
     console.log('Action End: ', args);
   };
-  
-  
-  
-  
+
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) {
       return null;
@@ -138,9 +135,6 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const monthEventTemplate = (props) => {
-    // console.log('Event props:', props);
-    //console.log('Commesse array:', commesse);
-
     const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
     const commessa = commesse.find(commessa => commessa.Id === commessaId);
 

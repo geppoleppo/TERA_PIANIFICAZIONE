@@ -26,7 +26,7 @@ const createTables = () => {
             Inizio TEXT NOT NULL,
             Fine TEXT NOT NULL,
             CommessaId INTEGER,
-            IncaricatoId TEXT, -- Cambiato da INTEGER a TEXT
+            IncaricatoId TEXT,
             Colore TEXT,
             Progresso INTEGER,
             FOREIGN KEY (CommessaId) REFERENCES Commesse(Id)
@@ -43,7 +43,7 @@ createTables();
 const verifyTables = () => {
     try {
         const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-        //console.log("Tables in the database:", tables);
+        console.log("Tables in the database:", tables);
     } catch (error) {
         console.error("Error verifying tables:", error);
     }
@@ -85,9 +85,21 @@ const createEvento = (evento) => {
     try {
         const query = `
             INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaId, IncaricatoId, Colore, Progresso)
-            VALUES (@Descrizione, @Inizio, @Fine, @CommessaId, @IncaricatoId, @Colore, @Progresso)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
-        const result = db.prepare(query).run(evento);
+        const params = [
+            evento.Descrizione,
+            evento.Inizio,
+            evento.Fine,
+            evento.CommessaId,
+            evento.IncaricatoId,
+            evento.Colore || '',
+            evento.Progresso || 0
+        ];
+        console.log('Create Event Params:', params);
+        const interpolatedQuery = query.replace(/\?/g, (_, i) => `'${params[i]}'`);
+        console.log('Interpolated Create Event Query:', interpolatedQuery);
+        const result = db.prepare(query).run(params);
         return { ...evento, Id: result.lastInsertRowid };
     } catch (error) {
         console.error("Database error:", error);
@@ -95,15 +107,27 @@ const createEvento = (evento) => {
     }
 };
 
-const updateEvento = (id, evento) => {
+const updateEvento = (evento) => {
     try {
         const query = `
             UPDATE Eventi
-            SET Descrizione = @Descrizione, Inizio = @Inizio, Fine = @Fine, CommessaId = @CommessaId, IncaricatoId = @IncaricatoId, Colore = @Colore, Progresso = @Progresso
-            WHERE Id = @Id
+            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, IncaricatoId = ?, Colore = ?, Progresso = ?
+            WHERE Id = ?
         `;
-        db.prepare(query).run({ ...evento, Id: id });
-        return { ...evento, Id: id };
+        const params = [
+            evento.Descrizione,
+            evento.Inizio,
+            evento.Fine,
+            evento.CommessaId,
+            evento.IncaricatoId,
+            evento.Colore || '',
+            evento.Progresso || 0,
+            evento.Id
+        ];
+        console.log('Update Event Params:', params);
+        const interpolatedQuery = query.replace(/\?/g, (_, i) => `'${params[i]}'`);
+        console.log('Interpolated Update Event Query:', interpolatedQuery);
+        return db.prepare(query).run(params);
     } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to update event.");

@@ -59,7 +59,6 @@ const App = () => {
       case 'eventCreated':
         axios.post('http://localhost:3001/eventi', event)
           .then(response => {
-            console.log('Event created:', response.data);
             updateLocalData(response.data, 'add');
           })
           .catch(error => console.error('Failed to create event:', error));
@@ -67,7 +66,6 @@ const App = () => {
       case 'eventChanged':
         axios.put(`http://localhost:3001/eventi/${event.Id}`, event)
           .then(response => {
-            console.log('Event updated:', response.data);
             updateLocalData(event, 'update');
           })
           .catch(error => console.error('Failed to update event:', error));
@@ -75,7 +73,6 @@ const App = () => {
       case 'eventRemoved':
         axios.delete(`http://localhost:3001/eventi/${event.Id}`)
           .then(response => {
-            console.log('Event deleted:', response.data);
             updateLocalData(event, 'delete');
           })
           .catch(error => console.error('Failed to delete event:', error));
@@ -85,14 +82,16 @@ const App = () => {
     }
   };
   
+
   const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
-    const task = convertToStandardFormat(args.data);
+    const task = convertToStandardFormat(args.data); // Convertire i dati del Gantt nel formato standard
+    console.log('taskigna:', task);
+    
     switch (args.requestType) {
-      case 'save':
+      case 'eventChanged':
         axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
           .then(response => {
-            console.log('Task updated:', response.data);
             updateLocalData(task, 'update');
           })
           .catch(error => console.error('Failed to update task:', error));
@@ -100,7 +99,6 @@ const App = () => {
       case 'delete':
         axios.delete(`http://localhost:3001/eventi/${task.Id}`)
           .then(response => {
-            console.log('Task deleted:', response.data);
             updateLocalData(task, 'delete');
           })
           .catch(error => console.error('Failed to delete task:', error));
@@ -110,14 +108,15 @@ const App = () => {
     }
   };
   
+
   const updateLocalData = (data, type) => {
     let updatedScheduleData = [...scheduleData];
     switch (type) {
       case 'add':
-        updatedScheduleData = [...updatedScheduleData, convertToSchedulerFormat(data)];
+        updatedScheduleData = [...updatedScheduleData, formatEventForScheduler(data)];
         break;
       case 'update':
-        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? convertToSchedulerFormat(data) : item);
+        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? formatEventForScheduler(data) : item);
         break;
       case 'delete':
         updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
@@ -126,27 +125,22 @@ const App = () => {
         break;
     }
     setScheduleData(updatedScheduleData);
-    setGanttData(updatedScheduleData.map(item => convertToGanttFormat(item)));
+    setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
     console.log('Updated Schedule Data:', updatedScheduleData);
     console.log('Updated Gantt Data:', updatedScheduleData);
   };
   
-  const formatEventData = (event) => {
-    const commessa = commesse.find(c => c.Id === event.CommessaId);
-    const formattedEvent = {
-      Id: event.Id,
-      Descrizione: event.Subject || '',
-      Inizio: event.StartTime ? new Date(event.StartTime).toISOString() : '',
-      Fine: event.EndTime ? new Date(event.EndTime).toISOString() : '',
-      CommessaId: event.CommessaId || '',
-      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId, // Convert array to comma-separated string
-      Colore: commessa ? commessa.Colore : '#000000',
-      Progresso: event.Progress || 0
+
+  const convertToStandardFormat = (event) => {
+    return {
+      ...event,
+      Inizio: event.StartTime || event.StartDate,
+      Fine: event.EndTime || event.EndDate,
+      Descrizione: event.Subject || event.TaskName,
+      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId // Convert array to comma-separated string
     };
-    console.log('Formatted Event Data:', formattedEvent);
-    return formattedEvent;
   };
-  
+
   const formatEventForScheduler = (event) => {
     return {
       Id: event.Id,
@@ -154,53 +148,25 @@ const App = () => {
       StartTime: new Date(event.Inizio),
       EndTime: new Date(event.Fine),
       CommessaId: event.CommessaId,
-      IncaricatoId: event.IncaricatoId ? event.IncaricatoId.split(',') : [], // Convert comma-separated string to array
+      IncaricatoId: event.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Convert comma-separated string to array of integers
       Color: event.Colore,
       Progress: event.Progresso
     };
   };
-  
+
   const formatGanttData = (task) => {
-    console.log('pippo', task);
-    const commessa = commesse.find(c => c.Id === task.CommessaId);
-    const formattedTask = {
+    console.log('MENAAAA',task.EndTime)
+    return {
       Id: task.Id,
       TaskName: task.Descrizione || '',
-      StartTime: task.StartTime ? new Date(task.StartTime) : new Date(task.StartTime),
-      EndTime: task.EndTime ? new Date(task.EndTime) : new Date(task.EndTime),
+      StartDate: task.StartTime ? new Date(task.StartTime) : new Date(),
+      EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
       Predecessor: task.Predecessor || '',
+      Duration: task.Duration || 1,
       Progress: task.Progresso || 0,
-      Color: (commessa && commessa.Colore) || '#000000',
+      Color: task.Color,
       CommessaId: task.CommessaId || '',
-      IncaricatoId: Array.isArray(task.IncaricatoId) ? task.IncaricatoId.map(id => parseInt(id, 10)) : [] // Convert array of strings to array of integers
-    };
-    console.log('Formatted Gantt Task:', formattedTask);
-    return formattedTask;
-  };
-  
-  
-  
-  const convertToStandardFormat = (event) => {
-    return {
-      ...event,
-      Inizio: event.StartTime || event.StartDate,
-      Fine: event.EndTime || event.EndDate,
-    };
-  };
-  
-  const convertToSchedulerFormat = (event) => {
-    return {
-      ...event,
-      StartTime: event.Inizio,
-      EndTime: event.Fine,
-    };
-  };
-  
-  const convertToGanttFormat = (task) => {
-    return {
-      ...task,
-      StartDate: task.Inizio,
-      EndDate: task.Fine,
+      IncaricatoId: Array.isArray(task.IncaricatoId) ? task.IncaricatoId.join(',') : task.IncaricatoId // Convert array to comma-separated string
     };
   };
 

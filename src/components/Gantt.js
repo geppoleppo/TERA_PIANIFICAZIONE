@@ -9,49 +9,36 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     console.log('commessaColors in Gantt:', commessaColors);
     console.log('data in Gantt:', data);
 
-    // Verifica la corrispondenza tra i campi dei dati e taskFields
     const verifyData = data.map(event => {
-      const startDate = new Date(event.StartDate);
-      const endDate = new Date(event.EndDate);
+      const startDate = new Date(event.StartDate || event.StartTime);
+      const endDate = new Date(event.EndDate || event.EndTime);
 
-      // Log delle date originali per il debug
       console.log(`Event ID: ${event.Id} - Original StartDate: ${event.StartDate}, Original EndDate: ${event.EndDate}`);
       console.log(`Event ID: ${event.Id} - Parsed StartDate: ${startDate}, Parsed EndDate: ${endDate}`);
 
-      // Verifica se le date sono valide
       const isValidStartDate = !isNaN(startDate.getTime());
       const isValidEndDate = !isNaN(endDate.getTime());
 
-      // Rimuove la durata se la data di fine è valida
-      const duration = isValidEndDate ? null : event.Duration
-      
-      const verifiedEvent = {
-        ...event,
+      return {
         Id: event.Id || '',
-        TaskName: event.TaskName || event.Subject || '',  // Assicuriamoci di avere il nome corretto del task
+        TaskName: event.TaskName || event.Subject || '', 
         StartDate: isValidStartDate ? startDate : null,
         EndDate: isValidEndDate ? endDate : null,
         Predecessor: event.Predecessor || '',
-        Duration: duration,
         Progress: event.Progress || 0,
         Color: event.Color || commessaColors[event.CommessaId] || '#000000',
-        CommessaId: event.CommessaId || ''
+        CommessaId: event.CommessaId || '',
+        IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId
       };
-
-      // Log del nuovo oggetto evento per il debug
-      console.log('Verified Event:', verifiedEvent);
-
-      return verifiedEvent;
     });
 
-    // Log dei dati verificati per il debug
     console.log('Verified Data for Gantt:', verifyData);
     setFilteredData(verifyData);
   }, [data, commessaColors]);
 
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';
-    console.log('taskbarTemplate props:', props); // Stampa tutte le proprietà di `props`
+    console.log('taskbarTemplate props:', props); 
     return (
       <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
         {props.TaskName}
@@ -60,24 +47,13 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
   };
 
   const onActionComplete = (args) => {
-    console.log('Action Complete:', args);
     if (args.requestType === 'save' || args.requestType === 'delete') {
-      const updatedEvent = {
-        ...args.data,
-        Inizio: args.data.StartDate,
-        Fine: args.data.EndDate,
-        IncaricatoId: Array.isArray(args.data.IncaricatoId) ? args.data.IncaricatoId.join(',') : '' // Convert array to comma-separated string
-      };
       onDataChange({
         requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
-        data: updatedEvent
+        data: [args.data]
       });
     }
   };
-  
-  
-  
-  
 
   const taskFields = {
     id: 'Id',
@@ -88,7 +64,8 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     duration: 'Duration',
     progress: 'Progress',
     color: 'Color',
-    CommessaId: 'CommessaId'
+    CommessaId: 'CommessaId',
+    IncaricatoId: 'IncaricatoId'
   };
 
   return (
