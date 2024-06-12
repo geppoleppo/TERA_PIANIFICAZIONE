@@ -38,6 +38,7 @@ app.get('/eventi', (req, res) => {
 
 app.post('/eventi', (req, res) => {
     try {
+        
         const newEvento = db.createEvento(req.body);
         res.json(newEvento);
     } catch (error) {

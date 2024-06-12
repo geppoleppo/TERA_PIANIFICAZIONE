@@ -62,12 +62,20 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
   const onActionComplete = (args) => {
     console.log('Action Complete:', args);
     if (args.requestType === 'save' || args.requestType === 'delete') {
+      const updatedEvent = {
+        ...args.data,
+        StartTime: args.data.StartDate,
+        EndTime: args.data.EndDate,
+        IncaricatoId: Array.isArray(args.data.IncaricatoId) ? args.data.IncaricatoId.join(',') : '' // Convert array to comma-separated string
+      };
       onDataChange({
         requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
-        data: args.data
+        data: [updatedEvent] // Ensure data is an array
       });
     }
   };
+  
+  
 
   const taskFields = {
     id: 'Id',

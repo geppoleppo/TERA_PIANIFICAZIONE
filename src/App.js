@@ -52,6 +52,31 @@ const App = () => {
     fetchData();
   }, []);
 
+  const handleGanttDataChange = (args) => {
+    console.log('Gantt Data Change:', args);
+    const task = formatGanttData(args.data);
+    switch (args.requestType) {
+      case 'save':
+        axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
+          .then(response => {
+            console.log('Task updated:', response.data);
+            updateLocalData(task, 'update');
+          })
+          .catch(error => console.error('Failed to update task:', error));
+        break;
+      case 'delete':
+        axios.delete(`http://localhost:3001/eventi/${task.Id}`)
+          .then(response => {
+            console.log('Task deleted:', response.data);
+            updateLocalData(task, 'delete');
+          })
+          .catch(error => console.error('Failed to delete task:', error));
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
     const event = formatEventData(args.data[0]);
@@ -84,32 +109,54 @@ const App = () => {
         break;
     }
   };
-
-  const handleGanttDataChange = (args) => {
-    console.log('Gantt Data Change:', args);
-    const task = formatGanttData(args.data, commesse);
-    switch (args.requestType) {
-      case 'save':
-        axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
-          .then(response => {
-            console.log('Task updated:', response.data);
-            updateLocalData(task, 'update');
-          })
-          .catch(error => console.error('Failed to update task:', error));
-        break;
-      case 'delete':
-        axios.delete(`http://localhost:3001/eventi/${task.Id}`)
-          .then(response => {
-            console.log('Task deleted:', response.data);
-            updateLocalData(task, 'delete');
-          })
-          .catch(error => console.error('Failed to delete task:', error));
-        break;
-      default:
-        break;
-    }
+  
+  const formatEventData = (event) => {
+    const commessa = commesse.find(c => c.Id === event.CommessaId);
+    const formattedEvent = {
+      Id: event.Id,
+      Descrizione: event.Subject || '',
+      Inizio: event.StartTime ? new Date(event.StartTime).toISOString() : '',
+      Fine: event.EndTime ? new Date(event.EndTime).toISOString() : '',
+      CommessaId: event.CommessaId || '',
+      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId, // Convert array to comma-separated string
+      Colore: commessa ? commessa.Colore : '#000000',
+      Progresso: event.Progress || 0
+    };
+    console.log('Formatted Event Data:', formattedEvent);
+    return formattedEvent;
   };
-
+  
+  const formatEventForScheduler = (event) => {
+    return {
+      Id: event.Id,
+      Subject: event.Descrizione,
+      StartTime: new Date(event.Inizio),
+      EndTime: new Date(event.Fine),
+      CommessaId: event.CommessaId,
+      IncaricatoId: event.IncaricatoId ? event.IncaricatoId.split(',') : [], // Convert comma-separated string to array
+      Color: event.Colore,
+      Progress: event.Progresso
+    };
+  };
+  
+  const formatGanttData = (task) => {
+    const commessa = commesse.find(c => c.Id === task.CommessaId);
+    const formattedTask = {
+      Id: task.Id,
+      TaskName: task.Descrizione || '',
+      StartDate: task.StartTime ? new Date(task.StartTime) : new Date(task.Inizio),
+      EndDate: task.EndTime ? new Date(task.EndTime) : new Date(task.Fine),
+      Predecessor: task.Predecessor || '',
+      Duration: task.Duration || 1,
+      Progress: task.Progresso || 0,
+      Color: (commessa && commessa.Colore) || '#000000',
+      CommessaId: task.CommessaId || '',
+      IncaricatoId: typeof task.IncaricatoId === 'string' ? task.IncaricatoId.split(',').map(id => parseInt(id, 10)) : [], // Convert comma-separated string to array of integers
+    };
+    console.log('Formatted Gantt Task:', formattedTask);
+    return formattedTask;
+  };
+  
   const updateLocalData = (data, type) => {
     let updatedScheduleData = [...scheduleData];
     switch (type) {
@@ -126,57 +173,12 @@ const App = () => {
         break;
     }
     setScheduleData(updatedScheduleData);
-    setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
+    setGanttData(updatedScheduleData.map(item => formatGanttData(item)));
     console.log('Updated Schedule Data:', updatedScheduleData);
     console.log('Updated Gantt Data:', updatedScheduleData);
   };
-
-  const formatEventData = (event) => {
-    const commessa = commesse.find(c => c.Id === event.CommessaId);
-    const formattedEvent = {
-      Id: event.Id,
-      Descrizione: event.Subject || '',
-      Inizio: event.StartTime ? new Date(event.StartTime).toISOString() : '',
-      Fine: event.EndTime ? new Date(event.EndTime).toISOString() : '',
-      CommessaId: event.CommessaId || '',
-      IncaricatoId: event.IncaricatoId.join(','), // Convert array to comma-separated string
-      Colore: commessa ? commessa.Colore : '#000000',
-      Progresso: event.Progress || 0
-    };
-    console.log('Formatted Event Data:', formattedEvent);
-    return formattedEvent;
-  };
-
-  const formatEventForScheduler = (event) => {
-    return {
-      Id: event.Id,
-      Subject: event.Descrizione,
-      StartTime: new Date(event.Inizio),
-      EndTime: new Date(event.Fine),
-      CommessaId: event.CommessaId,
-      IncaricatoId: event.IncaricatoId.split(','), // Convert comma-separated string to array
-      Color: event.Colore,
-      Progress: event.Progresso
-    };
-  };
-
-  const formatGanttData = (task, commesse) => {
-   
-    const commessa = commesse.find(c => c.Id === task.CommessaId);
-    const formattedTask = {
-      Id: task.Id,
-      TaskName: task.Descrizione || '',
-      StartDate: task.StartTime ? new Date(task.StartTime) : new Date(),
-      EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
-      Predecessor: task.Predecessor || '',
-      Duration: task.Duration || 1,
-      Progress: task.Progresso || 0,
-      Color: (commessa && commessa.Colore) || '#000000',
-      CommessaId: task.CommessaId || ''
-    };
-    console.log('Formatted Gantt Task:', formattedTask);
-    return formattedTask;
-  };
+  
+  
 
   return (
     <div className="app-container">
