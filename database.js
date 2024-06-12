@@ -107,7 +107,8 @@ const createEvento = (evento) => {
     }
 };
 
-const updateEvento = (evento) => {
+const updateEvento = (id, evento) => {
+    console.log('EVENTOOO:', evento);
     try {
         const query = `
             UPDATE Eventi
@@ -122,7 +123,7 @@ const updateEvento = (evento) => {
             evento.IncaricatoId,
             evento.Colore || '',
             evento.Progresso || 0,
-            evento.Id
+            id
         ];
         console.log('Update Event Params:', params);
         const interpolatedQuery = query.replace(/\?/g, (_, i) => `'${params[i]}'`);
@@ -133,6 +134,10 @@ const updateEvento = (evento) => {
         throw new Error("Failed to update event.");
     }
 };
+
+  
+  
+  
 
 const deleteEvento = (id) => {
     try {

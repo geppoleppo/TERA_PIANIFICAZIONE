@@ -48,12 +48,14 @@ app.post('/eventi', (req, res) => {
 
 app.put('/eventi/:id', (req, res) => {
     try {
-        const updatedEvento = db.updateEvento(req.params.id, req.body);
+        console.log('EVENTISSIMO:', req.body);
+        const updatedEvento = db.updateEvento(req.params.id, req.body); // Passiamo anche l'ID
         res.json(updatedEvento);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 app.delete('/eventi/:id', (req, res) => {
     try {

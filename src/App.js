@@ -51,10 +51,11 @@ const App = () => {
 
     fetchData();
   }, []);
-
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
     const event = convertToStandardFormat(args.data[0]);
+    console.log('Formatted Event for Scheduler:', event); // Log for debugging
+  
     switch (args.requestType) {
       case 'eventCreated':
         axios.post('http://localhost:3001/eventi', event)
@@ -82,12 +83,11 @@ const App = () => {
     }
   };
   
-
   const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
-    const task = convertToStandardFormat(args.data); // Convertire i dati del Gantt nel formato standard
-    console.log('taskigna:', task);
-    
+    const task = convertToStandardFormat(args.data[0]);
+    console.log('Formatted Task for Gantt:', task); // Log for debugging
+  
     switch (args.requestType) {
       case 'eventChanged':
         axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
@@ -107,6 +107,7 @@ const App = () => {
         break;
     }
   };
+  
   
 
   const updateLocalData = (data, type) => {
