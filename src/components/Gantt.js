@@ -11,26 +11,40 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
 
     // Verifica la corrispondenza tra i campi dei dati e taskFields
     const verifyData = data.map(event => {
-      const startDate = new Date(event.StartTime);
-      const endDate = new Date(event.EndTime);
-      
+      const startDate = new Date(event.StartDate);
+      const endDate = new Date(event.EndDate);
+
+      // Log delle date originali per il debug
+      console.log(`Event ID: ${event.Id} - Original StartDate: ${event.StartDate}, Original EndDate: ${event.EndDate}`);
+      console.log(`Event ID: ${event.Id} - Parsed StartDate: ${startDate}, Parsed EndDate: ${endDate}`);
+
       // Verifica se le date sono valide
       const isValidStartDate = !isNaN(startDate.getTime());
       const isValidEndDate = !isNaN(endDate.getTime());
 
-      return {
+      // Rimuove la durata se la data di fine è valida
+      const duration = isValidEndDate ? null : event.Duration || 1;
+      
+      const verifiedEvent = {
         ...event,
         Id: event.Id || '',
-        TaskName: event.Subject,
+        TaskName: event.TaskName || event.Subject || '',  // Assicuriamoci di avere il nome corretto del task
         StartDate: isValidStartDate ? startDate : null,
         EndDate: isValidEndDate ? endDate : null,
         Predecessor: event.Predecessor || '',
-        Duration: event.Duration || 1,
+        Duration: duration,
         Progress: event.Progress || 0,
         Color: event.Color || commessaColors[event.CommessaId] || '#000000',
         CommessaId: event.CommessaId || ''
       };
+
+      // Log del nuovo oggetto evento per il debug
+      console.log('Verified Event:', verifiedEvent);
+
+      return verifiedEvent;
     });
+
+    // Log dei dati verificati per il debug
     console.log('Verified Data for Gantt:', verifyData);
     setFilteredData(verifyData);
   }, [data, commessaColors]);
@@ -46,6 +60,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
   };
 
   const onActionComplete = (args) => {
+    console.log('Action Complete:', args);
     if (args.requestType === 'save' || args.requestType === 'delete') {
       onDataChange({
         requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',

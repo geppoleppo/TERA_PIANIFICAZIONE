@@ -14,7 +14,7 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        //console.log('Fetching collaborators and projects...');
+        console.log('Fetching collaborators and projects...');
         const [collaboratoriResponse, commesseResponse] = await Promise.all([
           axios.get('http://localhost:3001/collaboratori'),
           axios.get('http://localhost:3001/commesse')
@@ -36,7 +36,7 @@ const App = () => {
         console.log('Commessa Colors:', colors);
 
         // Carica gli eventi dal server solo dopo che le commesse sono state impostate
-        //console.log('Fetching events...');
+        console.log('Fetching events...');
         const eventiResponse = await axios.get('http://localhost:3001/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event));
         console.log('Events:', staticSchedulerData);
@@ -55,7 +55,6 @@ const App = () => {
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
     const event = formatEventData(args.data[0]);
-    //console.log('Formatted Event Data:', event);
     switch (args.requestType) {
       case 'eventCreated':
         axios.post('http://localhost:3001/eventi', event)
@@ -89,7 +88,6 @@ const App = () => {
   const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
     const task = formatGanttData(args.data, commesse);
-    console.log('Formatted Gantt Data:', task);
     switch (args.requestType) {
       case 'save':
         axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
@@ -111,7 +109,6 @@ const App = () => {
         break;
     }
   };
-  
 
   const updateLocalData = (data, type) => {
     let updatedScheduleData = [...scheduleData];
@@ -130,11 +127,9 @@ const App = () => {
     }
     setScheduleData(updatedScheduleData);
     setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
-
     console.log('Updated Schedule Data:', updatedScheduleData);
     console.log('Updated Gantt Data:', updatedScheduleData);
   };
-
 
   const formatEventData = (event) => {
     const commessa = commesse.find(c => c.Id === event.CommessaId);
@@ -166,19 +161,20 @@ const App = () => {
   };
 
   const formatGanttData = (task, commesse) => {
+   
     const commessa = commesse.find(c => c.Id === task.CommessaId);
     const formattedTask = {
       Id: task.Id,
       TaskName: task.Descrizione || '',
-      StartTime: task.Inizio ? new Date(task.Inizio) : new Date(),
-      EndTime: task.Fine ? new Date(task.Fine) : new Date(),
+      StartDate: task.StartTime ? new Date(task.StartTime) : new Date(),
+      EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
       Predecessor: task.Predecessor || '',
       Duration: task.Duration || 1,
       Progress: task.Progresso || 0,
       Color: (commessa && commessa.Colore) || '#000000',
       CommessaId: task.CommessaId || ''
     };
-    //console.log('Formatted Gantt Task:', formattedTask);
+    console.log('Formatted Gantt Task:', formattedTask);
     return formattedTask;
   };
 
