@@ -88,25 +88,24 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const onActionComplete = (args) => {
-    console.log('Action Start: ', args);
-
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        const updatedEvent = {
-          ...args.data,
-          Inizio: args.data.StartTime,
-          Fine: args.data.EndTime,
-          IncaricatoId: Array.isArray(args.data.IncaricatoId) ? args.data.IncaricatoId.map(id => parseInt(id, 10)) : [] // Convert array of strings to array of integers
-        };
+        if (args.data) {
+            const updatedEvent = {
+                ...args.data,
+                Inizio: args.data.StartTime,
+                Fine: args.data.EndTime,
+                IncaricatoId: Array.isArray(args.data.IncaricatoId) ? args.data.IncaricatoId.map(id => parseInt(id, 10)) : [],
+                CommessaName: args.data.CommessaName || '',  // Aggiungi CommessaName
+                Dipendenza: args.data.Predecessor || ''      // Usa Predecessor per il campo Dipendenza
+            };
 
-        onDataChange({
-          requestType: args.requestType,
-          data: updatedEvent
-        });
-      }
+            onDataChange({
+                requestType: args.requestType,
+                data: updatedEvent
+            });
+        }
     }
-    console.log('Action End: ', args);
-  };
+};
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) {

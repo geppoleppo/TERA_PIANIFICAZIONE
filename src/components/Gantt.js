@@ -5,40 +5,33 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
   const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
-    console.log('Gantt component mounted');
-    console.log('commessaColors in Gantt:', commessaColors);
-    console.log('data in Gantt:', data);
-
     const verifyData = data.map(event => {
       const startDate = new Date(event.StartDate || event.StartTime);
       const endDate = new Date(event.EndDate || event.EndTime);
-
-      console.log(`Event ID: ${event.Id} - Original StartDate: ${event.StartDate}, Original EndDate: ${event.EndDate}`);
-      console.log(`Event ID: ${event.Id} - Parsed StartDate: ${startDate}, Parsed EndDate: ${endDate}`);
 
       const isValidStartDate = !isNaN(startDate.getTime());
       const isValidEndDate = !isNaN(endDate.getTime());
 
       return {
         Id: event.Id || '',
-        TaskName: event.TaskName || event.Subject || '', 
+        TaskName: event.TaskName || event.Subject || '',
         StartDate: isValidStartDate ? startDate : null,
         EndDate: isValidEndDate ? endDate : null,
         Predecessor: event.Predecessor || '',
         Progress: event.Progress || 0,
         Color: event.Color || commessaColors[event.CommessaId] || '#000000',
         CommessaId: event.CommessaId || '',
-        IncaricatoId: event.IncaricatoId // Ensure IncaricatoId is included
+        IncaricatoId: event.IncaricatoId || '',
+        CommessaName: event.CommessaName || '',
+        Dipendenza: event.Dipendenza || ''
       };
     });
 
-    console.log('Verified Data for Gantt:', verifyData);
     setFilteredData(verifyData);
   }, [data, commessaColors]);
 
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';
-    console.log('taskbarTemplate props:', props); 
     return (
       <div style={{ backgroundColor: commessaColor, width: '100%', height: '100%' }}>
         {props.TaskName}
@@ -65,7 +58,8 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     progress: 'Progress',
     color: 'Color',
     CommessaId: 'CommessaId',
-    IncaricatoId: 'IncaricatoId'
+    IncaricatoId: 'IncaricatoId',
+    CommessaName: 'CommessaName'
   };
 
   return (

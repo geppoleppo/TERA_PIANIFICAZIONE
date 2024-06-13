@@ -29,6 +29,8 @@ const createTables = () => {
             IncaricatoId TEXT,
             Colore TEXT,
             Progresso INTEGER,
+            CommessaName TEXT,   -- Aggiungi il campo CommessaName
+            Dipendenza TEXT,     -- Aggiungi il campo Dipendenza
             FOREIGN KEY (CommessaId) REFERENCES Commesse(Id)
         );
     `;
@@ -37,6 +39,7 @@ const createTables = () => {
     db.prepare(queryCommesse).run();
     db.prepare(queryEventi).run();
 };
+
 
 createTables();
 
@@ -83,9 +86,9 @@ const getAllEventi = () => {
 
 const createEvento = (evento) => {
     try {
-      const query = `
-          INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaId, IncaricatoId, Colore, Progresso)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+        const query = `
+            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaId, IncaricatoId, Colore, Progresso, CommessaName, Dipendenza)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const params = [
           evento.Descrizione,
@@ -94,7 +97,9 @@ const createEvento = (evento) => {
           evento.CommessaId,
           evento.IncaricatoId,
           evento.Colore || '',
-          evento.Progresso || 0
+          evento.Progresso || 0,
+          evento.CommessaName || '',
+          evento.Dipendenza || ''
       ];
   
       console.log('Create Event Params:', params);
@@ -114,20 +119,26 @@ const createEvento = (evento) => {
         throw new Error(`CommessaId ${evento.CommessaId} does not exist in Commesse table`);
       }
   
+      // Verifica e assegna IncaricatoId correttamente
+      const incaricatoId = evento.IncaricatoId !== '' ? evento.IncaricatoId : evento.taskDate.IncaricatoId;
+      console.log('merdaaaaa',incaricatoId)
+  
       let query = `
-          UPDATE Eventi
-          SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ? 
-          WHERE Id = ?
+        UPDATE Eventi
+        SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, CommessaName = ?, Dipendenza = ?
+        WHERE Id = ?
       `;
       const params = [
-          evento.Descrizione || evento.Subject || 'No Description',
-          evento.Inizio || new Date().toISOString(),
-          evento.Fine || new Date().toISOString(),
-          evento.CommessaId,
-          evento.Colore || '',
-          evento.Progresso || 0,
-          evento.IncaricatoId || '',
-          id
+        evento.Descrizione || evento.Subject || 'No Description',
+        evento.Inizio || new Date().toISOString(),
+        evento.Fine || new Date().toISOString(),
+        evento.CommessaId,
+        evento.Colore || '',
+        evento.Progresso || 0,
+        incaricatoId,
+        evento.CommessaName || '',
+        evento.Dipendenza || '',
+        id
       ];
   
       console.log('Update Event Params:', params);
@@ -139,11 +150,6 @@ const createEvento = (evento) => {
     }
   };
   
-  
-  
-
-
-
   
   
   
