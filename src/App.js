@@ -134,6 +134,7 @@ const App = () => {
   
 
   const convertToStandardFormat = (event) => {
+    console.log('mareee',event)
     return {
       ...event,
       Inizio: event.StartTime || event.StartDate,
@@ -157,9 +158,10 @@ const App = () => {
   };
 
   const formatGanttData = (task) => {
+    console.log("DATA DA FORMATTARE PER GANT",task)
     return {
       Id: task.Id,
-      TaskName: task.Descrizione || '',
+      TaskName: task.Descrizione || task.Subject,
       StartDate: task.StartTime ? new Date(task.StartTime) : new Date(),
       EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
       Predecessor: task.Predecessor || '',

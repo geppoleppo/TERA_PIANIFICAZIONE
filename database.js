@@ -113,25 +113,20 @@ const updateEvento = (id, evento) => {
         // Base query
         let query = `
             UPDATE Eventi
-            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?
+            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ? 
         `;
         const params = [
-            evento.Descrizione,
-            evento.Inizio,
-            evento.Fine,
+            evento.TaskName || evento.Subject,
+            evento.StartDate || evento.StartTime,
+            evento.EndDate|| evento.EndTime,
             Array.isArray(evento.CommessaId) ? evento.CommessaId.join(',') : evento.CommessaId,
-            evento.Colore || '',
-            evento.Progresso || 0,
+            evento.Color || evento.Color,
+            evento.Progress ,
+            evento.IncaricatoId ||  evento.taskData?.IncaricatoId,
             id
         ];
 
-        // Aggiungi IncaricatoId alla query e ai parametri se è presente
-        if (evento.IncaricatoId !== undefined) {
-            query = query.replace('Colore = ?', 'IncaricatoId = ?, Colore = ?');
-            params.splice(4, 0, evento.IncaricatoId);
-        }
-
-        query += ' WHERE Id = ?';
+           query += ' WHERE Id = ?';
         
         console.log('Update Event Params:', params);
         const interpolatedQuery = query.replace(/\?/g, (_, i) => `'${params[i]}'`);
