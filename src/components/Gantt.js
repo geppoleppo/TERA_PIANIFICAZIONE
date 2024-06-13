@@ -8,14 +8,17 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     console.log('Gantt component mounted');
     console.log('commessaColors in Gantt:', commessaColors);
     console.log('data in Gantt:', data);
-  
+
     const verifyData = data.map(event => {
-      const startDate = new Date(event.StartDate);
-      const endDate = new Date(event.EndDate);
-  
+      const startDate = new Date(event.StartDate || event.StartTime);
+      const endDate = new Date(event.EndDate || event.EndTime);
+
+      console.log(`Event ID: ${event.Id} - Original StartDate: ${event.StartDate}, Original EndDate: ${event.EndDate}`);
+      console.log(`Event ID: ${event.Id} - Parsed StartDate: ${startDate}, Parsed EndDate: ${endDate}`);
+
       const isValidStartDate = !isNaN(startDate.getTime());
       const isValidEndDate = !isNaN(endDate.getTime());
-  
+
       return {
         Id: event.Id || '',
         TaskName: event.TaskName || event.Subject || '', 
@@ -25,13 +28,13 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
         Progress: event.Progress || 0,
         Color: event.Color || commessaColors[event.CommessaId] || '#000000',
         CommessaId: event.CommessaId || '',
-        IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId
+        IncaricatoId: event.IncaricatoId // Ensure IncaricatoId is included
       };
     });
-  
+
+    console.log('Verified Data for Gantt:', verifyData);
     setFilteredData(verifyData);
   }, [data, commessaColors]);
-  
 
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';

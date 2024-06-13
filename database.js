@@ -108,6 +108,12 @@ const createEvento = (evento) => {
   
   const updateEvento = (id, evento) => {
     try {
+      // Verifica se CommessaId è valido
+      const commessaExists = db.prepare('SELECT 1 FROM Commesse WHERE Id = ?').get(evento.CommessaId);
+      if (!commessaExists) {
+        throw new Error(`CommessaId ${evento.CommessaId} does not exist in Commesse table`);
+      }
+  
       let query = `
           UPDATE Eventi
           SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ? 
@@ -117,10 +123,10 @@ const createEvento = (evento) => {
           evento.Descrizione || evento.Subject || 'No Description',
           evento.Inizio || new Date().toISOString(),
           evento.Fine || new Date().toISOString(),
-          evento.CommessaId || 0, // Ensure it is a single value
+          evento.CommessaId,
           evento.Colore || '',
           evento.Progresso || 0,
-          evento.IncaricatoId,
+          evento.IncaricatoId || '',
           id
       ];
   
@@ -129,9 +135,11 @@ const createEvento = (evento) => {
       return { ...evento, Id: id };
     } catch (error) {
       console.error("Database error:", error);
-      throw new Error("Failed to update event.");
+      throw new Error("Failed to update event: " + error.message);
     }
   };
+  
+  
   
 
 
