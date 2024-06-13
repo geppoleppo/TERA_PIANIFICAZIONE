@@ -55,7 +55,7 @@ const App = () => {
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
     const event = convertToStandardFormat(args.data[0]);
-    console.log('Formatted Event for Scheduler:', event); // Log for debugging
+    console.log('Formatted Event for Scheduler:', event);
   
     switch (args.requestType) {
       case 'eventCreated':
@@ -83,6 +83,23 @@ const App = () => {
         break;
     }
   };
+  
+  const convertToStandardFormat = (event) => {
+    const startDate = event.StartTime || event.StartDate || new Date().toISOString();
+    const endDate = event.EndTime || event.EndDate || new Date().toISOString();
+  
+    return {
+      ...event,
+      Inizio: startDate,
+      Fine: endDate,
+      Descrizione: event.Subject || event.TaskName,
+      CommessaId: Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId || 0, // Ensure it is a single value
+      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId || '' // Ensure it is a string
+    };
+  };
+  
+  
+  
   
   const handleGanttDataChange = (args) => {
     console.log('Gantt Data Change:', args);
@@ -128,22 +145,9 @@ const App = () => {
     }
     setScheduleData(updatedScheduleData);
     setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
-    console.log('Updated Schedule Data:', updatedScheduleData);
-    console.log('Updated Gantt Data:', updatedScheduleData);
   };
   
-
-  const convertToStandardFormat = (event) => {
-    console.log('mareee',event)
-    return {
-      ...event,
-      Inizio: event.StartTime || event.StartDate,
-      Fine: event.EndTime || event.EndDate,
-      Descrizione: event.Subject || event.TaskName,
-      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId || '' // Ensure it is a string
-    };
-  };
-
+  
   const formatEventForScheduler = (event) => {
     return {
       Id: event.Id,

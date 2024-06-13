@@ -83,61 +83,56 @@ const getAllEventi = () => {
 
 const createEvento = (evento) => {
     try {
-        const query = `
-            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaId, IncaricatoId, Colore, Progresso)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
-        const params = [
-            evento.Descrizione,
-            evento.Inizio,
-            evento.Fine,
-            evento.CommessaId,
-            evento.IncaricatoId,
-            evento.Colore || '',
-            evento.Progresso || 0
-        ];
-        console.log('Create Event Params:', params);
-        const interpolatedQuery = query.replace(/\?/g, (_, i) => `'${params[i]}'`);
-        console.log('Interpolated Create Event Query:', interpolatedQuery);
-        const result = db.prepare(query).run(params);
-        return { ...evento, Id: result.lastInsertRowid };
+      const query = `
+          INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaId, IncaricatoId, Colore, Progresso)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+          evento.Descrizione,
+          evento.Inizio,
+          evento.Fine,
+          evento.CommessaId,
+          evento.IncaricatoId,
+          evento.Colore || '',
+          evento.Progresso || 0
+      ];
+  
+      console.log('Create Event Params:', params);
+      const result = db.prepare(query).run(params);
+      return { ...evento, Id: result.lastInsertRowid };
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to create event.");
+      console.error("Database error:", error);
+      throw new Error("Failed to create event.");
     }
-};
-
-const updateEvento = (id, evento) => {
-    console.log('EVENTOOO:', evento);
+  };
+  
+  const updateEvento = (id, evento) => {
     try {
-        // Base query
-        let query = `
-            UPDATE Eventi
-            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ? 
-        `;
-        const params = [
-            evento.TaskName || evento.Subject,
-            evento.StartDate || evento.StartTime,
-            evento.EndDate|| evento.EndTime,
-            Array.isArray(evento.CommessaId) ? evento.CommessaId.join(',') : evento.CommessaId,
-            evento.Color || evento.Color,
-            evento.Progress ,
-            evento.IncaricatoId ||  evento.taskData?.IncaricatoId,
-            id
-        ];
-
-           query += ' WHERE Id = ?';
-        
-        console.log('Update Event Params:', params);
-        const interpolatedQuery = query.replace(/\?/g, (_, i) => `'${params[i]}'`);
-        console.log('Interpolated Update Event Query:', interpolatedQuery);
-
-        return db.prepare(query).run(params);
+      let query = `
+          UPDATE Eventi
+          SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ? 
+          WHERE Id = ?
+      `;
+      const params = [
+          evento.Descrizione || evento.Subject || 'No Description',
+          evento.Inizio || new Date().toISOString(),
+          evento.Fine || new Date().toISOString(),
+          evento.CommessaId || 0, // Ensure it is a single value
+          evento.Colore || '',
+          evento.Progresso || 0,
+          evento.IncaricatoId,
+          id
+      ];
+  
+      console.log('Update Event Params:', params);
+      const result = db.prepare(query).run(params);
+      return { ...evento, Id: id };
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update event.");
+      console.error("Database error:", error);
+      throw new Error("Failed to update event.");
     }
-};
+  };
+  
 
 
 
