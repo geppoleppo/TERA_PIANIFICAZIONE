@@ -110,30 +110,41 @@ const createEvento = (evento) => {
 const updateEvento = (id, evento) => {
     console.log('EVENTOOO:', evento);
     try {
-        const query = `
+        // Base query
+        let query = `
             UPDATE Eventi
-            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, IncaricatoId = ?, Colore = ?, Progresso = ?
-            WHERE Id = ?
+            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?
         `;
         const params = [
             evento.Descrizione,
             evento.Inizio,
             evento.Fine,
-            evento.CommessaId,
-            evento.IncaricatoId,
+            Array.isArray(evento.CommessaId) ? evento.CommessaId.join(',') : evento.CommessaId,
             evento.Colore || '',
             evento.Progresso || 0,
             id
         ];
+
+        // Aggiungi IncaricatoId alla query e ai parametri se è presente
+        if (evento.IncaricatoId !== undefined) {
+            query = query.replace('Colore = ?', 'IncaricatoId = ?, Colore = ?');
+            params.splice(4, 0, evento.IncaricatoId);
+        }
+
+        query += ' WHERE Id = ?';
+        
         console.log('Update Event Params:', params);
         const interpolatedQuery = query.replace(/\?/g, (_, i) => `'${params[i]}'`);
         console.log('Interpolated Update Event Query:', interpolatedQuery);
+
         return db.prepare(query).run(params);
     } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to update event.");
     }
 };
+
+
 
   
   

@@ -51,6 +51,7 @@ const App = () => {
 
     fetchData();
   }, []);
+
   const handleSchedulerDataChange = (args) => {
     console.log('Scheduler Data Change:', args);
     const event = convertToStandardFormat(args.data[0]);
@@ -138,7 +139,7 @@ const App = () => {
       Inizio: event.StartTime || event.StartDate,
       Fine: event.EndTime || event.EndDate,
       Descrizione: event.Subject || event.TaskName,
-      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId // Convert array to comma-separated string
+      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.join(',') : event.IncaricatoId || '' // Ensure it is a string
     };
   };
 
@@ -156,20 +157,19 @@ const App = () => {
   };
 
   const formatGanttData = (task) => {
-    console.log('MENAAAA',task.EndTime)
     return {
       Id: task.Id,
       TaskName: task.Descrizione || '',
       StartDate: task.StartTime ? new Date(task.StartTime) : new Date(),
       EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
       Predecessor: task.Predecessor || '',
-      Duration: task.Duration || 1,
       Progress: task.Progresso || 0,
       Color: task.Color,
       CommessaId: task.CommessaId || '',
-      IncaricatoId: Array.isArray(task.IncaricatoId) ? task.IncaricatoId.join(',') : task.IncaricatoId // Convert array to comma-separated string
+      IncaricatoId: task.IncaricatoId || '' // Ensure IncaricatoId is included
     };
   };
+  
 
   return (
     <div className="app-container">
