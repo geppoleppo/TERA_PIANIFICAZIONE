@@ -120,7 +120,7 @@ const createEvento = (evento) => {
       }
   
       // Verifica e assegna IncaricatoId correttamente
-      const incaricatoId = evento.IncaricatoId !== '' ? evento.IncaricatoId : evento.taskDate.IncaricatoId;
+      const incaricatoId = evento.IncaricatoId && evento.IncaricatoId !== '' ? evento.IncaricatoId : (evento.taskData ? evento.taskData.IncaricatoId : '');
       console.log('merdaaaaa',incaricatoId)
   
       let query = `
