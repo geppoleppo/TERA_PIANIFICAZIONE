@@ -46,7 +46,8 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
         data: [args.data]
       });
     }
-  };
+};
+
 
   const taskFields = {
     id: 'Id',

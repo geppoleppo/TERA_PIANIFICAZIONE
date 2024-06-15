@@ -145,12 +145,11 @@ const App = () => {
       CommessaId: Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId || 0,
       IncaricatoId: Array.isArray(incaricatoId) ? incaricatoId.join(',') : incaricatoId || '',
       CommessaName: event.CommessaName || '',
-      Dipendenza: event.Dipendenza || ''
+      Dipendenza: event.Predecessor || '' // Assicurati di passare la dipendenza
     };
   };
-  
 
-  const formatEventForScheduler = (event) => {
+const formatEventForScheduler = (event) => {
     return {
       Id: event.Id,
       Subject: event.Descrizione,
@@ -161,24 +160,25 @@ const App = () => {
       Color: event.Colore,
       Progress: event.Progresso,
       CommessaName: event.CommessaName,
-      Dipendenza: event.Dipendenza
+      Dipendenza: event.Dipendenza // Assicurati che la dipendenza sia inclusa
     };
-  };
+};
 
-  const formatGanttData = (task) => {
+const formatGanttData = (task) => {
     return {
       Id: task.Id,
       TaskName: task.Descrizione || task.Subject,
       StartDate: task.StartTime ? new Date(task.StartTime) : new Date(),
       EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
-      Predecessor: task.Dipendenza || '', // Use Dipendenza for the Predecessor field
+      Predecessor: task.Dipendenza || '', // Usa Dipendenza per il campo Predecessor
       Progress: task.Progresso || 0,
       Color: task.Color,
       CommessaId: task.CommessaId || '',
-      IncaricatoId: task.IncaricatoId || '', // Ensure IncaricatoId is included
+      IncaricatoId: task.IncaricatoId || '', // Assicurati che IncaricatoId sia incluso
       CommessaName: task.CommessaName || ''
     };
-  };
+};
+
 
   return (
     <div className="app-container">

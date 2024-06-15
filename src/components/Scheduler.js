@@ -97,12 +97,14 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
             const commessa = commesse.find(c => c.Id === event.CommessaId);
             event.CommessaName = commessa ? commessa.Descrizione : '';
             event.Color = commessa ? commessa.Colore : '#000000';
+            event.Dipendenza = event.Predecessor || ''; // Assicurati che Dipendenza sia impostato
             console.log('Event After Change: ', event);
           });
         } else {
           const commessa = commesse.find(c => c.Id === args.data.CommessaId);
           args.data.CommessaName = commessa ? commessa.Descrizione : '';
           args.data.Color = commessa ? commessa.Colore : '#000000';
+          args.data.Dipendenza = args.data.Predecessor || ''; // Assicurati che Dipendenza sia impostato
           console.log('Event After Change: ', args.data);
         }
       }
@@ -110,6 +112,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     }
     console.log('Action End: ', args);
   };
+
   
 
   const resourceHeaderTemplate = (props) => {

@@ -89,66 +89,56 @@ const createEvento = (evento) => {
         const query = `
             INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaId, IncaricatoId, Colore, Progresso, CommessaName, Dipendenza)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const params = [
-          evento.Descrizione,
-          evento.Inizio,
-          evento.Fine,
-          evento.CommessaId,
-          evento.IncaricatoId,
-          evento.Colore || '',
-          evento.Progresso || 0,
-          evento.CommessaName || '',
-          evento.Dipendenza || ''
-      ];
-  
-      console.log('Create Event Params:', params);
-      const result = db.prepare(query).run(params);
-      return { ...evento, Id: result.lastInsertRowid };
+        `;
+        const params = [
+            evento.Descrizione,
+            evento.Inizio,
+            evento.Fine,
+            evento.CommessaId,
+            evento.IncaricatoId,
+            evento.Colore || '',
+            evento.Progresso || 0,
+            evento.CommessaName || '',
+            evento.Dipendenza || ''
+        ];
+        console.log('Create Event Params:', params);
+        const result = db.prepare(query).run(params);
+        return { ...evento, Id: result.lastInsertRowid };
     } catch (error) {
-      console.error("Database error:", error);
-      throw new Error("Failed to create event.");
+        console.error("Database error:", error);
+        throw new Error("Failed to create event.");
     }
-  };
+};
+
   
-  const updateEvento = (id, evento) => {
+const updateEvento = (id, evento) => {
     try {
-      // Verifica se CommessaId è valido
-      const commessaExists = db.prepare('SELECT 1 FROM Commesse WHERE Id = ?').get(evento.CommessaId);
-      if (!commessaExists) {
-        throw new Error(`CommessaId ${evento.CommessaId} does not exist in Commesse table`);
-      }
-  
-      // Verifica e assegna IncaricatoId correttamente
-      const incaricatoId = evento.IncaricatoId && evento.IncaricatoId !== '' ? evento.IncaricatoId : (evento.taskData ? evento.taskData.IncaricatoId : '');
-      console.log('merdaaaaa',incaricatoId)
-  
-      let query = `
-        UPDATE Eventi
-        SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, CommessaName = ?, Dipendenza = ?
-        WHERE Id = ?
-      `;
-      const params = [
-        evento.Descrizione || evento.Subject || 'No Description',
-        evento.Inizio || new Date().toISOString(),
-        evento.Fine || new Date().toISOString(),
-        evento.CommessaId,
-        evento.Colore || '',
-        evento.Progresso || 0,
-        incaricatoId,
-        evento.CommessaName || '',
-        evento.Dipendenza || '',
-        id
-      ];
-  
-      console.log('Update Event Params:', params);
-      const result = db.prepare(query).run(params);
-      return { ...evento, Id: id };
+        const query = `
+            UPDATE Eventi
+            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, CommessaName = ?, Dipendenza = ?
+            WHERE Id = ?
+        `;
+        const params = [
+            evento.Descrizione || evento.Subject || 'No Description',
+            evento.Inizio || new Date().toISOString(),
+            evento.Fine || new Date().toISOString(),
+            evento.CommessaId,
+            evento.Colore || '',
+            evento.Progresso || 0,
+            evento.IncaricatoId,
+            evento.CommessaName || '',
+            evento.Dipendenza || '',
+            id
+        ];
+        console.log('Update Event Params:', params);
+        const result = db.prepare(query).run(params);
+        return { ...evento, Id: id };
     } catch (error) {
-      console.error("Database error:", error);
-      throw new Error("Failed to update event: " + error.message);
+        console.error("Database error:", error);
+        throw new Error("Failed to update event.");
     }
-  };
+};
+
   
   
   
