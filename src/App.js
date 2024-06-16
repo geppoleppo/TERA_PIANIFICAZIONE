@@ -130,25 +130,29 @@ const App = () => {
   };
 
   const convertToStandardFormat = (event) => {
-    console.log("CCCCCCCP",event)
     const startDate = event.StartTime || event.StartDate || new Date().toISOString();
     const endDate = event.EndTime || event.EndDate || new Date().toISOString();
-  
+
     const incaricatoId = event.IncaricatoId && event.IncaricatoId !== '' 
                           ? event.IncaricatoId 
                           : (event.taskData ? event.taskData.IncaricatoId : '');
-  
+
+    const commessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId || 0;
+    const commessa = commesse.find(c => c.Id === commessaId);
+    const commessaName = commessa ? commessa.Descrizione : '';
+
     return {
       ...event,
       Inizio: startDate,
       Fine: endDate,
       Descrizione: event.Subject || event.TaskName,
-      CommessaId: Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId || 0,
+      CommessaId: commessaId,
       IncaricatoId: Array.isArray(incaricatoId) ? incaricatoId.join(',') : incaricatoId || '',
-      CommessaName: event.CommessaName || '',
+      CommessaName: commessaName,
       Dipendenza: event.Predecessor || '' // Assicurati di passare la dipendenza
     };
-  };
+};
+
 
 const formatEventForScheduler = (event) => {
     return {
