@@ -130,6 +130,7 @@ const App = () => {
   };
 
   const convertToStandardFormat = (event) => {
+    console.log("CCCCCCCP",event)
     const startDate = event.StartTime || event.StartDate || new Date().toISOString();
     const endDate = event.EndTime || event.EndDate || new Date().toISOString();
   

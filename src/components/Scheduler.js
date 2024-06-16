@@ -89,31 +89,30 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const onActionComplete = (args) => {
     console.log('Action Start: ', args);
-  
+
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        if (Array.isArray(args.data)) {
-          args.data.forEach(event => {
-            const commessa = commesse.find(c => c.Id === event.CommessaId);
-            event.CommessaName = commessa ? commessa.Descrizione : '';
-            event.Color = commessa ? commessa.Colore : '#000000';
-            event.Dipendenza = event.Predecessor || ''; // Assicurati che Dipendenza sia impostato
-            console.log('Event After Change: ', event);
-          });
-        } else {
-          const commessa = commesse.find(c => c.Id === args.data.CommessaId);
-          args.data.CommessaName = commessa ? commessa.Descrizione : '';
-          args.data.Color = commessa ? commessa.Colore : '#000000';
-          args.data.Dipendenza = args.data.Predecessor || ''; // Assicurati che Dipendenza sia impostato
-          console.log('Event After Change: ', args.data);
+        if (args.data) {
+            if (Array.isArray(args.data)) {
+                args.data.forEach(event => {
+                    const commessa = commesse.find(c => c.Id === event.CommessaId);
+                    event.CommessaName = commessa ? commessa.Descrizione : '';
+                    event.Color = commessa ? commessa.Colore : '#000000';
+                    event.Dipendenza = event.Predecessor || event.Dipendenza || ''; // Assicurati che Dipendenza sia impostato
+                    console.log('Event After Change: ', event);
+                });
+            } else {
+                const commessa = commesse.find(c => c.Id === args.data.CommessaId);
+                args.data.CommessaName = commessa ? commessa.Descrizione : '';
+                args.data.Color = commessa ? commessa.Colore : '#000000';
+                args.data.Dipendenza = args.data.Predecessor || args.data.Dipendenza || ''; // Assicurati che Dipendenza sia impostato
+                console.log('Event After Change: ', args.data);
+            }
         }
-      }
-      onDataChange(args);
+        onDataChange(args);
     }
     console.log('Action End: ', args);
-  };
+};
 
-  
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) {
