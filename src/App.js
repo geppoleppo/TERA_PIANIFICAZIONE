@@ -200,10 +200,6 @@ const formatGanttData = (task) => {
         commessaColors={commessaColors}
         commesse={commesse}
       />
-      <div className="saved-data-container">
-        <h2>Saved Data</h2>
-        <pre>{JSON.stringify(savedData, null, 2)}</pre>
-      </div>
     </div>
   );
 };
