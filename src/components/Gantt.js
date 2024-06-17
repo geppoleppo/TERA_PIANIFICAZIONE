@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD, Filter } from '@syncfusion/ej2-react-gantt';
 
+
+
 const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
   const [filteredData, setFilteredData] = useState([]);
 
@@ -73,6 +75,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       allowFiltering={true}
       editSettings={{ allowEditing: true, allowAdding: true, allowDeleting: true, allowTaskbarEditing: true, mode: 'Dialog' }}
       taskbarTemplate={taskbarTemplate}
+      
       timelineSettings={{
         timelineViewMode: 'Month',
         topTier: {
@@ -89,6 +92,10 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       actionComplete={onActionComplete}
       allowRowDragAndDrop={true}
       filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
+      //labelSettings= {
+        //rightLabel= 'commesse'
+        
+    //}
       highlightWeekends={true}
     >
       <ColumnsDirective>
