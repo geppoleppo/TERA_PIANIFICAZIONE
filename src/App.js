@@ -108,7 +108,6 @@ const App = () => {
         break;
     }
   };
-  
 
   const updateLocalData = (data, type) => {
     let updatedScheduleData = [...scheduleData];
@@ -127,20 +126,21 @@ const App = () => {
     }
     setScheduleData(updatedScheduleData);
     setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
-  };
+ };
+ 
 
   const convertToStandardFormat = (event) => {
     const startDate = event.StartTime || event.StartDate || new Date().toISOString();
     const endDate = event.EndTime || event.EndDate || new Date().toISOString();
-
+ 
     const incaricatoId = event.IncaricatoId && event.IncaricatoId !== '' 
                           ? event.IncaricatoId 
                           : (event.taskData ? event.taskData.IncaricatoId : '');
-
+ 
     const commessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId || 0;
     const commessa = commesse.find(c => c.Id === commessaId);
     const commessaName = commessa ? commessa.Descrizione : '';
-
+ 
     return {
       ...event,
       Inizio: startDate,
@@ -151,8 +151,8 @@ const App = () => {
       CommessaName: commessaName,
       Dipendenza: event.Predecessor || '' // Assicurati di passare la dipendenza
     };
-};
-
+ };
+ 
 
 const formatEventForScheduler = (event) => {
     return {
@@ -184,7 +184,6 @@ const formatGanttData = (task) => {
     };
 };
 
-
   return (
     <div className="app-container">
       <Scheduler
@@ -199,6 +198,7 @@ const formatGanttData = (task) => {
         onDataChange={handleGanttDataChange}
         commessaColors={commessaColors}
         commesse={commesse}
+        resources={resources}  // Passa le risorse qui
       />
     </div>
   );

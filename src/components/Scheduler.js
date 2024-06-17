@@ -1,4 +1,3 @@
-// Scheduler.js
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
@@ -89,7 +88,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const onActionComplete = (args) => {
     console.log('Action Start: ', args);
-
+ 
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
         if (args.data) {
             if (Array.isArray(args.data)) {
@@ -111,8 +110,8 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
         onDataChange(args);
     }
     console.log('Action End: ', args);
-};
-
+ };
+ 
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) {

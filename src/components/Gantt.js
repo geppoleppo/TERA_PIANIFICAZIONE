@@ -1,12 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD, Filter } from '@syncfusion/ej2-react-gantt';
 
-
-
-const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
+const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
   const [filteredData, setFilteredData] = useState([]);
+  const [resourceMap, setResourceMap] = useState({});
 
   useEffect(() => {
+    console.log('Gantt component mounted');
+    console.log('commessaColors in Gantt:', commessaColors);
+    console.log('data in Gantt:', data);
+    console.log('resources:', resources);
+
+    // Creazione della mappa degli incaricati
+    if (resources) {
+      const resourceMapping = resources.reduce((map, resource) => {
+        map[resource.Id] = resource.Nome;
+        return map;
+      }, {});
+      setResourceMap(resourceMapping);
+    }
+
     const verifyData = data.map(event => {
       const startDate = new Date(event.StartDate || event.StartTime);
       const endDate = new Date(event.EndDate || event.EndTime);
@@ -23,14 +36,14 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
         Progress: event.Progress || 0,
         Color: event.Color || commessaColors[event.CommessaId] || '#000000',
         CommessaId: event.CommessaId || '',
-        IncaricatoId: event.IncaricatoId || '',
+        IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId : event.IncaricatoId ? event.IncaricatoId.split(',') : [],
         CommessaName: event.CommessaName || '',
         Dipendenza: event.Dipendenza || ''
       };
     });
 
     setFilteredData(verifyData);
-  }, [data, commessaColors]);
+  }, [data, commessaColors, resources]);
 
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';
@@ -48,8 +61,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
         data: [args.data]
       });
     }
-};
-
+  };
 
   const taskFields = {
     id: 'Id',
@@ -65,6 +77,10 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
     CommessaName: 'CommessaName'
   };
 
+  const mapIncaricatoIdToName = (id) => {
+    return resourceMap[id] || id;
+  };
+
   return (
     <GanttComponent
       dataSource={filteredData}
@@ -75,7 +91,6 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       allowFiltering={true}
       editSettings={{ allowEditing: true, allowAdding: true, allowDeleting: true, allowTaskbarEditing: true, mode: 'Dialog' }}
       taskbarTemplate={taskbarTemplate}
-      
       timelineSettings={{
         timelineViewMode: 'Month',
         topTier: {
@@ -92,10 +107,13 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       actionComplete={onActionComplete}
       allowRowDragAndDrop={true}
       filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
-      //labelSettings= {
-        //rightLabel= 'commesse'
-        
-    //}
+      labelSettings={{
+        rightLabel: (props) => {
+          const incaricatoIds = Array.isArray(props.IncaricatoId) ? props.IncaricatoId : props.IncaricatoId ? props.IncaricatoId.split(',') : [];
+          if (!incaricatoIds.length) return '';
+          return incaricatoIds.map(id => mapIncaricatoIdToName(id)).join(', ');
+        }
+      }}
       highlightWeekends={true}
     >
       <ColumnsDirective>
@@ -107,6 +125,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
         <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={true} visible={false}/>
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={true} />
         <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} />
+        <ColumnDirective field='IncaricatoId' headerText='IncaricatoId ' width='150' visible={true} />
         <ColumnDirective field='Color' visible={false} />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD, Filter]} />
