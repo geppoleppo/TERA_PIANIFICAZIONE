@@ -1,3 +1,5 @@
+// App.js
+
 import React, { useState, useEffect } from 'react';
 import Scheduler from './components/Scheduler';
 import Gantt from './components/Gantt';
@@ -85,6 +87,7 @@ const App = () => {
       default:
         break;
     }
+    reloadData(); // Assicurati che i dati siano ricaricati
   };
   
   const handleGanttDataChange = (args) => {
@@ -113,9 +116,6 @@ const App = () => {
         break;
     }
   };
-  
-  
-  
 
   const updateLocalData = (data, type) => {
     let updatedScheduleData = [...scheduleData];

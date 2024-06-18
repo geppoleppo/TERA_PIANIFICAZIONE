@@ -42,7 +42,9 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   useEffect(() => {
     console.log('Scheduler component mounted');
     console.log('Scheduler data:', data);
-
+    console.log('Resources:', resources);
+    console.log('Commesse:', commesse);
+  
     // Convertiamo l'array IncaricatoId da stringhe a numeri
     const newData = data.map(event => ({
       ...event,
@@ -88,30 +90,37 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const onActionComplete = (args) => {
     console.log('Action Start: ', args);
- 
+
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-        if (args.data) {
-            if (Array.isArray(args.data)) {
-                args.data.forEach(event => {
-                    const commessa = commesse.find(c => c.Id === event.CommessaId);
-                    event.CommessaName = commessa ? commessa.Descrizione : '';
-                    event.Color = commessa ? commessa.Colore : '#000000';
-                    event.Dipendenza = event.Predecessor || event.Dipendenza || ''; // Assicurati che Dipendenza sia impostato
-                    console.log('Event After Change: ', event);
-                });
-            } else {
-                const commessa = commesse.find(c => c.Id === args.data.CommessaId);
-                args.data.CommessaName = commessa ? commessa.Descrizione : '';
-                args.data.Color = commessa ? commessa.Colore : '#000000';
-                args.data.Dipendenza = args.data.Predecessor || args.data.Dipendenza || ''; // Assicurati che Dipendenza sia impostato
-                console.log('Event After Change: ', args.data);
+      if (args.data) {
+        if (Array.isArray(args.data)) {
+          args.data.forEach(event => {
+            if (args.requestType === 'eventCreated') {
+              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
+            } else if (args.requestType === 'eventChanged') {
+              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
             }
+            event.Color = commessaColors[event.CommessaId] || '#000000';
+            console.log('Event After Change: ', event);
+          });
+        } else {
+          if (args.requestType === 'eventCreated') {
+            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
+          } else if (args.requestType === 'eventChanged') {
+            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
+          }
+          args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
+          console.log('Event After Change: ', args.data);
         }
-        onDataChange(args);
+      }
+      onDataChange(args);
     }
+    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved' || args.requestType === 'drag' || args.requestType === 'resize') {
+      onDataChange(args);
+    }
+
     console.log('Action End: ', args);
- };
- 
+  };
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) {
