@@ -36,23 +36,16 @@ L10n.load({
 const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) => {
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
-  const [currentView, setCurrentView] = useState('Month'); // Set default view to 'Month'
+  const [currentView, setCurrentView] = useState('Month'); 
   const [modifiedData, setModifiedData] = useState([]);
 
   useEffect(() => {
-    console.log('Scheduler component mounted');
-    console.log('Scheduler data:', data);
-    console.log('Resources:', resources);
-    console.log('Commesse:', commesse);
-  
-    // Convertiamo l'array IncaricatoId da stringhe a numeri
     const newData = data.map(event => ({
       ...event,
       IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.map(id => parseInt(id)) : event.IncaricatoId
     }));
     setModifiedData(newData);
-    console.log('Modified Scheduler data:', newData);
-  }, [data, resources, commesse]);
+  }, [data]);
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
@@ -89,28 +82,20 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const onActionComplete = (args) => {
-    console.log('Action Start: ', args);
-  
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
         const events = Array.isArray(args.data) ? args.data : [args.data];
         events.forEach(event => {
           event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
           event.Color = commessaColors[event.CommessaId] || '#000000';
-          console.log('Event After Change: ', event);
         });
       }
       onDataChange(args);
     }
-  
-    console.log('Action End: ', args);
   };
-  
 
   const resourceHeaderTemplate = (props) => {
-    if (!props.resourceData) {
-      return null;
-    }
+    if (!props.resourceData) return null;
     const commessa = props.resourceData.Descrizione;
     if (commessa) {
       return (

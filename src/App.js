@@ -13,7 +13,6 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Fetching collaborators and projects...');
         const [collaboratoriResponse, commesseResponse] = await Promise.all([
           axios.get('http://localhost:3001/collaboratori'),
           axios.get('http://localhost:3001/commesse')
@@ -21,8 +20,6 @@ const App = () => {
 
         const staticCollaboratori = collaboratoriResponse.data;
         const staticCommesse = commesseResponse.data;
-        console.log('Collaborators:', staticCollaboratori);
-        console.log('Projects:', staticCommesse);
 
         setResources(staticCollaboratori);
         setCommesse(staticCommesse);
@@ -32,15 +29,10 @@ const App = () => {
           return acc;
         }, {});
         setCommessaColors(colors);
-        console.log('Commessa Colors:', colors);
 
-        // Carica gli eventi dal server solo dopo che le commesse sono state impostate
-        console.log('Fetching events...');
         const eventiResponse = await axios.get('http://localhost:3001/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event));
-        console.log('Events:', staticSchedulerData);
 
-        // Aggiorna lo stato con gli eventi caricati
         setScheduleData(staticSchedulerData);
         setGanttData(staticSchedulerData.map(event => formatGanttData(event, staticCommesse)));
       } catch (error) {
@@ -51,7 +43,6 @@ const App = () => {
     fetchData();
   }, []);
 
-  // Debounce function
   const debounce = (func, wait) => {
     let timeout;
     return (...args) => {
@@ -61,24 +52,22 @@ const App = () => {
   };
 
   const handleSchedulerDataChange = debounce((args) => {
-    console.log('Scheduler Data Change:', args);
     const event = convertToStandardFormat(args.data[0]);
-    console.log('Formatted Event for Scheduler:', event);
 
     switch (args.requestType) {
       case 'eventCreated':
         axios.post('http://localhost:3001/eventi', event)
           .then(response => {
             updateLocalData(response.data, 'add');
-            reloadData(); // Ricarica i dati
+            reloadData();
           })
           .catch(error => console.error('Failed to create event:', error));
         break;
       case 'eventChanged':
         axios.put(`http://localhost:3001/eventi/${event.Id}`, event)
-          .then(response => {
+          .then(() => {
             updateLocalData(event, 'update');
-            reloadData(); // Ricarica i dati
+            reloadData();
           })
           .catch(error => console.error('Failed to update event:', error));
         break;
@@ -86,7 +75,7 @@ const App = () => {
         axios.delete(`http://localhost:3001/eventi/${event.Id}`)
           .then(() => {
             updateLocalData(event, 'delete');
-            reloadData(); // Ricarica i dati
+            reloadData();
           })
           .catch(error => console.error('Failed to delete event:', error));
         break;
@@ -96,16 +85,14 @@ const App = () => {
   }, 300);
 
   const handleGanttDataChange = debounce((args) => {
-    console.log('Gantt Data Change:', args);
     const task = convertToStandardFormat(args.data[0]);
-    console.log('Formatted Task for Gantt:', task);
 
     switch (args.requestType) {
       case 'eventChanged':
         axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
-          .then(response => {
+          .then(() => {
             updateLocalData(task, 'update');
-            reloadData(); // Ricarica i dati
+            reloadData();
           })
           .catch(error => console.error('Failed to update task:', error));
         break;
@@ -113,7 +100,7 @@ const App = () => {
         axios.delete(`http://localhost:3001/eventi/${task.Id}`)
           .then(() => {
             updateLocalData(task, 'delete');
-            reloadData(); // Ricarica i dati
+            reloadData();
           })
           .catch(error => console.error('Failed to delete task:', error));
         break;
@@ -143,12 +130,9 @@ const App = () => {
 
   const reloadData = async () => {
     try {
-      console.log('Fetching events...');
       const eventiResponse = await axios.get('http://localhost:3001/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event));
-      console.log('Events:', staticSchedulerData);
 
-      // Aggiorna lo stato con gli eventi caricati
       setScheduleData(staticSchedulerData);
       setGanttData(staticSchedulerData.map(event => formatGanttData(event, commesse)));
     } catch (error) {
@@ -176,7 +160,7 @@ const App = () => {
       CommessaId: commessaId,
       IncaricatoId: Array.isArray(incaricatoId) ? incaricatoId.join(',') : incaricatoId || '',
       CommessaName: commessaName,
-      Dipendenza: event.Predecessor || '' // Assicurati di passare la dipendenza
+      Dipendenza: event.Predecessor || ''
     };
   };
 
@@ -187,11 +171,11 @@ const App = () => {
       StartTime: new Date(event.Inizio),
       EndTime: new Date(event.Fine),
       CommessaId: event.CommessaId,
-      IncaricatoId: event.IncaricatoId ? event.IncaricatoId.split(',').map(id => parseInt(id, 10)) : [], // Convert comma-separated string to array of integers
+      IncaricatoId: event.IncaricatoId ? event.IncaricatoId.split(',').map(id => parseInt(id, 10)) : [],
       Color: event.Colore,
       Progress: event.Progresso,
       CommessaName: event.CommessaName,
-      Dipendenza: event.Dipendenza // Assicurati che la dipendenza sia inclusa
+      Dipendenza: event.Dipendenza
     };
   };
 
@@ -201,11 +185,11 @@ const App = () => {
       TaskName: task.Descrizione || task.Subject,
       StartDate: task.StartTime ? new Date(task.StartTime) : new Date(),
       EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
-      Predecessor: task.Dipendenza || '', // Usa Dipendenza per il campo Predecessor
+      Predecessor: task.Dipendenza || '',
       Progress: task.Progresso || 0,
       Color: task.Color,
       CommessaId: task.CommessaId || '',
-      IncaricatoId: task.IncaricatoId || '', // Assicurati che IncaricatoId sia incluso
+      IncaricatoId: task.IncaricatoId || '',
       CommessaName: task.CommessaName || ''
     };
   };

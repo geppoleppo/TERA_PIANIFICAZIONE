@@ -1,26 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD, Filter } from '@syncfusion/ej2-react-gantt';
-import axios from 'axios';
 
 const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
   const [filteredData, setFilteredData] = useState([]);
-  const [resourceMap, setResourceMap] = useState({});
 
   useEffect(() => {
-    console.log('Gantt component mounted');
-    console.log('commessaColors in Gantt:', commessaColors);
-    console.log('data in Gantt:', data);
-    console.log('resources:', resources);
-
-    // Creazione della mappa degli incaricati
-    if (resources) {
-      const resourceMapping = resources.reduce((map, resource) => {
-        map[resource.Id] = resource.Nome;
-        return map;
-      }, {});
-      setResourceMap(resourceMapping);
-    }
-
     const verifyData = data.map(event => {
       const startDate = new Date(event.StartDate || event.StartTime);
       const endDate = new Date(event.EndDate || event.EndTime);
@@ -44,25 +28,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     });
 
     setFilteredData(verifyData);
-  }, [data, commessaColors, resources]);
-
-  useEffect(() => {
-    const fetchGanttData = async () => {
-      try {
-        const eventiResponse = await axios.get('http://localhost:3001/eventi');
-        const staticGanttData = eventiResponse.data.map(event => ({
-          ...event,
-          StartDate: new Date(event.Inizio),
-          EndDate: new Date(event.Fine)
-        }));
-        setFilteredData(staticGanttData);
-      } catch (error) {
-        console.error('Errore nel caricamento dei dati del Gantt:', error);
-      }
-    };
-
-    fetchGanttData();
-  }, [data]);
+  }, [data, commessaColors]);
 
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';
@@ -79,7 +45,6 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
         requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
         data: [args.data]
       });
-      setFilteredData(filteredData => [...filteredData]);
     }
   };
 
@@ -95,10 +60,6 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     CommessaId: 'CommessaId',
     IncaricatoId: 'IncaricatoId',
     CommessaName: 'CommessaName'
-  };
-
-  const mapIncaricatoIdToName = (id) => {
-    return resourceMap[id] || id;
   };
 
   return (
@@ -131,7 +92,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
         rightLabel: (props) => {
           const incaricatoIds = Array.isArray(props.IncaricatoId) ? props.IncaricatoId : props.IncaricatoId ? props.IncaricatoId.split(',') : [];
           if (!incaricatoIds.length) return '';
-          return incaricatoIds.map(id => mapIncaricatoIdToName(id)).join(', ');
+          return incaricatoIds.map(id => resources.find(r => r.Id === id)?.Nome || id).join(', ');
         }
       }}
       highlightWeekends={true}
