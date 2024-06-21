@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar, RowDD, Filter } from '@syncfusion/ej2-react-gantt';
+import axios from 'axios';
 
 const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
   const [filteredData, setFilteredData] = useState([]);
@@ -45,6 +46,24 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     setFilteredData(verifyData);
   }, [data, commessaColors, resources]);
 
+  useEffect(() => {
+    const fetchGanttData = async () => {
+      try {
+        const eventiResponse = await axios.get('http://localhost:3001/eventi');
+        const staticGanttData = eventiResponse.data.map(event => ({
+          ...event,
+          StartDate: new Date(event.Inizio),
+          EndDate: new Date(event.Fine)
+        }));
+        setFilteredData(staticGanttData);
+      } catch (error) {
+        console.error('Errore nel caricamento dei dati del Gantt:', error);
+      }
+    };
+
+    fetchGanttData();
+  }, [data]);
+
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';
     return (
@@ -63,8 +82,6 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
       setFilteredData(filteredData => [...filteredData]);
     }
   };
-  
-
 
   const taskFields = {
     id: 'Id',
