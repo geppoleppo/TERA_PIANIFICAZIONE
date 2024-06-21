@@ -54,89 +54,101 @@ const App = () => {
     fetchData();
   }, []);
 
-  const handleSchedulerDataChange = (args) => {
-    console.log('Scheduler Data Change:', args);
-    const event = convertToStandardFormat(args.data[0]);
-    console.log('Formatted Event for Scheduler:', event);
-  
-    switch (args.requestType) {
-      case 'eventCreated':
-        axios.post('http://localhost:3001/eventi', event)
-          .then(response => {
-            updateLocalData(response.data, 'add');
-            reloadData(); // Ricarica i dati
-          })
-          .catch(error => console.error('Failed to create event:', error));
-        break;
-      case 'eventChanged':
-        axios.put(`http://localhost:3001/eventi/${event.Id}`, event)
-          .then(response => {
-            updateLocalData(event, 'update');
-            reloadData(); // Ricarica i dati
-          })
-          .catch(error => console.error('Failed to update event:', error));
-        break;
-      case 'eventRemoved':
-        axios.delete(`http://localhost:3001/eventi/${event.Id}`)
-          .then(response => {
-            updateLocalData(event, 'delete');
-            reloadData(); // Ricarica i dati
-          })
-          .catch(error => console.error('Failed to delete event:', error));
-        break;
-      default:
-        break;
-    }
-    reloadData(); // Assicurati che i dati siano ricaricati
+// Debounce function
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
   };
-  
-  const handleGanttDataChange = (args) => {
-    console.log('Gantt Data Change:', args);
-    const task = convertToStandardFormat(args.data[0]);
-    console.log('Formatted Task for Gantt:', task);
-  
-    switch (args.requestType) {
-      case 'eventChanged':
-        axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
-          .then(response => {
-            updateLocalData(task, 'update');
-            reloadData(); // Ricarica i dati
-          })
-          .catch(error => console.error('Failed to update task:', error));
-        break;
-      case 'eventRemoved':
-        axios.delete(`http://localhost:3001/eventi/${task.Id}`)
-          .then(response => {
-            updateLocalData(task, 'delete');
-            reloadData(); // Ricarica i dati
-          })
-          .catch(error => console.error('Failed to delete task:', error));
-        break;
-      default:
-        break;
-    }
-  };
+};
 
-  const updateLocalData = (data, type) => {
-    let updatedScheduleData = [...scheduleData];
-    switch (type) {
-      case 'add':
-        updatedScheduleData = [...updatedScheduleData, formatEventForScheduler(data)];
-        break;
-      case 'update':
-        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? formatEventForScheduler(data) : item);
-        break;
-      case 'delete':
-        updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
-        break;
-      default:
-        break;
-    }
-    setScheduleData(updatedScheduleData);
-    setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
- };
+const handleSchedulerDataChange = debounce((args) => {
+  console.log('Scheduler Data Change:', args);
+  const event = convertToStandardFormat(args.data[0]);
+  console.log('Formatted Event for Scheduler:', event);
 
- const reloadData = async () => {
+  switch (args.requestType) {
+    case 'eventCreated':
+      axios.post('http://localhost:3001/eventi', event)
+        .then(response => {
+          updateLocalData(response.data, 'add');
+          reloadData(); // Ricarica i dati
+        })
+        .catch(error => console.error('Failed to create event:', error));
+      break;
+    case 'eventChanged':
+      axios.put(`http://localhost:3001/eventi/${event.Id}`, event)
+        .then(response => {
+          updateLocalData(event, 'update');
+          reloadData(); // Ricarica i dati
+        })
+        .catch(error => console.error('Failed to update event:', error));
+      break;
+    case 'eventRemoved':
+      axios.delete(`http://localhost:3001/eventi/${event.Id}`)
+        .then(() => {
+          updateLocalData(event, 'delete');
+          reloadData(); // Ricarica i dati
+        })
+        .catch(error => console.error('Failed to delete event:', error));
+      break;
+    default:
+      break;
+  }
+}, 300);
+
+const handleGanttDataChange = debounce((args) => {
+  console.log('Gantt Data Change:', args);
+  const task = convertToStandardFormat(args.data[0]);
+  console.log('Formatted Task for Gantt:', task);
+
+  switch (args.requestType) {
+    case 'eventChanged':
+      axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
+        .then(response => {
+          updateLocalData(task, 'update');
+          reloadData(); // Ricarica i dati
+        })
+        .catch(error => console.error('Failed to update task:', error));
+      break;
+    case 'eventRemoved':
+      axios.delete(`http://localhost:3001/eventi/${task.Id}`)
+        .then(() => {
+          updateLocalData(task, 'delete');
+          reloadData(); // Ricarica i dati
+        })
+        .catch(error => console.error('Failed to delete task:', error));
+      break;
+    default:
+      break;
+  }
+}, 300);
+
+
+const updateLocalData = (data, type) => {
+  let updatedScheduleData = [...scheduleData];
+  switch (type) {
+    case 'add':
+      updatedScheduleData = [...updatedScheduleData, formatEventForScheduler(data)];
+      break;
+    case 'update':
+      updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? formatEventForScheduler(data) : item);
+      break;
+    case 'delete':
+      updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
+      break;
+    default:
+      break;
+  }
+  setScheduleData(updatedScheduleData);
+  setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
+};
+
+
+
+
+const reloadData = async () => {
   try {
     console.log('Fetching events...');
     const eventiResponse = await axios.get('http://localhost:3001/eventi');
@@ -204,6 +216,7 @@ const formatGanttData = (task) => {
     CommessaName: task.CommessaName || ''
   };
 };
+
 
 
   return (

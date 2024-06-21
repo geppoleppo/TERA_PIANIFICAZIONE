@@ -90,37 +90,22 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const onActionComplete = (args) => {
     console.log('Action Start: ', args);
-
+  
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
       if (args.data) {
-        if (Array.isArray(args.data)) {
-          args.data.forEach(event => {
-            if (args.requestType === 'eventCreated') {
-              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
-            } else if (args.requestType === 'eventChanged') {
-              event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
-            }
-            event.Color = commessaColors[event.CommessaId] || '#000000';
-            console.log('Event After Change: ', event);
-          });
-        } else {
-          if (args.requestType === 'eventCreated') {
-            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
-          } else if (args.requestType === 'eventChanged') {
-            args.data.CommessaId = Array.isArray(args.data.CommessaId) ? args.data.CommessaId[0] : args.data.CommessaId;
-          }
-          args.data.Color = commessaColors[args.data.CommessaId] || '#000000';
-          console.log('Event After Change: ', args.data);
-        }
+        const events = Array.isArray(args.data) ? args.data : [args.data];
+        events.forEach(event => {
+          event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
+          event.Color = commessaColors[event.CommessaId] || '#000000';
+          console.log('Event After Change: ', event);
+        });
       }
       onDataChange(args);
     }
-    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved' || args.requestType === 'drag' || args.requestType === 'resize') {
-      onDataChange(args);
-    }
-
+  
     console.log('Action End: ', args);
   };
+  
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) {

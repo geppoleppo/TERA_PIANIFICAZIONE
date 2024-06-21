@@ -54,16 +54,16 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     );
   };
 
-const onActionComplete = (args) => {
-  if (args.requestType === 'save' || args.requestType === 'delete') {
-    onDataChange({
-      requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
-      data: [args.data]
-    });
-    // Forza il reload del Gantt
-    setFilteredData(filteredData => [...filteredData]);
-  }
-};
+  const onActionComplete = (args) => {
+    if (args.requestType === 'save' || args.requestType === 'delete') {
+      onDataChange({
+        requestType: args.requestType === 'save' ? 'eventChanged' : 'eventRemoved',
+        data: [args.data]
+      });
+      setFilteredData(filteredData => [...filteredData]);
+    }
+  };
+  
 
 
   const taskFields = {
