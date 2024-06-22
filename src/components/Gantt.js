@@ -5,6 +5,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
   const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
+    console.log('Gantt component mounted or updated with data:', data);
     const verifyData = data.map(event => {
       const startDate = new Date(event.StartDate || event.StartTime);
       const endDate = new Date(event.EndDate || event.EndTime);
@@ -28,6 +29,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     });
 
     setFilteredData(verifyData);
+    console.log('Filtered data set in Gantt:', verifyData);
   }, [data, commessaColors]);
 
   const taskbarTemplate = (props) => {

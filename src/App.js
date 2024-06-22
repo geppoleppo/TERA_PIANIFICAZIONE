@@ -9,6 +9,7 @@ const App = () => {
   const [resources, setResources] = useState([]);
   const [commessaColors, setCommessaColors] = useState({});
   const [commesse, setCommesse] = useState([]);
+  const [ganttKey, setGanttKey] = useState(0); // Add key state for Gantt component
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,7 +60,7 @@ const App = () => {
         axios.post('http://localhost:3001/eventi', event)
           .then(response => {
             updateLocalData(response.data, 'add');
-            reloadData();
+            reloadSchedulerData();
           })
           .catch(error => console.error('Failed to create event:', error));
         break;
@@ -67,7 +68,7 @@ const App = () => {
         axios.put(`http://localhost:3001/eventi/${event.Id}`, event)
           .then(() => {
             updateLocalData(event, 'update');
-            reloadData();
+            reloadSchedulerData();
           })
           .catch(error => console.error('Failed to update event:', error));
         break;
@@ -75,7 +76,7 @@ const App = () => {
         axios.delete(`http://localhost:3001/eventi/${event.Id}`)
           .then(() => {
             updateLocalData(event, 'delete');
-            reloadData();
+            reloadSchedulerData();
           })
           .catch(error => console.error('Failed to delete event:', error));
         break;
@@ -92,7 +93,7 @@ const App = () => {
         axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
           .then(() => {
             updateLocalData(task, 'update');
-            reloadData();
+            reloadSchedulerData();
           })
           .catch(error => console.error('Failed to update task:', error));
         break;
@@ -100,7 +101,7 @@ const App = () => {
         axios.delete(`http://localhost:3001/eventi/${task.Id}`)
           .then(() => {
             updateLocalData(task, 'delete');
-            reloadData();
+            reloadSchedulerData();
           })
           .catch(error => console.error('Failed to delete task:', error));
         break;
@@ -126,17 +127,30 @@ const App = () => {
     }
     setScheduleData(updatedScheduleData);
     setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
+    setGanttKey(prevKey => prevKey + 1); // Increment key to force re-render
   };
 
-  const reloadData = async () => {
+  const reloadSchedulerData = async () => {
     try {
       const eventiResponse = await axios.get('http://localhost:3001/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event));
 
       setScheduleData(staticSchedulerData);
-      setGanttData(staticSchedulerData.map(event => formatGanttData(event, commesse)));
     } catch (error) {
       console.error('Errore nel caricamento dei dati:', error);
+    }
+  };
+
+  const reloadGanttData = async () => {
+    try {
+      console.log('Ricarica dati Gantt iniziata');
+      const eventiResponse = await axios.get('http://localhost:3001/eventi');
+      const staticGanttData = eventiResponse.data.map(event => formatGanttData(event, commesse));
+      setGanttData(staticGanttData);
+      setGanttKey(prevKey => prevKey + 1); // Increment key to force re-render
+      console.log('Dati Gantt ricaricati:', staticGanttData);
+    } catch (error) {
+      console.error('Errore nel caricamento dei dati Gantt:', error);
     }
   };
 
@@ -160,7 +174,8 @@ const App = () => {
       CommessaId: commessaId,
       IncaricatoId: Array.isArray(incaricatoId) ? incaricatoId.join(',') : incaricatoId || '',
       CommessaName: commessaName,
-      Dipendenza: event.Predecessor || ''
+      Dipendenza: event.Predecessor || '',
+      Colore: event.Color || commessaColors[commessaId] || '#000000' // Assicurarsi che il colore sia definito
     };
   };
 
@@ -187,7 +202,7 @@ const App = () => {
       EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
       Predecessor: task.Dipendenza || '',
       Progress: task.Progresso || 0,
-      Color: task.Color,
+      Color: task.Colore || commessaColors[task.CommessaId] || '#000000', // Assicurarsi che il colore sia definito
       CommessaId: task.CommessaId || '',
       IncaricatoId: task.IncaricatoId || '',
       CommessaName: task.CommessaName || ''
@@ -203,12 +218,14 @@ const App = () => {
         commessaColors={commessaColors}
         commesse={commesse}
       />
+      <button onClick={reloadGanttData}>Ricarica Dati Gantt</button>
       <Gantt
+        key={ganttKey} // Add key prop to force re-render
         data={ganttData}
         onDataChange={handleGanttDataChange}
         commessaColors={commessaColors}
         commesse={commesse}
-        resources={resources}  // Passa le risorse qui
+        resources={resources}
       />
     </div>
   );
