@@ -2,12 +2,40 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./database');
+const mysql = require('mysql');
 
 const app = express();
 const port = 3001;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+const mysqlConnection = mysql.createConnection({
+    host: '93.49.98.201',
+    port: 8085,
+    user: 'geppolo',
+    password: 'geppolo',
+    database: 'gestionale'
+});
+
+mysqlConnection.connect(err => {
+    if (err) {
+        console.error('Error connecting to MySQL:', err);
+    } else {
+        console.log('Connected to MySQL');
+    }
+});
+
+app.get('/commesse-mysql', (req, res) => {
+    mysqlConnection.query('SELECT NOME FROM COMMESSE', (err, results) => {
+        if (err) {
+            console.error('Error fetching commesse:', err);
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(results);
+        }
+    });
+});
 
 app.get('/collaboratori', (req, res) => {
     try {
@@ -20,7 +48,7 @@ app.get('/collaboratori', (req, res) => {
 
 app.get('/commesse', (req, res) => {
     try {
-        const commesse = db.getAllCommesse();
+        const commesse = db.getSelectedCommesse();
         res.json(commesse);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -54,8 +82,6 @@ app.put('/eventi/:id', (req, res) => {
     }
 });
 
-
-
 app.delete('/eventi/:id', (req, res) => {
     try {
         db.deleteEvento(req.params.id);
@@ -65,6 +91,16 @@ app.delete('/eventi/:id', (req, res) => {
     }
 });
 
+app.post('/update-sqlite', (req, res) => {
+    try {
+        const { commesse } = req.body;
+        db.updateCommesse(commesse);
+        res.json({ message: 'Commesse updated in SQLite' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
-    //console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running at http://localhost:${port}`);
 });

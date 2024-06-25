@@ -62,7 +62,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   const handleCommessaChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
       if (selectedOptions.length === 1) {
-        setSelectedCommesse(commesse.map(commessa => commessa.Id));
+        setSelectedCommesse(commesse.map(commessa => commessa.CommessaName));
       } else {
         setSelectedCommesse([]);
       }
@@ -78,7 +78,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const getFilteredCommesse = () => {
     if (selectedCommesse.length === 0) return [];
-    return commesse.filter(commessa => selectedCommesse.includes(commessa.Id));
+    return commesse.filter(commessa => selectedCommesse.includes(commessa.CommessaName));
   };
 
   const onActionComplete = (args) => {
@@ -86,8 +86,8 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
       if (args.data) {
         const events = Array.isArray(args.data) ? args.data : [args.data];
         events.forEach(event => {
-          event.CommessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId;
-          event.Color = commessaColors[event.CommessaId] || '#000000';
+          event.CommessaName = Array.isArray(event.CommessaName) ? event.CommessaName[0] : event.CommessaName;
+          event.Color = commessaColors[event.CommessaName] || '#000000';
         });
       }
       onDataChange(args);
@@ -119,12 +119,12 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const monthEventTemplate = (props) => {
-    const commessaId = Array.isArray(props.CommessaId) ? props.CommessaId[0] : props.CommessaId;
-    const commessa = commesse.find(commessa => commessa.Id === commessaId);
+    const commessaName = Array.isArray(props.CommessaName) ? props.CommessaName[0] : props.CommessaName;
+    const commessa = commesse.find(commessa => commessa.CommessaName === commessaName);
 
     const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
     const subjectText = props.Subject ? props.Subject : '';
-    const color = commessaColors[commessaId] || '#000000';
+    const color = commessaColors[commessaName] || '#000000';
 
     return (
       <div className="template-wrap" style={{ backgroundColor: color }}>
@@ -149,7 +149,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   }))];
 
   const commessaOptions = [{ value: 'select-all', label: 'Select All' }, ...commesse.map(commessa => ({
-    value: commessa.Id,
+    value: commessa.CommessaName,
     label: commessa.Descrizione
   }))];
 
@@ -191,7 +191,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
               endTime: { title: 'To', name: 'EndTime' },
               color: { name: 'Color' },
               IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
-              commessaId: { title: 'Commessa', name: 'CommessaId', validation: { required: true } }
+              commessaName: { title: 'Commessa', name: 'CommessaName', validation: { required: true } }
             },
             template: monthEventTemplate,
           }}
@@ -218,13 +218,13 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
               colorField='Colore'
             />
             <ResourceDirective
-              field='CommessaId'
+              field='CommessaName'
               title='Commessa'
               name='Commesse'
               allowMultiple={false}
               dataSource={getFilteredCommesse()}
               textField='Descrizione'
-              idField='Id'
+              idField='CommessaName'
               colorField='Colore'
             />
           </ResourcesDirective>

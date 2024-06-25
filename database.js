@@ -13,7 +13,7 @@ const createTables = () => {
 
     const queryCommesse = `
         CREATE TABLE IF NOT EXISTS Commesse (
-            Id INTEGER PRIMARY KEY,
+            CommessaName TEXT PRIMARY KEY,
             Descrizione TEXT NOT NULL,
             Colore TEXT NOT NULL
         );
@@ -25,13 +25,11 @@ const createTables = () => {
             Descrizione TEXT NOT NULL,
             Inizio TEXT NOT NULL,
             Fine TEXT NOT NULL,
-            CommessaId INTEGER,
+            CommessaName TEXT,
             IncaricatoId TEXT,
             Colore TEXT,
             Progresso INTEGER,
-            CommessaName TEXT,   -- Aggiungi il campo CommessaName
-            Dipendenza TEXT,     -- Aggiungi il campo Dipendenza
-            FOREIGN KEY (CommessaId) REFERENCES Commesse(Id)
+            Dipendenza TEXT
         );
     `;
 
@@ -39,7 +37,6 @@ const createTables = () => {
     db.prepare(queryCommesse).run();
     db.prepare(queryEventi).run();
 };
-
 
 createTables();
 
@@ -87,18 +84,17 @@ const getAllEventi = () => {
 const createEvento = (evento) => {
     try {
         const query = `
-            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaId, IncaricatoId, Colore, Progresso, CommessaName, Dipendenza)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const params = [
             evento.Descrizione,
             evento.Inizio,
             evento.Fine,
-            evento.CommessaId,
+            evento.CommessaName,
             evento.IncaricatoId,
             evento.Colore || '',
             evento.Progresso || 0,
-            evento.CommessaName || '',
             evento.Dipendenza || ''
         ];
         console.log('Create Event Params:', params);
@@ -110,23 +106,21 @@ const createEvento = (evento) => {
     }
 };
 
-  
 const updateEvento = (id, evento) => {
     try {
         const query = `
             UPDATE Eventi
-            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaId = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, CommessaName = ?, Dipendenza = ?
+            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?
             WHERE Id = ?
         `;
         const params = [
             evento.Descrizione || evento.Subject || 'No Description',
             evento.Inizio || new Date().toISOString(),
             evento.Fine || new Date().toISOString(),
-            evento.CommessaId,
+            evento.CommessaName,
             evento.Colore || '',
             evento.Progresso || 0,
             evento.IncaricatoId,
-            evento.CommessaName || '',
             evento.Dipendenza || '',
             id
         ];
@@ -139,12 +133,6 @@ const updateEvento = (id, evento) => {
     }
 };
 
-
-  
-  
-  
-  
-
 const deleteEvento = (id) => {
     try {
         const query = `DELETE FROM Eventi WHERE Id = ?`;
@@ -155,6 +143,32 @@ const deleteEvento = (id) => {
     }
 };
 
+const updateCommesse = (commesse) => {
+    try {
+        db.prepare(`DELETE FROM Commesse`).run();
+        const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore) VALUES (?, ?, ?)`);
+        const insertMany = db.transaction((commesse) => {
+            for (const commessa of commesse) {
+                insert.run(commessa.descrizione.substring(0, 5), commessa.descrizione, commessa.colore);
+            }
+        });
+        insertMany(commesse);
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to update commesse.");
+    }
+};
+
+const getSelectedCommesse = () => {
+    try {
+        const query = `SELECT * FROM Commesse`;
+        return db.prepare(query).all();
+    } catch (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to retrieve selected commesse.");
+    }
+};
+
 module.exports = {
     getAllCollaboratori,
     getAllCommesse,
@@ -162,4 +176,6 @@ module.exports = {
     createEvento,
     updateEvento,
     deleteEvento,
+    updateCommesse,
+    getSelectedCommesse
 };

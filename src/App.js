@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Scheduler from './components/Scheduler';
 import Gantt from './components/Gantt';
 import axios from 'axios';
+import Select from 'react-select';
+import { TwitterPicker } from 'react-color';
 
 const App = () => {
   const [scheduleData, setScheduleData] = useState([]);
@@ -9,24 +11,39 @@ const App = () => {
   const [resources, setResources] = useState([]);
   const [commessaColors, setCommessaColors] = useState({});
   const [commesse, setCommesse] = useState([]);
-  const [ganttKey, setGanttKey] = useState(0); // Add key state for Gantt component
+  const [mysqlCommesse, setMysqlCommesse] = useState([]);
+  const [selectedCommesse, setSelectedCommesse] = useState([]);
+  const [ganttKey, setGanttKey] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [collaboratoriResponse, commesseResponse] = await Promise.all([
+        const [collaboratoriResponse, commesseResponse, mysqlCommesseResponse, selectedCommesseResponse] = await Promise.all([
           axios.get('http://localhost:3001/collaboratori'),
+          axios.get('http://localhost:3001/commesse'),
+          axios.get('http://localhost:3001/commesse-mysql'),
           axios.get('http://localhost:3001/commesse')
         ]);
 
         const staticCollaboratori = collaboratoriResponse.data;
         const staticCommesse = commesseResponse.data;
+        const mysqlCommesse = mysqlCommesseResponse.data.map(commessa => ({
+          value: commessa.NOME,
+          label: commessa.NOME
+        }));
+        const selectedCommesse = selectedCommesseResponse.data.map(commessa => ({
+          value: commessa.CommessaName,
+          label: commessa.Descrizione,
+          color: commessa.Colore
+        }));
 
         setResources(staticCollaboratori);
         setCommesse(staticCommesse);
+        setMysqlCommesse(mysqlCommesse);
+        setSelectedCommesse(selectedCommesse);
 
-        const colors = staticCommesse.reduce((acc, commessa) => {
-          acc[commessa.Id] = commessa.Colore;
+        const colors = selectedCommesse.reduce((acc, commessa) => {
+          acc[commessa.value] = commessa.color;
           return acc;
         }, {});
         setCommessaColors(colors);
@@ -43,6 +60,49 @@ const App = () => {
 
     fetchData();
   }, []);
+
+  const handleCommesseChange = (selectedOptions) => {
+    setSelectedCommesse(selectedOptions);
+  };
+
+  const handleColorChange = (color, index) => {
+    const updatedSelectedCommesse = [...selectedCommesse];
+    updatedSelectedCommesse[index].color = color.hex;
+    setSelectedCommesse(updatedSelectedCommesse);
+  };
+
+  const saveSelectedCommesse = async () => {
+    try {
+      const commesseToSave = selectedCommesse.map(option => ({
+        descrizione: option.label,
+        colore: option.color || '#000000'
+      }));
+      await axios.post('http://localhost:3001/update-sqlite', { commesse: commesseToSave });
+      // Fetch updated data and update state
+      const updatedCommesseResponse = await axios.get('http://localhost:3001/commesse');
+      setCommesse(updatedCommesseResponse.data);
+
+      // Filter scheduler data based on selected commesse
+      const selectedCommessaNames = selectedCommesse.map(c => c.value);
+      const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+      setScheduleData(filteredScheduleData);
+      setGanttData(filteredScheduleData.map(event => formatGanttData(event, updatedCommesseResponse.data)));
+    } catch (error) {
+      console.error('Failed to update SQLite:', error);
+    }
+  };
+
+  const removeCommessa = (index) => {
+    const updatedSelectedCommesse = [...selectedCommesse];
+    updatedSelectedCommesse.splice(index, 1);
+    setSelectedCommesse(updatedSelectedCommesse);
+
+    // Filter scheduler data based on updated selected commesse
+    const selectedCommessaNames = updatedSelectedCommesse.map(c => c.value);
+    const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+    setScheduleData(filteredScheduleData);
+    setGanttData(filteredScheduleData.map(event => formatGanttData(event, commesse)));
+  };
 
   const debounce = (func, wait) => {
     let timeout;
@@ -125,8 +185,10 @@ const App = () => {
       default:
         break;
     }
-    setScheduleData(updatedScheduleData);
-    setGanttData(updatedScheduleData.map(item => formatGanttData(item, commesse)));
+    const selectedCommessaNames = selectedCommesse.map(c => c.value);
+    const filteredScheduleData = updatedScheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+    setScheduleData(filteredScheduleData);
+    setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse)));
     setGanttKey(prevKey => prevKey + 1); // Increment key to force re-render
   };
 
@@ -135,22 +197,12 @@ const App = () => {
       const eventiResponse = await axios.get('http://localhost:3001/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event));
 
-      setScheduleData(staticSchedulerData);
+      const selectedCommessaNames = selectedCommesse.map(c => c.value);
+      const filteredScheduleData = staticSchedulerData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+      setScheduleData(filteredScheduleData);
+      setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse)));
     } catch (error) {
       console.error('Errore nel caricamento dei dati:', error);
-    }
-  };
-
-  const reloadGanttData = async () => {
-    try {
-      console.log('Ricarica dati Gantt iniziata');
-      const eventiResponse = await axios.get('http://localhost:3001/eventi');
-      const staticGanttData = eventiResponse.data.map(event => formatGanttData(event, commesse));
-      setGanttData(staticGanttData);
-      setGanttKey(prevKey => prevKey + 1); // Increment key to force re-render
-      console.log('Dati Gantt ricaricati:', staticGanttData);
-    } catch (error) {
-      console.error('Errore nel caricamento dei dati Gantt:', error);
     }
   };
 
@@ -162,20 +214,15 @@ const App = () => {
                           ? event.IncaricatoId 
                           : (event.taskData ? event.taskData.IncaricatoId : '');
 
-    const commessaId = Array.isArray(event.CommessaId) ? event.CommessaId[0] : event.CommessaId || 0;
-    const commessa = commesse.find(c => c.Id === commessaId);
-    const commessaName = commessa ? commessa.Descrizione : '';
-
     return {
       ...event,
       Inizio: startDate,
       Fine: endDate,
       Descrizione: event.Subject || event.TaskName,
-      CommessaId: commessaId,
+      CommessaName: event.CommessaName,
       IncaricatoId: Array.isArray(incaricatoId) ? incaricatoId.join(',') : incaricatoId || '',
-      CommessaName: commessaName,
       Dipendenza: event.Predecessor || '',
-      Colore: event.Color || commessaColors[commessaId] || '#000000' // Assicurarsi che il colore sia definito
+      Colore: event.Color || commessaColors[event.CommessaName] || '#000000'
     };
   };
 
@@ -185,11 +232,10 @@ const App = () => {
       Subject: event.Descrizione,
       StartTime: new Date(event.Inizio),
       EndTime: new Date(event.Fine),
-      CommessaId: event.CommessaId,
+      CommessaName: event.CommessaName,
       IncaricatoId: event.IncaricatoId ? event.IncaricatoId.split(',').map(id => parseInt(id, 10)) : [],
       Color: event.Colore,
       Progress: event.Progresso,
-      CommessaName: event.CommessaName,
       Dipendenza: event.Dipendenza
     };
   };
@@ -202,15 +248,33 @@ const App = () => {
       EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
       Predecessor: task.Dipendenza || '',
       Progress: task.Progresso || 0,
-      Color: task.Colore || commessaColors[task.CommessaId] || '#000000', // Assicurarsi che il colore sia definito
-      CommessaId: task.CommessaId || '',
-      IncaricatoId: task.IncaricatoId || '',
-      CommessaName: task.CommessaName || ''
+      Color: task.Colore || commessaColors[task.CommessaName] || '#000000',
+      CommessaName: task.CommessaName || '',
+      IncaricatoId: task.IncaricatoId || ''
     };
   };
 
   return (
     <div className="app-container">
+      <div className="menu-container">
+        <Select
+          isMulti
+          options={mysqlCommesse}
+          onChange={handleCommesseChange}
+          placeholder="Seleziona commesse da monitorare"
+        />
+        {selectedCommesse.map((commessa, index) => (
+          <div key={index} style={{ marginTop: '10px' }}>
+            <span>{commessa.label}</span>
+            <TwitterPicker
+              color={commessa.color || '#000000'}
+              onChangeComplete={(color) => handleColorChange(color, index)}
+            />
+            <button onClick={() => removeCommessa(index)}>Rimuovi</button>
+          </div>
+        ))}
+        <button onClick={saveSelectedCommesse}>Memorizza</button>
+      </div>
       <Scheduler
         data={scheduleData}
         resources={resources}
@@ -218,9 +282,8 @@ const App = () => {
         commessaColors={commessaColors}
         commesse={commesse}
       />
-      <button onClick={reloadGanttData}>Ricarica Dati Gantt</button>
       <Gantt
-        key={ganttKey} // Add key prop to force re-render
+        key={ganttKey}
         data={ganttData}
         onDataChange={handleGanttDataChange}
         commessaColors={commessaColors}
