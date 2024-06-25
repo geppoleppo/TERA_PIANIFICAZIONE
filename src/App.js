@@ -4,6 +4,7 @@ import Gantt from './components/Gantt';
 import axios from 'axios';
 import Select from 'react-select';
 import { TwitterPicker } from 'react-color';
+import './App.css'; // Aggiungi il file CSS
 
 const App = () => {
   const [scheduleData, setScheduleData] = useState([]);
@@ -263,16 +264,18 @@ const App = () => {
           onChange={handleCommesseChange}
           placeholder="Seleziona commesse da monitorare"
         />
-        {selectedCommesse.map((commessa, index) => (
-          <div key={index} style={{ marginTop: '10px' }}>
-            <span>{commessa.label}</span>
-            <TwitterPicker
-              color={commessa.color || '#000000'}
-              onChangeComplete={(color) => handleColorChange(color, index)}
-            />
-            <button onClick={() => removeCommessa(index)}>Rimuovi</button>
-          </div>
-        ))}
+        <div className="commesse-container">
+          {selectedCommesse.map((commessa, index) => (
+            <div key={index} className="commessa-card">
+              <span>{commessa.label}</span>
+              <TwitterPicker
+                color={commessa.color || '#000000'}
+                onChangeComplete={(color) => handleColorChange(color, index)}
+              />
+              <button onClick={() => removeCommessa(index)}>Rimuovi</button>
+            </div>
+          ))}
+        </div>
         <button onClick={saveSelectedCommesse}>Memorizza</button>
       </div>
       <Scheduler

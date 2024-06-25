@@ -5,7 +5,6 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
   const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
-    console.log('Gantt component mounted or updated with data:', data);
     const verifyData = data.map(event => {
       const startDate = new Date(event.StartDate || event.StartTime);
       const endDate = new Date(event.EndDate || event.EndTime);
@@ -20,16 +19,14 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
         EndDate: isValidEndDate ? endDate : null,
         Predecessor: event.Predecessor || '',
         Progress: event.Progress || 0,
-        Color: event.Color || commessaColors[event.CommessaId] || '#000000',
-        CommessaId: event.CommessaId || '',
-        IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId : event.IncaricatoId ? event.IncaricatoId.split(',') : [],
+        Color: event.Color || commessaColors[event.CommessaName] || '#000000',
         CommessaName: event.CommessaName || '',
+        IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId : event.IncaricatoId ? event.IncaricatoId.split(',') : [],
         Dipendenza: event.Dipendenza || ''
       };
     });
 
     setFilteredData(verifyData);
-    console.log('Filtered data set in Gantt:', verifyData);
   }, [data, commessaColors]);
 
   const taskbarTemplate = (props) => {
@@ -59,9 +56,8 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     duration: 'Duration',
     progress: 'Progress',
     color: 'Color',
-    CommessaId: 'CommessaId',
-    IncaricatoId: 'IncaricatoId',
-    CommessaName: 'CommessaName'
+    CommessaName: 'CommessaName',
+    IncaricatoId: 'IncaricatoId'
   };
 
   return (
@@ -107,9 +103,8 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
         <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={true}/>
         <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={true} visible={false}/>
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={true} />
-        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} />
-        <ColumnDirective field='IncaricatoId' headerText='IncaricatoId ' width='150' visible={true} />
         <ColumnDirective field='Color' visible={false} />
+        <ColumnDirective field='IncaricatoId' headerText='IncaricatoId ' width='150' visible={true} />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD, Filter]} />
     </GanttComponent>
