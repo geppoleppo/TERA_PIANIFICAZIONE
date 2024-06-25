@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import '../index.css';
+import axios from 'axios'; // Import axios for API requests
+
 
 // Load the required CLDR data
 import { loadCldr, L10n } from '@syncfusion/ej2-base';
@@ -41,16 +43,21 @@ const Scheduler = ({ data, onDataChange, commessaColors }) => {
   const [currentView, setCurrentView] = useState('Month'); // Set default view to 'Month'
 
   useEffect(() => {
-    // Simulate fetching static data for resources and commesse
-    setResources([
-      { Id: 1, Nome: 'Risorsa 1', Colore: '#ff0000', Immagine: '' },
-      { Id: 2, Nome: 'Risorsa 2', Colore: '#00ff00', Immagine: '' },
-    ]);
-    setCommesse([
-      { Id: 1, Descrizione: 'Commessa 1', Colore: '#ff0000' },
-      { Id: 2, Descrizione: 'Commessa 2', Colore: '#00ff00' },
-    ]);
-  }, []);
+    const fetchData = async () => {
+      try {
+        const resourcesResponse = await axios.get('http://localhost:3001/collaboratori');
+        const commesseResponse = await axios.get('http://localhost:3001/commesse');
+
+        setResources(resourcesResponse.data);
+        setCommesse(commesseResponse.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Handle the error, e.g., display an error message to the user
+      }
+    };
+
+    fetchData();
+  }, [])
 
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {

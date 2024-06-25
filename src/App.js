@@ -11,31 +11,6 @@ const App = () => {
   const [filteredCommesse, setFilteredCommesse] = useState([]);
   const [savedData, setSavedData] = useState([]);
 
-  // Dati statici simulati
-  const staticData = [
-    {
-      Id: 1,
-      Subject: 'Task 1',
-      StartTime: new Date('2024-06-01'),
-      EndTime: new Date('2024-06-02'),
-      CommessaId: 1,
-      IncaricatoId: 1,
-      Predecessor: '',
-      Color: '#ff0000',
-      Progress: 50,
-    },
-    {
-      Id: 2,
-      Subject: 'Task 2',
-      StartTime: new Date('2024-06-03'),
-      EndTime: new Date('2024-06-04'),
-      CommessaId: 2,
-      IncaricatoId: 2,
-      Predecessor: '',
-      Color: '#00ff00',
-      Progress: 75,
-    },
-  ];
 
   const staticCommesse = [
     { Id: 1, Descrizione: 'Commessa 1', Colore: '#ff0000' },
@@ -43,44 +18,46 @@ const App = () => {
   ];
 
   useEffect(() => {
-    const fetchCommesse = async () => {
+    const fetchData = async () => {
       try {
-        // Simula una richiesta per ottenere le commesse
-        const response = { data: staticCommesse };
-        const colors = response.data.reduce((acc, commessa) => {
+        const commesseResponse = await axios.get('http://localhost:3001/commesse');
+        const colors = commesseResponse.data.reduce((acc, commessa) => {
           acc[commessa.Id] = commessa.Colore;
           return acc;
         }, {});
-        setCommesse(response.data);
+        setCommesse(commesseResponse.data);
         setCommessaColors(colors);
-        console.log('commessaColors:', colors);
+
+        // Fetch events from the server
+        const scheduleEventsResponse = await axios.get('http://localhost:3001/schedulerevents');
+        const ganttTasksResponse = await axios.get('http://localhost:3001/gantttasks');
+
+        // Convert event data to correct format for Scheduler and Gantt
+        const initialScheduleData = scheduleEventsResponse.data.map(event => ({
+          ...event,
+          Id: event.EventID,
+          StartTime: new Date(event.StartTime),
+          EndTime: new Date(event.EndTime),
+          IsAllDay: !!event.IsAllDay,
+          IncaricatoId: event.IncaricatiId ? event.IncaricatiId.split(',') : []
+        }));
+
+        const initialGanttData = ganttTasksResponse.data.map(task => ({
+          ...task,
+          TaskID: task.TaskID,
+          StartDate: new Date(task.StartDate),
+          EndDate: new Date(task.EndDate),
+        }));
+        // Set the fetched data into the state
+        setScheduleData(initialScheduleData);
+        setGanttData(initialGanttData); 
+        setFilteredCommesse(commesseResponse.data);
       } catch (error) {
-        console.error('Error fetching commesse:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchCommesse();
-  }, []);
-
-  useEffect(() => {
-    // Carica i dati statici all'avvio
-    setScheduleData(staticData);
-    const initialGanttData = staticData.map(event => {
-      const commessa = staticCommesse.find(c => c.Id === event.CommessaId);
-      return {
-        TaskID: event.Id,
-        TaskName: event.Subject,
-        StartDate: event.StartTime,
-        EndDate: event.EndTime,
-        Predecessor: event.Predecessor || '',
-        CommessaId: event.CommessaId,
-        CommessaName: commessa ? commessa.Descrizione : 'N/A',
-        Color: event.Color,
-        Progress: event.Progress || 0
-      };
-    });
-    setGanttData(initialGanttData);
-    setFilteredCommesse(staticCommesse);
+    fetchData();
   }, []);
 
   const handleSchedulerDataChange = (args) => {
