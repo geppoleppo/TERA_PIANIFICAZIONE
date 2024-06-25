@@ -50,10 +50,10 @@ const App = () => {
         setCommessaColors(colors);
 
         const eventiResponse = await axios.get('http://localhost:3001/eventi');
-        const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event));
+        const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, colors));
 
         setScheduleData(staticSchedulerData);
-        setGanttData(staticSchedulerData.map(event => formatGanttData(event, staticCommesse)));
+        setGanttData(staticSchedulerData.map(event => formatGanttData(event, staticCommesse, colors)));
       } catch (error) {
         console.error('Errore nel caricamento dei dati:', error);
       }
@@ -64,12 +64,19 @@ const App = () => {
 
   const handleCommesseChange = (selectedOptions) => {
     setSelectedCommesse(selectedOptions);
+    applyGanttFilter(selectedOptions);
   };
 
   const handleColorChange = (color, index) => {
     const updatedSelectedCommesse = [...selectedCommesse];
     updatedSelectedCommesse[index].color = color.hex;
     setSelectedCommesse(updatedSelectedCommesse);
+
+    const colors = updatedSelectedCommesse.reduce((acc, commessa) => {
+      acc[commessa.value] = commessa.color;
+      return acc;
+    }, {});
+    setCommessaColors(colors);
   };
 
   const saveSelectedCommesse = async () => {
@@ -87,7 +94,7 @@ const App = () => {
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
       const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
       setScheduleData(filteredScheduleData);
-      setGanttData(filteredScheduleData.map(event => formatGanttData(event, updatedCommesseResponse.data)));
+      setGanttData(filteredScheduleData.map(event => formatGanttData(event, updatedCommesseResponse.data, commessaColors)));
     } catch (error) {
       console.error('Failed to update SQLite:', error);
     }
@@ -98,11 +105,23 @@ const App = () => {
     updatedSelectedCommesse.splice(index, 1);
     setSelectedCommesse(updatedSelectedCommesse);
 
+    const colors = updatedSelectedCommesse.reduce((acc, commessa) => {
+      acc[commessa.value] = commessa.color;
+      return acc;
+    }, {});
+    setCommessaColors(colors);
+
     // Filter scheduler data based on updated selected commesse
     const selectedCommessaNames = updatedSelectedCommesse.map(c => c.value);
     const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
     setScheduleData(filteredScheduleData);
-    setGanttData(filteredScheduleData.map(event => formatGanttData(event, commesse)));
+    setGanttData(filteredScheduleData.map(event => formatGanttData(event, commesse, colors)));
+  };
+
+  const applyGanttFilter = (selectedOptions) => {
+    const selectedCommessaNames = selectedOptions.map(option => option.value);
+    const filteredGanttData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+    setGanttData(filteredGanttData.map(event => formatGanttData(event, commesse, commessaColors)));
   };
 
   const debounce = (func, wait) => {
@@ -175,10 +194,10 @@ const App = () => {
     let updatedScheduleData = [...scheduleData];
     switch (type) {
       case 'add':
-        updatedScheduleData = [...updatedScheduleData, formatEventForScheduler(data)];
+        updatedScheduleData = [...updatedScheduleData, formatEventForScheduler(data, commessaColors)];
         break;
       case 'update':
-        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? formatEventForScheduler(data) : item);
+        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? formatEventForScheduler(data, commessaColors) : item);
         break;
       case 'delete':
         updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
@@ -189,19 +208,19 @@ const App = () => {
     const selectedCommessaNames = selectedCommesse.map(c => c.value);
     const filteredScheduleData = updatedScheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
     setScheduleData(filteredScheduleData);
-    setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse)));
+    setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
     setGanttKey(prevKey => prevKey + 1); // Increment key to force re-render
   };
 
   const reloadSchedulerData = async () => {
     try {
       const eventiResponse = await axios.get('http://localhost:3001/eventi');
-      const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event));
+      const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
 
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
       const filteredScheduleData = staticSchedulerData.filter(event => selectedCommessaNames.includes(event.CommessaName));
       setScheduleData(filteredScheduleData);
-      setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse)));
+      setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
     } catch (error) {
       console.error('Errore nel caricamento dei dati:', error);
     }
@@ -227,7 +246,7 @@ const App = () => {
     };
   };
 
-  const formatEventForScheduler = (event) => {
+  const formatEventForScheduler = (event, colors) => {
     return {
       Id: event.Id,
       Subject: event.Descrizione,
@@ -235,13 +254,13 @@ const App = () => {
       EndTime: new Date(event.Fine),
       CommessaName: event.CommessaName,
       IncaricatoId: event.IncaricatoId ? event.IncaricatoId.split(',').map(id => parseInt(id, 10)) : [],
-      Color: event.Colore,
+      Color: event.Colore || colors[event.CommessaName] || '#000000',
       Progress: event.Progresso,
       Dipendenza: event.Dipendenza
     };
   };
 
-  const formatGanttData = (task) => {
+  const formatGanttData = (task, commesse, colors) => {
     return {
       Id: task.Id,
       TaskName: task.Descrizione || task.Subject,
@@ -249,7 +268,7 @@ const App = () => {
       EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
       Predecessor: task.Dipendenza || '',
       Progress: task.Progresso || 0,
-      Color: task.Colore || commessaColors[task.CommessaName] || '#000000',
+      Color: task.Colore || colors[task.CommessaName] || '#000000',
       CommessaName: task.CommessaName || '',
       IncaricatoId: task.IncaricatoId || ''
     };
@@ -296,5 +315,6 @@ const App = () => {
     </div>
   );
 };
+
 
 export default App;
