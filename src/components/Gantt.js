@@ -71,15 +71,14 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse }) => {
       filterSettings={{ type: 'Menu' }}
     >
       <ColumnsDirective>
-      
-        
-        <ColumnDirective field='CommessaName' headerText='Commessa' width='250' allowFiltering={false} allowFiltering={true} />
-        <ColumnDirective field='TaskName' headerText='Task' width='250' allowFiltering={true}  visible={true}/>
-        <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={false}  visible={false} />
-        <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={false}  visible={false}/>
-        <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={false}   visible={false}/>
-        <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={false} />
-        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} />
+        <ColumnDirective field='TaskID' visible={false} />
+        <ColumnDirective field='CommessaName' headerText='Commessa' width='100' allowFiltering={true} />
+        <ColumnDirective field='TaskName' headerText='Task' width='250' allowFiltering={true} />
+        <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={true} />
+        <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={true}/>
+        <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={true} visible={false}/>
+        <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={false} visible={false}/>
+        <ColumnDirective field='CommessaId' headerText='Commessa ID' width='150' visible={false} visible={false}/>
         <ColumnDirective field='Color' visible={false} />
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD, Filter]} />
