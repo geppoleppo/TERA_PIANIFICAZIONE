@@ -12,6 +12,12 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
       const isValidStartDate = !isNaN(startDate.getTime());
       const isValidEndDate = !isNaN(endDate.getTime());
 
+      const incaricatoNames = Array.isArray(event.IncaricatoId)
+        ? event.IncaricatoId.map(id => resources.find(r => r.Id === id)?.Nome || id).join(', ')
+        : event.IncaricatoId
+          ? resources.find(r => r.Id === event.IncaricatoId)?.Nome || event.IncaricatoId
+          : '';
+
       return {
         Id: event.Id || '',
         TaskName: event.TaskName || event.Subject || '',
@@ -21,13 +27,14 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
         Progress: event.Progress || 0,
         Color: event.Color || commessaColors[event.CommessaName] || '#000000',
         CommessaName: event.CommessaName || '',
+        IncaricatoNames: incaricatoNames,
         IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId : event.IncaricatoId ? event.IncaricatoId.split(',') : [],
         Dipendenza: event.Dipendenza || ''
       };
     });
 
     setFilteredData(verifyData);
-  }, [data, commessaColors]);
+  }, [data, commessaColors, resources]);
 
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';
@@ -98,13 +105,14 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
       <ColumnsDirective>
         <ColumnDirective field='Id' visible={false} />
         <ColumnDirective field='CommessaName' headerText='Commessa' width='200' allowFiltering={true} />
+        <ColumnDirective field='IncaricatoNames' headerText='Incaricato' width='150' visible={true} />
         <ColumnDirective field='TaskName' headerText='Task' width='250' allowFiltering={true} />
         <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={true} />
         <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={true}/>
         <ColumnDirective field='Progress' headerText='Progress' width='150' textAlign='Right' allowFiltering={true} visible={false}/>
         <ColumnDirective field='Predecessor' headerText='Predecessore' width='150' visible={true} />
         <ColumnDirective field='Color' visible={false} />
-        <ColumnDirective field='IncaricatoId' headerText='IncaricatoId ' width='150' visible={true} />
+        
       </ColumnsDirective>
       <GanttInject services={[Edit, Selection, Toolbar, RowDD, Filter]} />
     </GanttComponent>
