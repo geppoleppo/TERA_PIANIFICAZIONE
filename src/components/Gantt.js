@@ -97,7 +97,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     >
       <ColumnsDirective>
         <ColumnDirective field='Id' visible={false} />
-        <ColumnDirective field='CommessaName' headerText='Commessa' width='100' allowFiltering={true} />
+        <ColumnDirective field='CommessaName' headerText='Commessa' width='200' allowFiltering={true} />
         <ColumnDirective field='TaskName' headerText='Task' width='250' allowFiltering={true} />
         <ColumnDirective field='StartDate' headerText='Start Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={true} />
         <ColumnDirective field='EndDate' headerText='End Date' width='150' format='dd/MM/yyyy' allowFiltering={true} visible={true}/>

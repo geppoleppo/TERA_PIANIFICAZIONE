@@ -149,7 +149,7 @@ const updateCommesse = (commesse) => {
         const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore) VALUES (?, ?, ?)`);
         const insertMany = db.transaction((commesse) => {
             for (const commessa of commesse) {
-                insert.run(commessa.descrizione.substring(0, 5), commessa.descrizione, commessa.colore);
+                insert.run(commessa.descrizione, commessa.descrizione, commessa.colore);
             }
         });
         insertMany(commesse);
