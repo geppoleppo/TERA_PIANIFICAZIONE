@@ -12,6 +12,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
       const isValidStartDate = !isNaN(startDate.getTime());
       const isValidEndDate = !isNaN(endDate.getTime());
 
+      // Mappa gli ID dei collaboratori ai loro nomi
       const incaricatoNames = Array.isArray(event.IncaricatoId)
         ? event.IncaricatoId.map(id => resources.find(r => r.Id === id)?.Nome || id).join(', ')
         : event.IncaricatoId
@@ -25,10 +26,11 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
         EndDate: isValidEndDate ? endDate : null,
         Predecessor: event.Predecessor || '',
         Progress: event.Progress || 0,
-        Color: event.Color || commessaColors[event.CommessaName] || '#000000',
+        Color: event.Color || commessaColors[event.CommessaId] || '#000000',
+        CommessaId: event.CommessaId || '',
         CommessaName: event.CommessaName || '',
-        IncaricatoNames: incaricatoNames,
         IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId : event.IncaricatoId ? event.IncaricatoId.split(',') : [],
+        IncaricatoNames: incaricatoNames,
         Dipendenza: event.Dipendenza || ''
       };
     });
