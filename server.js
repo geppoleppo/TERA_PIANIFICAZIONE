@@ -55,7 +55,7 @@ app.get('/api/commesse', (req, res) => {
     }
 });
 
-app.get('/eventi', (req, res) => {
+app.get('/api/eventi', (req, res) => {
     try {
         const eventi = db.getAllEventi();
         res.json(eventi);
@@ -64,7 +64,7 @@ app.get('/eventi', (req, res) => {
     }
 });
 
-app.post('/eventi', (req, res) => {
+app.post('/api/eventi', (req, res) => {
     try {
         const newEvento = db.createEvento(req.body);
         res.json(newEvento);
@@ -73,7 +73,7 @@ app.post('/eventi', (req, res) => {
     }
 });
 
-app.put('/eventi/:id', (req, res) => {
+app.put('/api/eventi/:id', (req, res) => {
     try {
         const updatedEvento = db.updateEvento(req.params.id, req.body);
         res.json(updatedEvento);
@@ -82,7 +82,7 @@ app.put('/eventi/:id', (req, res) => {
     }
 });
 
-app.delete('/eventi/:id', (req, res) => {
+app.delete('/api/eventi/:id', (req, res) => {
     try {
         db.deleteEvento(req.params.id);
         res.json({ message: 'Event deleted' });
@@ -91,7 +91,7 @@ app.delete('/eventi/:id', (req, res) => {
     }
 });
 
-app.post('/update-sqlite', (req, res) => {
+app.post('/api/update-sqlite', (req, res) => {
     try {
         const { commesse } = req.body;
         db.updateCommesse(commesse);
