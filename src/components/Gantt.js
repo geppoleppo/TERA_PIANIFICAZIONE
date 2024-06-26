@@ -97,9 +97,8 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
       filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
       labelSettings={{
         rightLabel: (props) => {
-          const incaricatoIds = Array.isArray(props.IncaricatoId) ? props.IncaricatoId : props.IncaricatoId ? props.IncaricatoId.split(',') : [];
-          if (!incaricatoIds.length) return '';
-          return incaricatoIds.map(id => resources.find(r => r.Id === id)?.Nome || id).join(', ');
+         
+          return props.IncaricatoNames;
         }
       }}
       highlightWeekends={true}
