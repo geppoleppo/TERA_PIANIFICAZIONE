@@ -2,40 +2,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./database');
-const mysql = require('mysql');
 
 const app = express();
 const port = 3001;
 
-app.use(cors());
+app.use(cors({
+    origin: 'http://93.49.98.201:4443', // L'origine esatta del tuo frontend (con porta)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // I metodi HTTP che vuoi consentire
+    allowedHeaders: ['Content-Type', 'Authorization'] // Le intestazioni che vuoi consentire
+  }));
 app.use(bodyParser.json());
-
-const mysqlConnection = mysql.createConnection({
-    host: '93.49.98.201',
-    port: 8085,
-    user: 'geppolo',
-    password: 'geppolo',
-    database: 'gestionale'
-});
-
-mysqlConnection.connect(err => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err);
-    } else {
-        console.log('Connected to MySQL');
-    }
-});
-
-app.get('/commesse-mysql', (req, res) => {
-    mysqlConnection.query('SELECT NOME FROM COMMESSE', (err, results) => {
-        if (err) {
-            console.error('Error fetching commesse:', err);
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(results);
-        }
-    });
-});
 
 app.get('/collaboratori', (req, res) => {
     try {
@@ -46,56 +22,149 @@ app.get('/collaboratori', (req, res) => {
     }
 });
 
+app.post('/collaboratori', (req, res) => {
+    const { nome, colore, immagine } = req.body;
+    try {
+        const id = db.addCollaboratore(nome, colore, immagine);
+        res.json({ id });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/collaboratori/:id', (req, res) => {
+    const { id } = req.params;
+    const { nome, colore, immagine } = req.body;
+    try {
+        db.updateCollaboratore(id, nome, colore, immagine);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/collaboratori/:id', (req, res) => {
+    const { id } = req.params;
+    try {
+        db.deleteCollaboratore(id);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/commesse', (req, res) => {
     try {
-        const commesse = db.getSelectedCommesse();
+        const commesse = db.getAllCommesse();
         res.json(commesse);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.get('/eventi', (req, res) => {
+app.post('/commesse', (req, res) => {
+    const { descrizione, colore } = req.body;
     try {
-        const eventi = db.getAllEventi();
-        res.json(eventi);
+        const id = db.addCommessa(descrizione, colore);
+        res.json({ id });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/eventi', (req, res) => {
+app.put('/commesse/:id', (req, res) => {
+    const { id } = req.params;
+    const { descrizione, colore } = req.body;
     try {
-        const newEvento = db.createEvento(req.body);
-        res.json(newEvento);
+        db.updateCommessa(id, descrizione, colore);
+        res.sendStatus(200);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.put('/eventi/:id', (req, res) => {
+app.delete('/commesse/:id', (req, res) => {
+    const { id } = req.params;
     try {
-        const updatedEvento = db.updateEvento(req.params.id, req.body);
-        res.json(updatedEvento);
+        db.deleteCommessa(id);
+        res.sendStatus(200);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.delete('/eventi/:id', (req, res) => {
+app.get('/gantttasks', (req, res) => {
     try {
-        db.deleteEvento(req.params.id);
-        res.json({ message: 'Event deleted' });
+        const ganttTasks = db.getAllGanttTasks();
+        res.json(ganttTasks);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/update-sqlite', (req, res) => {
+app.post('/gantttasks', (req, res) => {
     try {
-        const { commesse } = req.body;
-        db.updateCommesse(commesse);
-        res.json({ message: 'Commesse updated in SQLite' });
+        const id = db.addGanttTask(req.body);
+        res.json({ id });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Route for updating Gantt tasks
+app.put('/gantttasks/:id', (req, res) => {
+    try {
+        db.updateGanttTask(req.params.id, req.body);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+  
+
+app.delete('/gantttasks/:id', (req, res) => {
+    try {
+        db.deleteGanttTask(req.params.id);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/schedulerevents', (req, res) => {
+    try {
+        const schedulerEvents = db.getAllSchedulerEvents();
+        console.log('Loaded scheduler events from database:', schedulerEvents); // Log per debug
+        res.json(schedulerEvents);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/schedulerevents', (req, res) => {
+    console.log('Received event data:', req.body); // Log per debug
+    try {
+        const id = db.addSchedulerEvent(req.body);
+        res.json({ id });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/schedulerevents/:id', (req, res) => {
+    try {
+        db.updateSchedulerEvent(req.params.id, req.body);
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/schedulerevents/:id', (req, res) => {
+    console.log('Received delete request for EventID:', req.params.id); // Log per debug
+    try {
+        db.deleteSchedulerEvent(req.params.id);
+        res.sendStatus(200);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

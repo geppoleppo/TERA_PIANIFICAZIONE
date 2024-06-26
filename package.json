@@ -21,8 +21,12 @@
     "body-parser": "^1.20.2",
     "cldr-data": "^36.0.2",
     "cors": "^2.8.5",
+    "eslint-webpack-plugin": "^4.2.0",
     "express": "^4.19.2",
+    "jest-worker": "^29.7.0",
+    "mysql": "^2.18.1",
     "react": "18.1.0",
+    "react-color": "^2.19.3",
     "react-dom": "18.1.0",
     "react-select": "^5.8.0",
     "sqlite3": "^5.1.7"
@@ -39,6 +43,12 @@
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4"
   },
+
+  "overrides": {
+  "eslint-webpack-plugin": {
+    "jest-worker": false 
+  }
+},
   "browserslist": {
     "production": [
       ">0.2%",
