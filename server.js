@@ -3,13 +3,6 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./database');
 const mysql = require('mysql');
-const https = require('https');
-const fs = require('fs');
-
-const options = {
-  key: fs.readFileSync('/etc/ssl/private/gestionale.tera-key.pem'),  // Sostituisci con il percorso corretto
-  cert: fs.readFileSync('/etc/ssl/certs/gestionale.tera.pem;')  // Sostituisci con il percorso corretto
-};
 
 const app = express();
 const port = 3001;
@@ -33,7 +26,7 @@ mysqlConnection.connect(err => {
     }
 });
 
-app.get('/commesse-mysql', (req, res) => {
+app.get('/api/commesse-mysql', (req, res) => {
     mysqlConnection.query('SELECT NOME FROM COMMESSE', (err, results) => {
         if (err) {
             console.error('Error fetching commesse:', err);
@@ -44,7 +37,7 @@ app.get('/commesse-mysql', (req, res) => {
     });
 });
 
-app.get('/collaboratori', (req, res) => {
+app.get('/api/collaboratori', (req, res) => {
     try {
         const collaboratori = db.getAllCollaboratori();
         res.json(collaboratori);
@@ -53,7 +46,7 @@ app.get('/collaboratori', (req, res) => {
     }
 });
 
-app.get('/commesse', (req, res) => {
+app.get('/api/commesse', (req, res) => {
     try {
         const commesse = db.getSelectedCommesse();
         res.json(commesse);
@@ -108,10 +101,6 @@ app.post('/update-sqlite', (req, res) => {
     }
 });
 
-//app.listen(port, () => {
- //   console.log(`Server running at http://192.168.1.201:${port}`);
-//});
-
-https.createServer(options, app).listen(4443, () => { // Usa la porta 4443 o quella che preferisci
-    console.log(`Server running at https://192.168.1.201:4443/`); 
-  });
+app.listen(port, () => {
+    console.log(`Server running at http://192.168.1.201:${port}`);
+});

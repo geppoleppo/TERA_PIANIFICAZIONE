@@ -22,6 +22,7 @@
     "cldr-data": "^36.0.2",
     "cors": "^2.8.5",
     "express": "^4.19.2",
+    "mysql": "^2.18.1",
     "react": "18.1.0",
     "react-dom": "18.1.0",
     "react-select": "^5.8.0",
