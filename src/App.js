@@ -20,10 +20,10 @@ const App = () => {
     const fetchData = async () => {
       try {
         const [collaboratoriResponse, commesseResponse, mysqlCommesseResponse, selectedCommesseResponse] = await Promise.all([
-          axios.get('http://localhost:3001/collaboratori'),
-          axios.get('http://localhost:3001/commesse'),
-          axios.get('http://localhost:3001/commesse-mysql'),
-          axios.get('http://localhost:3001/commesse')
+          axios.get('http://192.168.1.201:3001/collaboratori'),
+          axios.get('http://192.168.1.201:3001/commesse'),
+          axios.get('http://192.168.1.201:3001/commesse-mysql'),
+          axios.get('http://192.168.1.201:3001/commesse')
         ]);
 
         const staticCollaboratori = collaboratoriResponse.data;
@@ -49,7 +49,7 @@ const App = () => {
         }, {});
         setCommessaColors(colors);
 
-        const eventiResponse = await axios.get('http://localhost:3001/eventi');
+        const eventiResponse = await axios.get('http://192.168.1.201:3001/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, colors));
 
         setScheduleData(staticSchedulerData);
@@ -85,9 +85,9 @@ const App = () => {
         descrizione: option.label,
         colore: option.color || '#000000'
       }));
-      await axios.post('http://localhost:3001/update-sqlite', { commesse: commesseToSave });
+      await axios.post('http://192.168.1.201:3001/update-sqlite', { commesse: commesseToSave });
       // Fetch updated data and update state
-      const updatedCommesseResponse = await axios.get('http://localhost:3001/commesse');
+      const updatedCommesseResponse = await axios.get('http://192.168.1.201:3001/commesse');
       setCommesse(updatedCommesseResponse.data);
 
       // Filter scheduler data based on selected commesse
@@ -137,7 +137,7 @@ const App = () => {
 
     switch (args.requestType) {
       case 'eventCreated':
-        axios.post('http://localhost:3001/eventi', event)
+        axios.post('http://192.168.1.201:3001/eventi', event)
           .then(response => {
             updateLocalData(response.data, 'add');
             reloadSchedulerData();
@@ -145,7 +145,7 @@ const App = () => {
           .catch(error => console.error('Failed to create event:', error));
         break;
       case 'eventChanged':
-        axios.put(`http://localhost:3001/eventi/${event.Id}`, event)
+        axios.put(`http://192.168.1.201:3001/eventi/${event.Id}`, event)
           .then(() => {
             updateLocalData(event, 'update');
             reloadSchedulerData();
@@ -153,7 +153,7 @@ const App = () => {
           .catch(error => console.error('Failed to update event:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`http://localhost:3001/eventi/${event.Id}`)
+        axios.delete(`http://192.168.1.201:3001/eventi/${event.Id}`)
           .then(() => {
             updateLocalData(event, 'delete');
             reloadSchedulerData();
@@ -170,7 +170,7 @@ const App = () => {
 
     switch (args.requestType) {
       case 'eventChanged':
-        axios.put(`http://localhost:3001/eventi/${task.Id}`, task)
+        axios.put(`http://192.168.1.201:3001/eventi/${task.Id}`, task)
           .then(() => {
             updateLocalData(task, 'update');
             reloadSchedulerData();
@@ -178,7 +178,7 @@ const App = () => {
           .catch(error => console.error('Failed to update task:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`http://localhost:3001/eventi/${task.Id}`)
+        axios.delete(`http://192.168.1.201:3001/eventi/${task.Id}`)
           .then(() => {
             updateLocalData(task, 'delete');
             reloadSchedulerData();
@@ -214,7 +214,7 @@ const App = () => {
 
   const reloadSchedulerData = async () => {
     try {
-      const eventiResponse = await axios.get('http://localhost:3001/eventi');
+      const eventiResponse = await axios.get('http://192.168.1.201:3001/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
 
       const selectedCommessaNames = selectedCommesse.map(c => c.value);

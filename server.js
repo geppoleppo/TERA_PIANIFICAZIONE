@@ -3,6 +3,13 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./database');
 const mysql = require('mysql');
+const https = require('https');
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('/etc/ssl/private/gestionale.tera-key.pem'),  // Sostituisci con il percorso corretto
+  cert: fs.readFileSync('/etc/ssl/certs/gestionale.tera.pem;')  // Sostituisci con il percorso corretto
+};
 
 const app = express();
 const port = 3001;
@@ -101,6 +108,10 @@ app.post('/update-sqlite', (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
+//app.listen(port, () => {
+ //   console.log(`Server running at http://192.168.1.201:${port}`);
+//});
+
+https.createServer(options, app).listen(4443, () => { // Usa la porta 4443 o quella che preferisci
+    console.log(`Server running at https://192.168.1.201:4443/`); 
+  });
