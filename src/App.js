@@ -4,7 +4,7 @@ import Gantt from './components/Gantt';
 import axios from 'axios';
 import Select from 'react-select';
 import { TwitterPicker } from 'react-color';
-import './App.css'; // Aggiungi il file CSS
+import './App.css';
 
 const App = () => {
   const [scheduleData, setScheduleData] = useState([]);
@@ -32,7 +32,7 @@ const App = () => {
           value: commessa.NOME,
           label: commessa.NOME
         }));
-        const selectedCommesse = selectedCommesseResponse.data.map(commessa => ({
+        const selectedCommesse = commesseResponse.data.map(commessa => ({
           value: commessa.CommessaName,
           label: commessa.Descrizione,
           color: commessa.Colore
@@ -280,6 +280,7 @@ const App = () => {
         <Select
           isMulti
           options={mysqlCommesse}
+          value={selectedCommesse}
           onChange={handleCommesseChange}
           placeholder="Seleziona commesse da monitorare"
         />
@@ -315,6 +316,5 @@ const App = () => {
     </div>
   );
 };
-
 
 export default App;
