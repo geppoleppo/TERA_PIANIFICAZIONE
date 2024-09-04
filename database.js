@@ -33,12 +33,26 @@ const createTables = () => {
         );
     `;
 
+    // Nuova tabella per tracciare lo stato delle commesse per ogni utente
+    const queryStatoCommesseUtente = `
+        CREATE TABLE IF NOT EXISTS StatoCommesseUtente (
+            UserID INTEGER NOT NULL,
+            CommessaName TEXT NOT NULL,
+            Stato TEXT NOT NULL,
+            PRIMARY KEY (UserID, CommessaName),
+            FOREIGN KEY (CommessaName) REFERENCES Commesse(CommessaName)
+        );
+    `;
+
+    // Esegui le query per creare le tabelle
     db.prepare(queryCollaboratori).run();
     db.prepare(queryCommesse).run();
     db.prepare(queryEventi).run();
+    db.prepare(queryStatoCommesseUtente).run(); // Esecuzione della query per la nuova tabella
 };
 
 createTables();
+
 
 const verifyTables = () => {
     try {
@@ -168,6 +182,18 @@ const getSelectedCommesse = () => {
         throw new Error("Failed to retrieve selected commesse.");
     }
 };
+
+const updateStatoCommesseUtente = (userID, commessaName, stato) => {
+    const query = `REPLACE INTO StatoCommesseUtente (UserID, CommessaName, Stato) VALUES (?, ?, ?)`;
+    db.prepare(query).run(userID, commessaName, stato);
+    return { userID, commessaName, stato };
+};
+
+const getStatoCommesseUtente = (userID) => {
+    const query = `SELECT * FROM StatoCommesseUtente WHERE UserID = ?`;
+    return db.prepare(query).all(userID);
+};
+
 
 module.exports = {
     getAllCollaboratori,

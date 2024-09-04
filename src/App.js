@@ -25,10 +25,10 @@ const App = () => {
           mysqlCommesseResponse,
           selectedCommesseResponse
         ] = await Promise.all([
-          axios.get('https://93.49.98.201:4443/api/collaboratori'),
-          axios.get('https://93.49.98.201:4443/api/commesse'),
-          axios.get('https://93.49.98.201:4443/api/commesse-mysql'),
-          axios.get('https://93.49.98.201:4443/api/commesse')
+          axios.get('http://93.49.98.201:4443/api/collaboratori'),
+          axios.get('http://93.49.98.201:4443/api/commesse'),
+          axios.get('http://93.49.98.201:4443/api/commesse-mysql'),
+          axios.get('http://93.49.98.201:4443/api/commesse')
         ]);
 
         const staticCollaboratori = collaboratoriResponse.data;
@@ -54,7 +54,7 @@ const App = () => {
         }, {});
         setCommessaColors(colors);
 
-        const eventiResponse = await axios.get('https://93.49.98.201:4443/api/eventi');
+        const eventiResponse = await axios.get('http://93.49.98.201:4443/api/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, colors));
 
         setScheduleData(staticSchedulerData);
@@ -90,9 +90,9 @@ const App = () => {
         descrizione: option.label,
         colore: option.color || '#000000'
       }));
-      await axios.post('https://93.49.98.201:4443/api/update-sqlite', { commesse: commesseToSave });
+      await axios.post('http://93.49.98.201:4443/api/update-sqlite', { commesse: commesseToSave });
       // Fetch updated data and update state
-      const updatedCommesseResponse = await axios.get('https://93.49.98.201:4443/api/commesse');
+      const updatedCommesseResponse = await axios.get('http://93.49.98.201:4443/api/commesse');
       setCommesse(updatedCommesseResponse.data);
 
       // Filter scheduler data based on selected commesse
@@ -142,7 +142,7 @@ const App = () => {
 
     switch (args.requestType) {
       case 'eventCreated':
-        axios.post('https://93.49.98.201:4443/api/eventi', event)
+        axios.post('http://93.49.98.201:4443/api/eventi', event)
           .then(response => {
             updateLocalData(response.data, 'add');
             reloadSchedulerData();
@@ -150,7 +150,7 @@ const App = () => {
           .catch(error => console.error('Failed to create event:', error));
         break;
       case 'eventChanged':
-        axios.put(`https://93.49.98.201:4443/api/eventi/${event.Id}`, event)
+        axios.put(`http://93.49.98.201:4443/api/eventi/${event.Id}`, event)
           .then(() => {
             updateLocalData(event, 'update');
             reloadSchedulerData();
@@ -158,7 +158,7 @@ const App = () => {
           .catch(error => console.error('Failed to update event:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`https://93.49.98.201:4443/api/eventi/${event.Id}`)
+        axios.delete(`http://93.49.98.201:4443/api/eventi/${event.Id}`)
           .then(() => {
             updateLocalData(event, 'delete');
             reloadSchedulerData();
@@ -175,7 +175,7 @@ const App = () => {
 
     switch (args.requestType) {
       case 'eventChanged':
-        axios.put(`https://93.49.98.201:4443/api/eventi/${task.Id}`, task)
+        axios.put(`http://93.49.98.201:4443/api/eventi/${task.Id}`, task)
           .then(() => {
             updateLocalData(task, 'update');
             reloadSchedulerData();
@@ -183,7 +183,7 @@ const App = () => {
           .catch(error => console.error('Failed to update task:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`https://93.49.98.201:4443/api/eventi/${task.Id}`)
+        axios.delete(`http://93.49.98.201:4443/api/eventi/${task.Id}`)
           .then(() => {
             updateLocalData(task, 'delete');
             reloadSchedulerData();
@@ -219,7 +219,7 @@ const App = () => {
 
   const reloadSchedulerData = async () => {
     try {
-      const eventiResponse = await axios.get('https://93.49.98.201:4443/api/eventi');
+      const eventiResponse = await axios.get('http://93.49.98.201:4443/api/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
 
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
