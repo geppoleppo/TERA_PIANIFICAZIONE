@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const db = require('./database');
+const db = require('./database');  // Importa tutte le funzioni dal modulo database
 const mysql = require('mysql');
 
 const app = express();
@@ -25,6 +25,31 @@ mysqlConnection.connect(err => {
         console.log('Connected to MySQL');
     }
 });
+
+
+app.get('/api/sync-commesse', (req, res) => {
+    // Modifica la query per selezionare le colonne esistenti
+    // Se Colore non esiste nel DB MySQL, puoi assegnare un colore di default
+    mysqlConnection.query('SELECT NOME, Descrizione, "#FFFFFF" AS Colore FROM COMMESSE', (err, results) => {
+        if (err) {
+            console.error('Error fetching commesse from MySQL:', err);
+            res.status(500).json({ error: err.message });
+        } else {
+            try {
+                // Aggiornare SQLite con le commesse ottenute da MySQL
+                results.forEach(commessa => {
+                    db.updateCommesse([commessa]);
+                });
+                res.json({ message: 'Commesse sincronizzate correttamente da MySQL a SQLite' });
+            } catch (error) {
+                console.error('Error updating commesse in SQLite:', error);
+                res.status(500).json({ error: error.message });
+            }
+        }
+    });
+});
+
+
 
 app.get('/api/commesse-mysql', (req, res) => {
     mysqlConnection.query('SELECT NOME FROM COMMESSE', (err, results) => {
@@ -101,6 +126,24 @@ app.post('/api/update-sqlite', (req, res) => {
     }
 });
 
+// Endpoint per associare una commessa a un collaboratore
+app.post('/api/associate-commesse-collaboratore', (req, res) => {
+    const { collaboratoreId, commesse } = req.body;
+
+    console.log('Dati ricevuti:', { collaboratoreId, commesse });
+
+    try {
+        commesse.forEach(commessa => {
+            console.log(`Associare commessa ${commessa.commessaName} a collaboratore ${collaboratoreId}`);
+            db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName);  // Usa la funzione esportata da database.js
+        });
+        res.status(200).send('Commesse associate correttamente');
+    } catch (error) {
+        console.error('Errore nell\'associazione delle commesse:', error);
+        res.status(500).send('Errore nel salvataggio delle commesse');
+    }
+});
+
 app.listen(port, () => {
-    console.log(`Server running at http://192.168.1.201:${port}`);
+    console.log(`Server running at http://192.168.1.67:${port}`);
 });

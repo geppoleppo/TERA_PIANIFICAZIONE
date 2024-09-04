@@ -15,6 +15,7 @@ const App = () => {
   const [mysqlCommesse, setMysqlCommesse] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [ganttKey, setGanttKey] = useState(0);
+  const [selectedCollaboratore, setSelectedCollaboratore] = useState(null); // Aggiungi stato per collaboratore
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,10 +26,10 @@ const App = () => {
           mysqlCommesseResponse,
           selectedCommesseResponse
         ] = await Promise.all([
-          axios.get('http://93.49.98.201:4443/api/collaboratori'),
-          axios.get('http://93.49.98.201:4443/api/commesse'),
-          axios.get('http://93.49.98.201:4443/api/commesse-mysql'),
-          axios.get('http://93.49.98.201:4443/api/commesse')
+          axios.get('http://192.168.1.67:4443/api/collaboratori'),
+          axios.get('http://192.168.1.67:4443/api/commesse'),
+          axios.get('http://192.168.1.67:4443/api/commesse-mysql'),
+          axios.get('http://192.168.1.67:4443/api/commesse')
         ]);
 
         const staticCollaboratori = collaboratoriResponse.data;
@@ -54,7 +55,7 @@ const App = () => {
         }, {});
         setCommessaColors(colors);
 
-        const eventiResponse = await axios.get('http://93.49.98.201:4443/api/eventi');
+        const eventiResponse = await axios.get('http://192.168.1.67:4443/api/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, colors));
 
         setScheduleData(staticSchedulerData);
@@ -66,6 +67,30 @@ const App = () => {
 
     fetchData();
   }, []);
+
+  // Gestisce il cambio di collaboratore
+  const handleCollaboratoreChange = async (option) => {
+    setSelectedCollaboratore(option);
+
+    try {
+      const response = await axios.get(`http://192.168.1.67:4443/api/commesse/collaboratore/${option.value}`);
+      const commesseAssociate = response.data.map(commessa => ({
+        value: commessa.CommessaName,
+        label: commessa.Descrizione,
+        color: commessa.Colore
+      }));
+
+      setSelectedCommesse(commesseAssociate);
+
+      const colors = commesseAssociate.reduce((acc, commessa) => {
+        acc[commessa.value] = commessa.color;
+        return acc;
+      }, {});
+      setCommessaColors(colors);
+    } catch (error) {
+      console.error('Errore nel caricamento delle commesse del collaboratore:', error);
+    }
+  };
 
   const handleCommesseChange = (selectedOptions) => {
     setSelectedCommesse(selectedOptions);
@@ -85,23 +110,31 @@ const App = () => {
   };
 
   const saveSelectedCommesse = async () => {
+    if (!selectedCollaboratore) {
+      alert("Seleziona prima un collaboratore");
+      return;
+    }
+
     try {
       const commesseToSave = selectedCommesse.map(option => ({
-        descrizione: option.label,
+        commessaName: option.value,
         colore: option.color || '#000000'
       }));
-      await axios.post('http://93.49.98.201:4443/api/update-sqlite', { commesse: commesseToSave });
+      await axios.post(`http://192.168.1.67:4443/api/associate-commesse-collaboratore`, {
+        collaboratoreId: selectedCollaboratore.value,
+        commesse: commesseToSave
+      });
+
       // Fetch updated data and update state
-      const updatedCommesseResponse = await axios.get('http://93.49.98.201:4443/api/commesse');
+      const updatedCommesseResponse = await axios.get(`http://192.168.1.67:4443/api/commesse/collaboratore/${selectedCollaboratore.value}`);
       setCommesse(updatedCommesseResponse.data);
 
-      // Filter scheduler data based on selected commesse
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
       const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
       setScheduleData(filteredScheduleData);
       setGanttData(filteredScheduleData.map(event => formatGanttData(event, updatedCommesseResponse.data, commessaColors)));
     } catch (error) {
-      console.error('Failed to update SQLite:', error);
+      console.error('Errore nel salvataggio delle commesse:', error);
     }
   };
 
@@ -116,7 +149,6 @@ const App = () => {
     }, {});
     setCommessaColors(colors);
 
-    // Filter scheduler data based on updated selected commesse
     const selectedCommessaNames = updatedSelectedCommesse.map(c => c.value);
     const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
     setScheduleData(filteredScheduleData);
@@ -142,7 +174,7 @@ const App = () => {
 
     switch (args.requestType) {
       case 'eventCreated':
-        axios.post('http://93.49.98.201:4443/api/eventi', event)
+        axios.post('http://192.168.1.67:4443/api/eventi', event)
           .then(response => {
             updateLocalData(response.data, 'add');
             reloadSchedulerData();
@@ -150,7 +182,7 @@ const App = () => {
           .catch(error => console.error('Failed to create event:', error));
         break;
       case 'eventChanged':
-        axios.put(`http://93.49.98.201:4443/api/eventi/${event.Id}`, event)
+        axios.put(`http://192.168.1.67:4443/api/eventi/${event.Id}`, event)
           .then(() => {
             updateLocalData(event, 'update');
             reloadSchedulerData();
@@ -158,7 +190,7 @@ const App = () => {
           .catch(error => console.error('Failed to update event:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`http://93.49.98.201:4443/api/eventi/${event.Id}`)
+        axios.delete(`http://192.168.1.67:4443/api/eventi/${event.Id}`)
           .then(() => {
             updateLocalData(event, 'delete');
             reloadSchedulerData();
@@ -175,7 +207,7 @@ const App = () => {
 
     switch (args.requestType) {
       case 'eventChanged':
-        axios.put(`http://93.49.98.201:4443/api/eventi/${task.Id}`, task)
+        axios.put(`http://192.168.1.67:4443/api/eventi/${task.Id}`, task)
           .then(() => {
             updateLocalData(task, 'update');
             reloadSchedulerData();
@@ -183,7 +215,7 @@ const App = () => {
           .catch(error => console.error('Failed to update task:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`http://93.49.98.201:4443/api/eventi/${task.Id}`)
+        axios.delete(`http://192.168.1.67:4443/api/eventi/${task.Id}`)
           .then(() => {
             updateLocalData(task, 'delete');
             reloadSchedulerData();
@@ -219,7 +251,7 @@ const App = () => {
 
   const reloadSchedulerData = async () => {
     try {
-      const eventiResponse = await axios.get('http://93.49.98.201:4443/api/eventi');
+      const eventiResponse = await axios.get('http://192.168.1.67:4443/api/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
 
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
@@ -282,6 +314,18 @@ const App = () => {
   return (
     <div className="app-container">
       <div className="menu-container">
+        {/* Aggiunta del menu a discesa per selezionare il collaboratore */}
+        <Select
+          options={resources.map(collaboratore => ({
+            value: collaboratore.Id,
+            label: collaboratore.Nome
+          }))}
+          value={selectedCollaboratore}
+          onChange={handleCollaboratoreChange}
+          placeholder="Seleziona un collaboratore"
+        />
+
+        {/* Menu a discesa per le commesse */}
         <Select
           isMulti
           options={mysqlCommesse}
@@ -289,6 +333,7 @@ const App = () => {
           onChange={handleCommesseChange}
           placeholder="Seleziona commesse da monitorare"
         />
+        
         <div className="commesse-container">
           {selectedCommesse.map((commessa, index) => (
             <div key={index} className="commessa-card">

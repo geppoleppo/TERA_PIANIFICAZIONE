@@ -33,13 +33,13 @@ const createTables = () => {
         );
     `;
 
-    // Nuova tabella per tracciare lo stato delle commesse per ogni utente
-    const queryStatoCommesseUtente = `
-        CREATE TABLE IF NOT EXISTS StatoCommesseUtente (
-            UserID INTEGER NOT NULL,
+    // Nuova tabella per tracciare le commesse associate ai collaboratori
+    const queryCommesseCollaboratori = `
+        CREATE TABLE IF NOT EXISTS CommesseCollaboratori (
+            CollaboratoreID INTEGER NOT NULL,
             CommessaName TEXT NOT NULL,
-            Stato TEXT NOT NULL,
-            PRIMARY KEY (UserID, CommessaName),
+            PRIMARY KEY (CollaboratoreID, CommessaName),
+            FOREIGN KEY (CollaboratoreID) REFERENCES Collaboratori(Id),
             FOREIGN KEY (CommessaName) REFERENCES Commesse(CommessaName)
         );
     `;
@@ -48,7 +48,7 @@ const createTables = () => {
     db.prepare(queryCollaboratori).run();
     db.prepare(queryCommesse).run();
     db.prepare(queryEventi).run();
-    db.prepare(queryStatoCommesseUtente).run(); // Esecuzione della query per la nuova tabella
+    db.prepare(queryCommesseCollaboratori).run(); // Nuova tabella per associare commesse e collaboratori
 };
 
 createTables();
@@ -64,6 +64,7 @@ const verifyTables = () => {
 };
 
 verifyTables();
+
 
 const getAllCollaboratori = () => {
     try {
@@ -82,6 +83,35 @@ const getAllCommesse = () => {
     } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to retrieve projects.");
+    }
+};
+
+const getCommesseByCollaboratore = (collaboratoreId) => {
+    try {
+        const query = `
+            SELECT C.*
+            FROM Commesse C
+            JOIN CommesseCollaboratori CC ON C.CommessaName = CC.CommessaName
+            WHERE CC.CollaboratoreID = ?;
+        `;
+        return db.prepare(query).all(collaboratoreId);
+    } catch (error) {
+        console.error("Errore nel recupero delle commesse per il collaboratore:", error);
+        throw new Error("Failed to retrieve projects for collaborator.");
+    }
+};
+
+const associateCommessaCollaboratore = (collaboratoreId, commessaName) => {
+    try {
+        const query = `
+            INSERT OR REPLACE INTO CommesseCollaboratori (CollaboratoreID, CommessaName)
+            VALUES (?, ?);
+        `;
+        db.prepare(query).run(collaboratoreId, commessaName);
+        console.log(`Commessa ${commessaName} associata al collaboratore ${collaboratoreId}`);
+    } catch (error) {
+        console.error("Errore nell'associare la commessa al collaboratore:", error);
+        throw new Error("Failed to associate project to collaborator.");
     }
 };
 
@@ -159,19 +189,27 @@ const deleteEvento = (id) => {
 
 const updateCommesse = (commesse) => {
     try {
-        db.prepare(`DELETE FROM Commesse`).run();
-        const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore) VALUES (?, ?, ?)`);
+        const insert = db.prepare(`
+            INSERT OR REPLACE INTO Commesse (CommessaName, Descrizione, Colore)
+            VALUES (?, ?, ?)
+        `);
         const insertMany = db.transaction((commesse) => {
             for (const commessa of commesse) {
-                insert.run(commessa.descrizione, commessa.descrizione, commessa.colore);
+                insert.run(commessa.NOME, commessa.Descrizione || 'Descrizione non disponibile', commessa.Colore || '#FFFFFF');
             }
         });
         insertMany(commesse);
+        console.log('Commesse aggiornate con successo in SQLite');
     } catch (error) {
-        console.error("Database error:", error);
+        console.error("Errore nell'aggiornamento delle commesse in SQLite:", error);
         throw new Error("Failed to update commesse.");
     }
 };
+
+
+
+
+
 
 const getSelectedCommesse = () => {
     try {
@@ -183,21 +221,12 @@ const getSelectedCommesse = () => {
     }
 };
 
-const updateStatoCommesseUtente = (userID, commessaName, stato) => {
-    const query = `REPLACE INTO StatoCommesseUtente (UserID, CommessaName, Stato) VALUES (?, ?, ?)`;
-    db.prepare(query).run(userID, commessaName, stato);
-    return { userID, commessaName, stato };
-};
-
-const getStatoCommesseUtente = (userID) => {
-    const query = `SELECT * FROM StatoCommesseUtente WHERE UserID = ?`;
-    return db.prepare(query).all(userID);
-};
-
 
 module.exports = {
     getAllCollaboratori,
     getAllCommesse,
+    getCommesseByCollaboratore,
+    associateCommessaCollaboratore,
     getAllEventi,
     createEvento,
     updateEvento,
