@@ -141,21 +141,18 @@ app.post('/api/update-sqlite', (req, res) => {
 // Endpoint per associare una commessa a un collaboratore
 app.post('/api/associate-commesse-collaboratore', (req, res) => {
     const { collaboratoreId, commesse } = req.body;
-
+  
     console.log('Dati ricevuti:', { collaboratoreId, commesse });
-
+  
     try {
-        commesse.forEach(commessa => {
-            console.log(`Associare commessa ${commessa.commessaName} a collaboratore ${collaboratoreId}`);
-            db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName);  // Usa la funzione esportata da database.js
-        });
-        res.status(200).send('Commesse associate correttamente');
+      commesse.forEach(commessa => {
+        console.log(`Associare commessa ${commessa.commessaName} a collaboratore ${collaboratoreId} con colore ${commessa.colore}`);
+        db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName, commessa.colore);
+      });
+      res.status(200).send('Commesse associate correttamente');
     } catch (error) {
-        console.error('Errore nell\'associazione delle commesse:', error);
-        res.status(500).send('Errore nel salvataggio delle commesse');
+      console.error('Errore nell\'associazione delle commesse:', error);
+      res.status(500).send('Errore nel salvataggio delle commesse');
     }
-});
-
-app.listen(port, () => {
-    console.log(`Server running at http://192.168.5.31:${port}`);
-});
+  });
+  

@@ -35,14 +35,16 @@ const createTables = () => {
 
     // Nuova tabella per tracciare le commesse associate ai collaboratori
     const queryCommesseCollaboratori = `
-        CREATE TABLE IF NOT EXISTS CommesseCollaboratori (
-            CollaboratoreID INTEGER NOT NULL,
-            CommessaName TEXT NOT NULL,
-            PRIMARY KEY (CollaboratoreID, CommessaName),
-            FOREIGN KEY (CollaboratoreID) REFERENCES Collaboratori(Id),
-            FOREIGN KEY (CommessaName) REFERENCES Commesse(CommessaName)
-        );
-    `;
+    CREATE TABLE IF NOT EXISTS CommesseCollaboratori (
+        CollaboratoreID INTEGER NOT NULL,
+        CommessaName TEXT NOT NULL,
+        Colore TEXT NOT NULL,  -- Nuovo campo per il colore
+        PRIMARY KEY (CollaboratoreID, CommessaName),
+        FOREIGN KEY (CollaboratoreID) REFERENCES Collaboratori(Id),
+        FOREIGN KEY (CommessaName) REFERENCES Commesse(CommessaName)
+    );
+`;
+
 
     // Esegui le query per creare le tabelle
     db.prepare(queryCollaboratori).run();
@@ -102,19 +104,21 @@ const getCommesseByCollaboratore = (collaboratoreId) => {
 };
 
 
-const associateCommessaCollaboratore = (collaboratoreId, commessaName) => {
+const associateCommessaCollaboratore = (collaboratoreId, commessaName, colore) => {
     try {
-        const query = `
-            INSERT OR REPLACE INTO CommesseCollaboratori (CollaboratoreID, CommessaName)
-            VALUES (?, ?);
-        `;
-        db.prepare(query).run(collaboratoreId, commessaName);
-        console.log(`Commessa ${commessaName} associata al collaboratore ${collaboratoreId}`);
+      const query = `
+          INSERT OR REPLACE INTO CommesseCollaboratori (CollaboratoreID, CommessaName, Colore)
+          VALUES (?, ?, ?);
+      `;
+      db.prepare(query).run(collaboratoreId, commessaName, colore);
+      console.log(`Commessa ${commessaName} associata al collaboratore ${collaboratoreId} con colore ${colore}`);
     } catch (error) {
-        console.error("Errore nell'associare la commessa al collaboratore:", error);
-        throw new Error("Failed to associate project to collaborator.");
+      console.error("Errore nell'associare la commessa al collaboratore:", error);
+      throw new Error("Failed to associate project to collaborator.");
     }
-};
+  };
+  
+  
 
 const getAllEventi = () => {
     try {

@@ -52,6 +52,9 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     setModifiedData(newData);
   }, [data]);
 
+
+
+
   const handleResourceChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
       if (selectedOptions.length === 1) {
@@ -82,9 +85,12 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const getFilteredCommesse = () => {
-    if (selectedCommesse.length === 0) return [];
-    return commesse.filter(commessa => selectedCommesse.includes(commessa.CommessaName));
+    if (!selectedCollaboratore) return []; // Non mostrare nulla se non c'è collaboratore selezionato
+    return commesse.filter(commessa => filteredCommesse.includes(commessa.CommessaName));
   };
+  
+  
+  
 
   const onActionComplete = (args) => {
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
@@ -101,7 +107,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) return null;
-    const commessa = props.resourceData.Descrizione;
+    const commessa = props.resourceData.CommessaName;
     if (commessa) {
       return (
         <div className="template-wrap">
@@ -127,7 +133,8 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     const commessaName = Array.isArray(props.CommessaName) ? props.CommessaName[0] : props.CommessaName;
     const commessa = commesse.find(commessa => commessa.CommessaName === commessaName);
 
-    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
+    const commessaText = commessa ? commessa.CommessaName : 'Nessuna commessa selezionata';
+
     const subjectText = props.Subject ? props.Subject : '';
     const color = commessaColors[commessaName] || '#000000';
 
@@ -172,7 +179,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
           isMulti
           options={commessaOptions}
           onChange={handleCommessaChange}
-          placeholder="Select Commesse"
+          placeholder="Select Commessa"
           className="filter-dropdown"
         />
       </div>
