@@ -89,7 +89,7 @@ const getAllCommesse = () => {
 const getCommesseByCollaboratore = (collaboratoreId) => {
     try {
         const query = `
-            SELECT C.*
+            SELECT C.CommessaName, C.Descrizione, C.Colore
             FROM Commesse C
             JOIN CommesseCollaboratori CC ON C.CommessaName = CC.CommessaName
             WHERE CC.CollaboratoreID = ?;
@@ -100,6 +100,7 @@ const getCommesseByCollaboratore = (collaboratoreId) => {
         throw new Error("Failed to retrieve projects for collaborator.");
     }
 };
+
 
 const associateCommessaCollaboratore = (collaboratoreId, commessaName) => {
     try {

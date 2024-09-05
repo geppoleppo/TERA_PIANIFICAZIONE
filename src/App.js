@@ -26,10 +26,10 @@ const App = () => {
           mysqlCommesseResponse,
           selectedCommesseResponse
         ] = await Promise.all([
-          axios.get('http://192.168.1.67:4443/api/collaboratori'),
-          axios.get('http://192.168.1.67:4443/api/commesse'),
-          axios.get('http://192.168.1.67:4443/api/commesse-mysql'),
-          axios.get('http://192.168.1.67:4443/api/commesse')
+          axios.get('http://192.168.5.31:4443/api/collaboratori'),
+          axios.get('http://192.168.5.31:4443/api/commesse'),
+          axios.get('http://192.168.5.31:4443/api/commesse-mysql'),
+          axios.get('http://192.168.5.31:4443/api/commesse')
         ]);
 
         const staticCollaboratori = collaboratoriResponse.data;
@@ -55,7 +55,7 @@ const App = () => {
         }, {});
         setCommessaColors(colors);
 
-        const eventiResponse = await axios.get('http://192.168.1.67:4443/api/eventi');
+        const eventiResponse = await axios.get('http://192.168.5.31:4443/api/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, colors));
 
         setScheduleData(staticSchedulerData);
@@ -73,7 +73,7 @@ const App = () => {
     setSelectedCollaboratore(option);
 
     try {
-      const response = await axios.get(`http://192.168.1.67:4443/api/commesse/collaboratore/${option.value}`);
+      const response = await axios.get(`http://192.168.5.31:4443/api/commesse/collaboratore/${option.value}`);
       const commesseAssociate = response.data.map(commessa => ({
         value: commessa.CommessaName,
         label: commessa.Descrizione,
@@ -120,13 +120,13 @@ const App = () => {
         commessaName: option.value,
         colore: option.color || '#000000'
       }));
-      await axios.post(`http://192.168.1.67:4443/api/associate-commesse-collaboratore`, {
+      await axios.post(`http://192.168.5.31:4443/api/associate-commesse-collaboratore`, {
         collaboratoreId: selectedCollaboratore.value,
         commesse: commesseToSave
       });
 
       // Fetch updated data and update state
-      const updatedCommesseResponse = await axios.get(`http://192.168.1.67:4443/api/commesse/collaboratore/${selectedCollaboratore.value}`);
+      const updatedCommesseResponse = await axios.get(`http://192.168.5.31:4443/api/commesse/collaboratore/${selectedCollaboratore.value}`);
       setCommesse(updatedCommesseResponse.data);
 
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
@@ -174,7 +174,7 @@ const App = () => {
 
     switch (args.requestType) {
       case 'eventCreated':
-        axios.post('http://192.168.1.67:4443/api/eventi', event)
+        axios.post('http://192.168.5.31:4443/api/eventi', event)
           .then(response => {
             updateLocalData(response.data, 'add');
             reloadSchedulerData();
@@ -182,7 +182,7 @@ const App = () => {
           .catch(error => console.error('Failed to create event:', error));
         break;
       case 'eventChanged':
-        axios.put(`http://192.168.1.67:4443/api/eventi/${event.Id}`, event)
+        axios.put(`http://192.168.5.31:4443/api/eventi/${event.Id}`, event)
           .then(() => {
             updateLocalData(event, 'update');
             reloadSchedulerData();
@@ -190,7 +190,7 @@ const App = () => {
           .catch(error => console.error('Failed to update event:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`http://192.168.1.67:4443/api/eventi/${event.Id}`)
+        axios.delete(`http://192.168.5.31:4443/api/eventi/${event.Id}`)
           .then(() => {
             updateLocalData(event, 'delete');
             reloadSchedulerData();
@@ -207,7 +207,7 @@ const App = () => {
 
     switch (args.requestType) {
       case 'eventChanged':
-        axios.put(`http://192.168.1.67:4443/api/eventi/${task.Id}`, task)
+        axios.put(`http://192.168.5.31:4443/api/eventi/${task.Id}`, task)
           .then(() => {
             updateLocalData(task, 'update');
             reloadSchedulerData();
@@ -215,7 +215,7 @@ const App = () => {
           .catch(error => console.error('Failed to update task:', error));
         break;
       case 'eventRemoved':
-        axios.delete(`http://192.168.1.67:4443/api/eventi/${task.Id}`)
+        axios.delete(`http://192.168.5.31:4443/api/eventi/${task.Id}`)
           .then(() => {
             updateLocalData(task, 'delete');
             reloadSchedulerData();
@@ -251,7 +251,7 @@ const App = () => {
 
   const reloadSchedulerData = async () => {
     try {
-      const eventiResponse = await axios.get('http://192.168.1.67:4443/api/eventi');
+      const eventiResponse = await axios.get('http://192.168.5.31:4443/api/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
 
       const selectedCommessaNames = selectedCommesse.map(c => c.value);

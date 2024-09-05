@@ -71,6 +71,18 @@ app.get('/api/collaboratori', (req, res) => {
     }
 });
 
+app.get('/api/commesse/collaboratore/:id', (req, res) => {
+    const collaboratoreId = req.params.id;
+    try {
+        const commesse = db.getCommesseByCollaboratore(collaboratoreId);
+        res.json(commesse);
+    } catch (error) {
+        console.error(`Errore nel recupero delle commesse per il collaboratore ${collaboratoreId}:`, error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 app.get('/api/commesse', (req, res) => {
     try {
         const commesse = db.getSelectedCommesse();
@@ -145,5 +157,5 @@ app.post('/api/associate-commesse-collaboratore', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running at http://192.168.1.67:${port}`);
+    console.log(`Server running at http://192.168.5.31:${port}`);
 });

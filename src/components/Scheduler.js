@@ -39,6 +39,11 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   const [currentView, setCurrentView] = useState('Month'); 
   const [modifiedData, setModifiedData] = useState([]);
 
+  // Nuovo stato per il collaboratore selezionato e le commesse filtrate
+  const [selectedCollaboratore, setSelectedCollaboratore] = useState(null);
+  const [filteredCommesse, setFilteredCommesse] = useState([]);
+
+
   useEffect(() => {
     const newData = data.map(event => ({
       ...event,
