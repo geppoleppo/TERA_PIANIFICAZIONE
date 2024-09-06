@@ -155,7 +155,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const commessaOptions = [{ value: 'select-all', label: 'Select All' }, ...commesse.map(commessa => ({
     value: commessa.CommessaName,
-    label: commessa.Descrizione
+    label: commessa.CommessaName
   }))];
 
   return (

@@ -102,19 +102,26 @@ const getCommesseByCollaboratore = (collaboratoreId) => {
 };
 
 
-const associateCommessaCollaboratore = (collaboratoreId, commessaName) => {
+const associateCommessaCollaboratore = (collaboratoreId, commessaName, colore) => {
     try {
+        // Verifica che i dati siano corretti
+        console.log("Dati ricevuti per l'inserimento:", { collaboratoreId, commessaName, colore });
+
         const query = `
-            INSERT OR REPLACE INTO CommesseCollaboratori (CollaboratoreID, CommessaName)
-            VALUES (?, ?);
+            INSERT OR REPLACE INTO CommesseCollaboratori (CollaboratoreID, CommessaName, Colore)
+            VALUES (?, ?, ?);
         `;
-        db.prepare(query).run(collaboratoreId, commessaName);
-        console.log(`Commessa ${commessaName} associata al collaboratore ${collaboratoreId}`);
+        db.prepare(query).run(collaboratoreId, commessaName, colore);
+        console.log(`Commessa ${commessaName} associata al collaboratore ${collaboratoreId} con colore ${colore}`);
     } catch (error) {
         console.error("Errore nell'associare la commessa al collaboratore:", error);
+        console.error("Errore dettagliato:", error.message);
         throw new Error("Failed to associate project to collaborator.");
     }
 };
+
+
+
 
 const getAllEventi = () => {
     try {

@@ -147,7 +147,7 @@ app.post('/api/associate-commesse-collaboratore', (req, res) => {
     try {
         commesse.forEach(commessa => {
             console.log(`Associare commessa ${commessa.commessaName} a collaboratore ${collaboratoreId}`);
-            db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName);  // Usa la funzione esportata da database.js
+            db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName, commessa.colore);  // Passa il colore
         });
         res.status(200).send('Commesse associate correttamente');
     } catch (error) {
@@ -157,5 +157,5 @@ app.post('/api/associate-commesse-collaboratore', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running at http://192.168.5.31:${port}`);
+    console.log(`Server running at http://localhost:${port}`);
 });
