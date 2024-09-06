@@ -5,7 +5,7 @@ const db = require('./database');  // Importa tutte le funzioni dal modulo datab
 const mysql = require('mysql');
 
 const app = express();
-const port = 4443;
+const port = 4001;
 
 app.use(cors());
 app.use(bodyParser.json());
