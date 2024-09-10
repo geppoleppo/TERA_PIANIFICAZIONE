@@ -120,7 +120,22 @@ const associateCommessaCollaboratore = (collaboratoreId, commessaName, colore) =
     }
 };
 
-
+const getCommesseComuni = (collaboratoriIds) => {
+    try {
+        const placeholders = collaboratoriIds.map(() => '?').join(',');
+        const query = `
+            SELECT CommessaName
+            FROM CommesseCollaboratori
+            WHERE CollaboratoreID IN (${placeholders})
+            GROUP BY CommessaName
+            HAVING COUNT(DISTINCT CollaboratoreID) = ?;
+        `;
+        return db.prepare(query).all(...collaboratoriIds, collaboratoriIds.length);
+    } catch (error) {
+        console.error("Errore nel recupero delle commesse comuni:", error);
+        throw new Error("Failed to retrieve common commesse.");
+    }
+};
 
 
 const getAllEventi = () => {
@@ -231,6 +246,7 @@ const getSelectedCommesse = () => {
 
 
 module.exports = {
+    getCommesseComuni,
     getAllCollaboratori,
     getAllCommesse,
     getCommesseByCollaboratore,

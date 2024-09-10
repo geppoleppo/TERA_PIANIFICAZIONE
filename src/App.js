@@ -253,7 +253,7 @@ const App = () => {
     try {
       const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
-
+  
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
       const filteredScheduleData = staticSchedulerData.filter(event => selectedCommessaNames.includes(event.CommessaName));
       setScheduleData(filteredScheduleData);
@@ -262,6 +262,7 @@ const App = () => {
       console.error('Errore nel caricamento dei dati:', error);
     }
   };
+  
 
   const convertToStandardFormat = (event) => {
     const startDate = event.StartTime || event.StartDate || new Date().toISOString();
@@ -349,12 +350,12 @@ const App = () => {
         <button onClick={saveSelectedCommesse}>Memorizza</button>
       </div>
       <Scheduler
-        data={scheduleData}
-        resources={resources}
-        onDataChange={handleSchedulerDataChange}
-        commessaColors={commessaColors}
-        commesse={commesse}
-      />
+  data={scheduleData}
+  resources={resources}
+  onDataChange={handleSchedulerDataChange}
+  commessaColors={commessaColors}
+  commesse={commesse}
+/>
       <Gantt
         key={ganttKey}
         data={ganttData}

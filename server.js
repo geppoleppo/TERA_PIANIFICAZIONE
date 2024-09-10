@@ -71,6 +71,19 @@ app.get('/api/collaboratori', (req, res) => {
     }
 });
 
+app.post('/api/commesse-comuni', (req, res) => {
+    const { collaboratoriIds } = req.body;
+    try {
+        const commesse = db.getCommesseComuni(collaboratoriIds);
+        res.json(commesse);
+    } catch (error) {
+        console.error('Errore nel recupero delle commesse comuni:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
 app.get('/api/commesse/collaboratore/:id', (req, res) => {
     const collaboratoreId = req.params.id;
     try {

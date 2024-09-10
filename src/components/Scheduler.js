@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import '../index.css';
+import axios from 'axios';
 
 // Load the required CLDR data
 import { loadCldr, L10n } from '@syncfusion/ej2-base';
@@ -52,17 +53,31 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     setModifiedData(newData);
   }, [data]);
 
-  const handleResourceChange = (selectedOptions) => {
-    if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
-      if (selectedOptions.length === 1) {
-        setSelectedResources(resources.map(resource => resource.Id));
-      } else {
-        setSelectedResources([]);
-      }
+  const handleResourceChange = async (selectedResources) => {
+    setSelectedResources(selectedResources);
+
+    if (selectedResources && selectedResources.length > 0) {
+        const resourceIds = selectedResources.map(option => option.value);
+
+        try {
+            const response = await axios.post('http://localhost:4443/api/commesse-comuni', {
+                collaboratoriIds: resourceIds
+            });
+
+            const commesseComuni = response.data.map(commessa => ({
+                value: commessa.CommessaName,
+                label: commessa.CommessaName
+            }));
+            setSelectedCommesse(commesseComuni);  // Aggiorna solo con le commesse comuni
+        } catch (error) {
+            console.error('Errore nel caricamento delle commesse comuni:', error);
+        }
     } else {
-      setSelectedResources(selectedOptions ? selectedOptions.map(option => option.value) : []);
+        setSelectedCommesse([]);
     }
-  };
+};
+
+
 
   const handleCommessaChange = (selectedOptions) => {
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
@@ -168,13 +183,13 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
           placeholder="Select Resources"
           className="filter-dropdown"
         />
-        <Select
-          isMulti
-          options={commessaOptions}
-          onChange={handleCommessaChange}
-          placeholder="Select Commesse"
-          className="filter-dropdown"
-        />
+<Select
+  isMulti
+  options={selectedCommesse}  // Usa le commesse filtrate
+  onChange={handleCommessaChange}
+  placeholder="Select Commesse"
+  className="filter-dropdown"
+/>
       </div>
       <div className="scroll-container">
         <ScheduleComponent
