@@ -62,8 +62,9 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
       try {
         const response = await axios.post('http://localhost:4443/api/commesse-comuni', {
           collaboratoriIds: resourceIds
+
         });
-  
+  console.log('Risposta da commesse comuni:', response.data);
         const commesseComuni = response.data.map(commessa => ({
           value: commessa.CommessaName,
           label: commessa.CommessaName
@@ -78,19 +79,25 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
   
 
-
-const handleCommessaChange = (selectedOptions) => {
-  console.log('Commesse selezionate:', selectedOptions);  // Log per verificare se la funzione viene chiamata
-  if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
-    if (selectedOptions.length === 1) {
-      setSelectedCommesse(commesse.map(commessa => commessa.CommessaName));
+  const handleCommessaChange = (selectedOptions) => {
+    console.log('Commesse selezionate:', selectedOptions);
+  
+    if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
+      if (selectedOptions.length === 1) {
+        setSelectedCommesse(commesse.map(commessa => commessa.CommessaName));
+      } else {
+        setSelectedCommesse([]);
+      }
     } else {
-      setSelectedCommesse([]);
+      const selectedCommessaNames = selectedOptions ? selectedOptions.map(option => option.value) : [];
+      setSelectedCommesse(selectedCommessaNames);
     }
-  } else {
-    setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
-  }
-};
+  
+    // Applica il filtro per il Gantt
+    applyGanttFilter(selectedOptions); // Ora questa funzione dovrebbe essere definita
+  };
+  
+  
 
 
   const getFilteredResources = () => {
@@ -101,7 +108,9 @@ const handleCommessaChange = (selectedOptions) => {
   const getFilteredCommesse = () => {
     if (selectedCommesse.length === 0) return [];
     return commesse.filter(commessa => selectedCommesse.includes(commessa.CommessaName));
+    console.log('Commesse filtrate per Scheduler:', getFilteredCommesse());
   };
+  
 
   const onActionComplete = (args) => {
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {

@@ -57,6 +57,7 @@ const App = () => {
 
         const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, colors));
+        console.log('Evento formattato per Scheduler:', formatEventForScheduler(event, commessaColors));
 
         setScheduleData(staticSchedulerData);
         setGanttData(staticSchedulerData.map(event => formatGanttData(event, staticCommesse, colors)));
@@ -101,6 +102,7 @@ const App = () => {
   
     setSelectedCommesse(selectedOptions);
     applyGanttFilter(selectedOptions);  // Applica il filtro a Gantt
+    console.log('Commesse filtrate per Gantt:', selectedOptions);
   };
   
 
@@ -164,10 +166,15 @@ const App = () => {
 
   const applyGanttFilter = (selectedOptions) => {
     const selectedCommessaNames = selectedOptions.map(option => option.value);
-    console.log('Commesse filtrate per Gantt:', selectedCommessaNames);  // Log per verificare
+    console.log('Commesse filtrate per Gantt:', selectedCommessaNames);
+  
+    // Filtro i dati di Gantt in base alle commesse selezionate
     const filteredGanttData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+  
+    // Aggiorna lo stato di Gantt con i dati filtrati
     setGanttData(filteredGanttData.map(event => formatGanttData(event, commesse, commessaColors)));
   };
+  
   
 
   const debounce = (func, wait) => {
@@ -180,7 +187,7 @@ const App = () => {
 
   const handleSchedulerDataChange = debounce((args) => {
     const event = convertToStandardFormat(args.data[0]);
-
+  
     switch (args.requestType) {
       case 'eventCreated':
         axios.post('http://localhost:4443/api/eventi', event)
@@ -209,7 +216,9 @@ const App = () => {
       default:
         break;
     }
+    console.log('Dati cambiati per Scheduler:', args.data[0]);
   }, 300);
+  
 
   const handleGanttDataChange = debounce((args) => {
     const task = convertToStandardFormat(args.data[0]);
@@ -259,13 +268,13 @@ const App = () => {
   };
 
   const reloadSchedulerData = async () => {
-    console.log('Ricaricamento dati dello scheduler...');  // Aggiungi questo log
+    console.log('Ricaricamento dati dello scheduler...');
   
     try {
       const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
       
-      console.log('Dati eventi:', staticSchedulerData);  // Aggiungi questo log
+      console.log('Dati eventi:', staticSchedulerData);
   
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
       const filteredScheduleData = staticSchedulerData.filter(event => selectedCommessaNames.includes(event.CommessaName));
@@ -276,6 +285,8 @@ const App = () => {
       console.error('Errore nel caricamento dei dati:', error);
     }
   };
+  
+  
   
   
 
