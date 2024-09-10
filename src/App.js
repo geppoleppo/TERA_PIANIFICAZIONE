@@ -376,14 +376,17 @@ const App = () => {
         </div>
         <button onClick={saveSelectedCommesse}>Memorizza</button>
       </div>
-
+      
+      
       <Scheduler
   data={scheduleData}
   resources={resources}
   onDataChange={handleSchedulerDataChange}
   commessaColors={commessaColors}
   commesse={commesse}
+  applyGanttFilter={applyGanttFilter}  // Passa la funzione qui
 />
+
       <Gantt
         key={ganttKey}
         data={ganttData}

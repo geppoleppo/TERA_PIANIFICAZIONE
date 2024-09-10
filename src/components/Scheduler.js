@@ -34,7 +34,7 @@ L10n.load({
   }
 });
 
-const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) => {
+const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,applyGanttFilter }) => {
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [currentView, setCurrentView] = useState('Month'); 
@@ -75,6 +75,9 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
       }
     } else {
       setSelectedCommesse([]);
+
+     // Usa la funzione applyGanttFilter che è passata come prop
+     applyGanttFilter(selectedOptions);      
     }
   };
   
