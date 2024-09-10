@@ -67,7 +67,11 @@ const App = () => {
 
     fetchData();
   }, []);
-
+  // Logga i dati prima del return
+  console.log('Schedule Data:', scheduleData);
+  console.log('Resources:', resources);
+  console.log('Commessa Colors:', commessaColors);
+  console.log('Commesse:', commesse);
   // Gestisce il cambio di collaboratore
   const handleCollaboratoreChange = async (option) => {
     setSelectedCollaboratore(option);
@@ -93,9 +97,12 @@ const App = () => {
   };
 
   const handleCommesseChange = (selectedOptions) => {
+    console.log('Commesse selezionate:', selectedOptions);  // Aggiungi questo log
+  
     setSelectedCommesse(selectedOptions);
-    applyGanttFilter(selectedOptions);
+    applyGanttFilter(selectedOptions);  // Applica il filtro a Gantt
   };
+  
 
   const handleColorChange = (color, index) => {
     const updatedSelectedCommesse = [...selectedCommesse];
@@ -157,9 +164,11 @@ const App = () => {
 
   const applyGanttFilter = (selectedOptions) => {
     const selectedCommessaNames = selectedOptions.map(option => option.value);
+    console.log('Commesse filtrate per Gantt:', selectedCommessaNames);  // Log per verificare
     const filteredGanttData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
     setGanttData(filteredGanttData.map(event => formatGanttData(event, commesse, commessaColors)));
   };
+  
 
   const debounce = (func, wait) => {
     let timeout;
@@ -250,18 +259,24 @@ const App = () => {
   };
 
   const reloadSchedulerData = async () => {
+    console.log('Ricaricamento dati dello scheduler...');  // Aggiungi questo log
+  
     try {
       const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
+      
+      console.log('Dati eventi:', staticSchedulerData);  // Aggiungi questo log
   
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
       const filteredScheduleData = staticSchedulerData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+      
       setScheduleData(filteredScheduleData);
       setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
     } catch (error) {
       console.error('Errore nel caricamento dei dati:', error);
     }
   };
+  
   
 
   const convertToStandardFormat = (event) => {
@@ -314,6 +329,7 @@ const App = () => {
 
   return (
     <div className="app-container">
+      
       <div className="menu-container">
         {/* Aggiunta del menu a discesa per selezionare il collaboratore */}
         <Select
@@ -349,6 +365,7 @@ const App = () => {
         </div>
         <button onClick={saveSelectedCommesse}>Memorizza</button>
       </div>
+
       <Scheduler
   data={scheduleData}
   resources={resources}
