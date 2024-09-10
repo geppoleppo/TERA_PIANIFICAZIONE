@@ -55,41 +55,43 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const handleResourceChange = async (selectedResources) => {
     setSelectedResources(selectedResources);
-
+  
     if (selectedResources && selectedResources.length > 0) {
-        const resourceIds = selectedResources.map(option => option.value);
-
-        try {
-            const response = await axios.post('http://localhost:4443/api/commesse-comuni', {
-                collaboratoriIds: resourceIds
-            });
-
-            const commesseComuni = response.data.map(commessa => ({
-                value: commessa.CommessaName,
-                label: commessa.CommessaName
-            }));
-            setSelectedCommesse(commesseComuni);  // Aggiorna solo con le commesse comuni
-        } catch (error) {
-            console.error('Errore nel caricamento delle commesse comuni:', error);
-        }
-    } else {
-        setSelectedCommesse([]);
-    }
-};
-
-
-
-  const handleCommessaChange = (selectedOptions) => {
-    if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
-      if (selectedOptions.length === 1) {
-        setSelectedCommesse(commesse.map(commessa => commessa.CommessaName));
-      } else {
-        setSelectedCommesse([]);
+      const resourceIds = selectedResources.map(option => option.value);
+  
+      try {
+        const response = await axios.post('http://localhost:4443/api/commesse-comuni', {
+          collaboratoriIds: resourceIds
+        });
+  
+        const commesseComuni = response.data.map(commessa => ({
+          value: commessa.CommessaName,
+          label: commessa.CommessaName
+        }));
+        setSelectedCommesse(commesseComuni);  // Aggiorna solo con le commesse comuni
+      } catch (error) {
+        console.error('Errore nel caricamento delle commesse comuni:', error);
       }
     } else {
-      setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
+      setSelectedCommesse([]);
     }
   };
+  
+
+
+const handleCommessaChange = (selectedOptions) => {
+  console.log('Commesse selezionate:', selectedOptions);  // Log per verificare se la funzione viene chiamata
+  if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
+    if (selectedOptions.length === 1) {
+      setSelectedCommesse(commesse.map(commessa => commessa.CommessaName));
+    } else {
+      setSelectedCommesse([]);
+    }
+  } else {
+    setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
+  }
+};
+
 
   const getFilteredResources = () => {
     if (selectedResources.length === 0) return [];
@@ -185,11 +187,12 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
         />
 <Select
   isMulti
-  options={selectedCommesse}  // Usa le commesse filtrate
-  onChange={handleCommessaChange}
+  options={selectedCommesse}  // Dati delle commesse filtrate
+  onChange={handleCommessaChange}  // Funzione di gestione della selezione
   placeholder="Select Commesse"
   className="filter-dropdown"
 />
+
       </div>
       <div className="scroll-container">
         <ScheduleComponent
