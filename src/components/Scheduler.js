@@ -62,9 +62,8 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
       try {
         const response = await axios.post('http://localhost:4443/api/commesse-comuni', {
           collaboratoriIds: resourceIds
-
         });
-  console.log('Risposta da commesse comuni:', response.data);
+        console.log('Risposta da commesse comuni:', response.data);
         const commesseComuni = response.data.map(commessa => ({
           value: commessa.CommessaName,
           label: commessa.CommessaName
@@ -75,30 +74,18 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
       }
     } else {
       setSelectedCommesse([]);
-
-     // Usa la funzione applyGanttFilter che è passata come prop
-     applyGanttFilter(selectedOptions);      
     }
   };
   
-
+  
   const handleCommessaChange = (selectedOptions) => {
-    console.log('Commesse selezionate:', selectedOptions);
+    setSelectedCommesse(selectedOptions);
   
-    if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
-      if (selectedOptions.length === 1) {
-        setSelectedCommesse(commesse.map(commessa => commessa.CommessaName));
-      } else {
-        setSelectedCommesse([]);
-      }
-    } else {
-      const selectedCommessaNames = selectedOptions ? selectedOptions.map(option => option.value) : [];
-      setSelectedCommesse(selectedCommessaNames);
-    }
-  
-    // Applica il filtro per il Gantt
-    applyGanttFilter(selectedOptions); // Ora questa funzione dovrebbe essere definita
+    // Applica il filtro per il Gantt e lo Scheduler
+    applyGanttFilter(selectedOptions);
+    handleSchedulerDataChange(selectedOptions);
   };
+  
   
   
 

@@ -268,5 +268,6 @@ module.exports = {
     updateEvento,
     deleteEvento,
     updateCommesse,
-    getSelectedCommesse
+    getSelectedCommesse,
+    removeAllCommesseFromCollaboratore
 };
