@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import '../index.css';
+import axios from 'axios';
 
 // Load the required CLDR data
 import { loadCldr, L10n } from '@syncfusion/ej2-base';
@@ -33,7 +34,7 @@ L10n.load({
   }
 });
 
-const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) => {
+const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,applyGanttFilter }) => {
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [currentView, setCurrentView] = useState('Month'); 
@@ -52,22 +53,38 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     setModifiedData(newData);
   }, [data]);
 
+  const handleResourceChange = async (selectedResources) => {
+    setSelectedResources(selectedResources);
+  
+    if (selectedResources && selectedResources.length > 0) {
+      const resourceIds = selectedResources.map(option => option.value);
+  
+      try {
+        const response = await axios.post('http://localhost:4443/api/commesse-comuni', {
+          collaboratoriIds: resourceIds
 
-
-
-  const handleResourceChange = (selectedOptions) => {
-    if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
-      if (selectedOptions.length === 1) {
-        setSelectedResources(resources.map(resource => resource.Id));
-      } else {
-        setSelectedResources([]);
+        });
+  console.log('Risposta da commesse comuni:', response.data);
+        const commesseComuni = response.data.map(commessa => ({
+          value: commessa.CommessaName,
+          label: commessa.CommessaName
+        }));
+        setSelectedCommesse(commesseComuni);  // Aggiorna solo con le commesse comuni
+      } catch (error) {
+        console.error('Errore nel caricamento delle commesse comuni:', error);
       }
     } else {
-      setSelectedResources(selectedOptions ? selectedOptions.map(option => option.value) : []);
+      setSelectedCommesse([]);
+
+     // Usa la funzione applyGanttFilter che è passata come prop
+     applyGanttFilter(selectedOptions);      
     }
   };
+  
 
   const handleCommessaChange = (selectedOptions) => {
+    console.log('Commesse selezionate:', selectedOptions);
+  
     if (selectedOptions && selectedOptions.some(option => option.value === 'select-all')) {
       if (selectedOptions.length === 1) {
         setSelectedCommesse(commesse.map(commessa => commessa.CommessaName));
@@ -75,9 +92,16 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
         setSelectedCommesse([]);
       }
     } else {
-      setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
+      const selectedCommessaNames = selectedOptions ? selectedOptions.map(option => option.value) : [];
+      setSelectedCommesse(selectedCommessaNames);
     }
+  
+    // Applica il filtro per il Gantt
+    applyGanttFilter(selectedOptions); // Ora questa funzione dovrebbe essere definita
   };
+  
+  
+
 
   const getFilteredResources = () => {
     if (selectedResources.length === 0) return [];
@@ -85,11 +109,10 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   };
 
   const getFilteredCommesse = () => {
-    if (!selectedCollaboratore) return []; // Non mostrare nulla se non c'è collaboratore selezionato
-    return commesse.filter(commessa => filteredCommesse.includes(commessa.CommessaName));
+    if (selectedCommesse.length === 0) return [];
+    return commesse.filter(commessa => selectedCommesse.includes(commessa.CommessaName));
+    console.log('Commesse filtrate per Scheduler:', getFilteredCommesse());
   };
-  
-  
   
 
   const onActionComplete = (args) => {
@@ -107,7 +130,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) return null;
-    const commessa = props.resourceData.CommessaName;
+    const commessa = props.resourceData.Descrizione;
     if (commessa) {
       return (
         <div className="template-wrap">
@@ -133,8 +156,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     const commessaName = Array.isArray(props.CommessaName) ? props.CommessaName[0] : props.CommessaName;
     const commessa = commesse.find(commessa => commessa.CommessaName === commessaName);
 
-    const commessaText = commessa ? commessa.CommessaName : 'Nessuna commessa selezionata';
-
+    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
     const subjectText = props.Subject ? props.Subject : '';
     const color = commessaColors[commessaName] || '#000000';
 
@@ -162,7 +184,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const commessaOptions = [{ value: 'select-all', label: 'Select All' }, ...commesse.map(commessa => ({
     value: commessa.CommessaName,
-    label: commessa.Descrizione
+    label: commessa.CommessaName
   }))];
 
   return (
@@ -175,13 +197,14 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
           placeholder="Select Resources"
           className="filter-dropdown"
         />
-        <Select
-          isMulti
-          options={commessaOptions}
-          onChange={handleCommessaChange}
-          placeholder="Select Commessa"
-          className="filter-dropdown"
-        />
+<Select
+  isMulti
+  options={selectedCommesse}  // Dati delle commesse filtrate
+  onChange={handleCommessaChange}  // Funzione di gestione della selezione
+  placeholder="Select Commesse"
+  className="filter-dropdown"
+/>
+
       </div>
       <div className="scroll-container">
         <ScheduleComponent

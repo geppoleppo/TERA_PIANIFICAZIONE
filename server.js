@@ -5,7 +5,7 @@ const db = require('./database');  // Importa tutte le funzioni dal modulo datab
 const mysql = require('mysql');
 
 const app = express();
-const port = 4001;
+const port = 4443;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -70,6 +70,19 @@ app.get('/api/collaboratori', (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.post('/api/commesse-comuni', (req, res) => {
+    const { collaboratoriIds } = req.body;
+    try {
+        const commesse = db.getCommesseComuni(collaboratoriIds);
+        res.json(commesse);
+    } catch (error) {
+        console.error('Errore nel recupero delle commesse comuni:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 
 app.get('/api/commesse/collaboratore/:id', (req, res) => {
     const collaboratoreId = req.params.id;
@@ -141,18 +154,24 @@ app.post('/api/update-sqlite', (req, res) => {
 // Endpoint per associare una commessa a un collaboratore
 app.post('/api/associate-commesse-collaboratore', (req, res) => {
     const { collaboratoreId, commesse } = req.body;
-  
-    console.log('Dati ricevuti:', { collaboratoreId, commesse });
-  
+
     try {
-      commesse.forEach(commessa => {
-        console.log(`Associare commessa ${commessa.commessaName} a collaboratore ${collaboratoreId} con colore ${commessa.colore}`);
-        db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName, commessa.colore);
-      });
-      res.status(200).send('Commesse associate correttamente');
+        // Rimuovi tutte le commesse associate al collaboratore
+        db.removeAllCommesseFromCollaboratore(collaboratoreId);
+
+        // Associa le nuove commesse al collaboratore
+        commesse.forEach(commessa => {
+            db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName, commessa.colore);
+        });
+
+        res.status(200).send('Commesse associate correttamente');
     } catch (error) {
-      console.error('Errore nell\'associazione delle commesse:', error);
-      res.status(500).send('Errore nel salvataggio delle commesse');
+        console.error('Errore nell\'associazione delle commesse:', error);
+        res.status(500).send('Errore nel salvataggio delle commesse');
     }
-  });
-  
+});
+
+
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});
