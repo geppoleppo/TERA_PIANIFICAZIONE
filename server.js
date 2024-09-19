@@ -117,13 +117,24 @@ app.get('/api/eventi', (req, res) => {
 });
 
 app.post('/api/eventi', (req, res) => {
+    const { Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza } = req.body;
     try {
-        const newEvento = db.createEvento(req.body);
-        res.json(newEvento);
+      const newEvento = db.createEvento({
+        Descrizione,
+        Inizio,
+        Fine,
+        CommessaName,
+        IncaricatoId,
+        Colore,
+        Progresso,
+        Dipendenza
+      });
+      res.status(201).json(newEvento);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Errore nel salvataggio dell\'evento' });
     }
-});
+  });
+  
 
 app.put('/api/eventi/:id', (req, res) => {
     try {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 import { TwitterPicker } from 'react-color';
-import { ScheduleComponent, Day, Week, WorkWeek, Month, Agenda, Inject } from '@syncfusion/ej2-react-schedule'; // Importa il Scheduler
+import { ScheduleComponent, Day, Week, WorkWeek, Month, Agenda, TimelineViews, Inject } from '@syncfusion/ej2-react-schedule';
 import { GanttComponent, ColumnsDirective, ColumnDirective, Inject as GanttInject, Edit, Selection, Toolbar } from '@syncfusion/ej2-react-gantt'; // Importa il Gantt
 import './App.css';
 
@@ -14,6 +14,7 @@ const App = () => {
   const [commessaColors, setCommessaColors] = useState({});
   const [scheduleData, setScheduleData] = useState([]);  // Dati per lo scheduler
   const [ganttData, setGanttData] = useState([]);        // Dati per il Gantt
+  
 
 
 
@@ -110,6 +111,32 @@ const App = () => {
     }
   };
   
+  const handleSchedulerActionComplete = async (args) => {
+    if (args.requestType === 'eventCreated') {
+      const newEvent = args.data[0]; // Se è un singolo evento
+      try {
+        // Salva l'evento nel database
+        const response = await axios.post('http://localhost:4443/api/eventi', {
+          Descrizione: newEvent.Subject || 'No description',
+          Inizio: newEvent.StartTime,
+          Fine: newEvent.EndTime,
+          CommessaName: newEvent.CommessaName,
+          IncaricatoId: Array.isArray(newEvent.IncaricatoId) ? newEvent.IncaricatoId.join(',') : newEvent.IncaricatoId,
+          Colore: newEvent.Color || '#000000',
+          Progresso: newEvent.Progress || 0,
+          Dipendenza: newEvent.Predecessor || ''
+        });
+        console.log('Evento salvato:', response.data);
+      } catch (error) {
+        console.error('Errore nel salvataggio dell\'evento:', error);
+      }
+    } else if (args.requestType === 'eventChanged') {
+      // Logica per l'aggiornamento dell'evento esistente
+    }
+  };
+  
+  
+
   const handleGanttDataChange = (updatedData) => {
     console.log('Dati del Gantt aggiornati:', updatedData);
     // Logica per gestire i dati aggiornati
@@ -160,39 +187,63 @@ const App = () => {
         {/* Salva le commesse e i colori */}
         <button onClick={saveSelectedCommesse}>Salva</button>
 
-        {/* Scheduler Syncfusion */}
+
+
+
         <ScheduleComponent
-  eventSettings={{
-    dataSource: Array.isArray(scheduleData) ? scheduleData.filter(event => selectedCommesse.some(commessa => commessa.value === event.CommessaName)) : []
-  }}
-  resources={resources}
-  currentView="Month"
-  actionComplete={handleSchedulerDataChange}
+  group={{ resources: ['Collaboratori'] }} // Definisci il gruppo di risorse
+  resources={[{
+    field: 'IncaricatoId', // Campo associato alla risorsa nel tuo evento
+    title: 'Collaboratore',
+    name: 'Collaboratori',
+    allowMultiple: true, // Permette di selezionare più collaboratori
+    dataSource: resources.map(collaboratore => ({
+      Id: collaboratore.Id,
+      Nome: collaboratore.Nome,
+      Colore: commessaColors[collaboratore.Id] || '#000000' // Usa il colore se definito
+    })),
+    textField: 'Nome',
+    idField: 'Id',
+    colorField: 'Colore'
+  }]} 
+  eventSettings={{ dataSource: scheduleData }} 
+  currentView="TimelineWeek"
+  selectedDate={new Date()}
+  actionComplete={handleSchedulerActionComplete} // Richiama la funzione di salvataggio
 >
-          <Inject services={[Day, Week, WorkWeek, Month, Agenda]} />
-        </ScheduleComponent>
+  <Inject services={[TimelineViews, Day, Week, WorkWeek, Month, Agenda]} />
+</ScheduleComponent>
+
+
+
 
         {/* Gantt Syncfusion */}
         <GanttComponent
-          dataSource={ganttData.filter(task => selectedCommesse.some(commessa => commessa.value === task.CommessaName))}
-          resources={resources}
-          taskFields={{
-            id: 'Id',
-            name: 'Subject',
-            startDate: 'StartTime',
-            endDate: 'EndTime',
-            dependency: 'Predecessor'
-          }}
-          actionComplete={handleGanttDataChange}
-        >
-          <ColumnsDirective>
-            <ColumnDirective field="Id" headerText="ID" width="100" />
-            <ColumnDirective field="Subject" headerText="Task Name" width="250" />
-            <ColumnDirective field="StartTime" headerText="Start Date" width="150" />
-            <ColumnDirective field="EndTime" headerText="End Date" width="150" />
-          </ColumnsDirective>
-          <GanttInject services={[Edit, Selection, Toolbar]} />
-        </GanttComponent>
+  dataSource={Array.isArray(ganttData) ? ganttData.filter(task => selectedCommesse.some(commessa => commessa.value === task.CommessaName)) : []}
+  resources={resources.map(collaboratore => ({
+    Id: collaboratore.Id,
+    Nome: collaboratore.Nome,
+    Colore: commessaColors[collaboratore.Id] || '#000000'
+  }))}
+  taskFields={{
+    id: 'Id',
+    name: 'Subject',
+    startDate: 'StartTime',
+    endDate: 'EndTime',
+    dependency: 'Predecessor'
+  }}
+  actionComplete={handleGanttDataChange}
+>
+  <ColumnsDirective>
+    <ColumnDirective field="Id" headerText="ID" width="100" />
+    <ColumnDirective field="Subject" headerText="Task Name" width="250" />
+    <ColumnDirective field="StartTime" headerText="Start Date" width="150" />
+    <ColumnDirective field="EndTime" headerText="End Date" width="150" />
+  </ColumnsDirective>
+  <GanttInject services={[Edit, Selection, Toolbar]} />
+</GanttComponent>
+
+
       </div>
     </div>
   );

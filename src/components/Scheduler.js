@@ -139,6 +139,34 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
     );
   };
 
+  const handleActionComplete = async (args) => {
+    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged') {
+      const event = Array.isArray(args.data) ? args.data[0] : args.data;
+      
+      // Prepara i dati dell'evento da inviare al server
+      const newEvent = {
+        Descrizione: event.Subject || 'No Description',
+        Inizio: event.StartTime,
+        Fine: event.EndTime,
+        CommessaName: selectedCommesse[0]?.value || '',
+        IncaricatoId: selectedCollaboratore.map(c => c.value).join(','),
+        Colore: commessaColors[selectedCommesse[0]?.value] || '#000000',
+        Progresso: event.Progresso || 0,
+        Dipendenza: event.Dipendenza || ''
+      };
+  
+      try {
+        await axios.post('http://localhost:4443/api/eventi', newEvent);
+        alert('Evento salvato con successo');
+      } catch (error) {
+        console.error('Errore nel salvataggio dell\'evento:', error);
+        alert('Errore nel salvataggio dell\'evento');
+      }
+    }
+  };
+  
+
+
   const monthEventTemplate = (props) => {
     const commessaName = Array.isArray(props.CommessaName) ? props.CommessaName[0] : props.CommessaName;
     const commessa = commesse.find(commessa => commessa.CommessaName === commessaName);

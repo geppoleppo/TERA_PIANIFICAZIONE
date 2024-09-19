@@ -146,28 +146,29 @@ const getAllEventi = () => {
 
 const createEvento = (evento) => {
     try {
-        const query = `
-            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const params = [
-            evento.Descrizione,
-            evento.Inizio,
-            evento.Fine,
-            evento.CommessaName,
-            evento.IncaricatoId,
-            evento.Colore || '',
-            evento.Progresso || 0,
-            evento.Dipendenza || ''
-        ];
-        console.log('Create Event Params:', params);
-        const result = db.prepare(query).run(params);
-        return { ...evento, Id: result.lastInsertRowid };
+      const query = `
+        INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        evento.Descrizione,
+        evento.Inizio,
+        evento.Fine,
+        evento.CommessaName,
+        evento.IncaricatoId,  // Questo campo può contenere più collaboratori separati da virgola
+        evento.Colore || '',
+        evento.Progresso || 0,
+        evento.Dipendenza || ''
+      ];
+      console.log('Create Event Params:', params);
+      const result = db.prepare(query).run(params);
+      return { ...evento, Id: result.lastInsertRowid };
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to create event.");
+      console.error("Database error:", error);
+      throw new Error("Failed to create event.");
     }
-};
+  };
+  
 
 const updateEvento = (id, evento) => {
     try {
