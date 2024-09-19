@@ -115,7 +115,10 @@ app.get('/api/eventi', (req, res) => {
         EndTime: new Date(evento.Fine),
         Subject: evento.Descrizione,
         CommessaName: evento.CommessaName,
-        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.split(',').map(id => parseInt(id)) : []
+        IncaricatoId: evento.IncaricatoId.join(','), // Converti in stringa separata da virgole
+        Colore: evento.Colore,
+        Progresso: evento.Progresso,
+        Dipendenza: evento.Dipendenza
       }));
       res.json(eventi);
     } catch (error) {
@@ -123,6 +126,7 @@ app.get('/api/eventi', (req, res) => {
       res.status(500).json({ error: error.message });
     }
   });
+  
   
 
 app.post('/api/eventi', (req, res) => {

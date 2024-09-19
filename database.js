@@ -139,7 +139,7 @@ const getAllEventi = () => {
       const query = `SELECT * FROM Eventi`;
       return db.prepare(query).all().map(evento => ({
         ...evento,
-        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.split(',').map(id => parseInt(id)) : []
+        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.toString().split(',').map(id => parseInt(id)) : [] // Conversione sicura
       }));
     } catch (error) {
       console.error("Database error:", error);

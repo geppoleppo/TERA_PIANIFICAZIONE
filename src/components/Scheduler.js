@@ -78,15 +78,16 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
       name: 'Commesse',
       allowMultiple: true,
       dataSource: commesse.map(commessa => ({
-        Id: commessa.CommessaName,
-        Nome: commessa.Descrizione,
+        CommessaName: commessa.CommessaName, // Verifica che questi campi corrispondano ai dati degli eventi
+        Descrizione: commessa.Descrizione,
         Colore: commessaColors[commessa.CommessaName] || '#000000'
       })),
-      textField: 'Nome',
-      idField: 'Id',
+      textField: 'Descrizione',
+      idField: 'CommessaName',
       colorField: 'Colore'
     }
   ];
+  
 
 
   const handleResourceChange = async (selectedResources) => {
@@ -178,12 +179,12 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
   const handleActionComplete = async (args) => {
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged') {
       const event = Array.isArray(args.data) ? args.data[0] : args.data;
-      
+  
       const newEvent = {
         Descrizione: event.Subject || 'No Description',
-        Inizio: event.StartTime.toISOString(), // Converte in stringa per il DB
-        Fine: event.EndTime.toISOString(), // Converte in stringa per il DB
-        CommessaName: selectedCommesse[0]?.value || '', // Verifica che questo sia corretto
+        Inizio: event.StartTime.toISOString(),
+        Fine: event.EndTime.toISOString(),
+        CommessaName: selectedCommesse[0]?.value || '', // Verifica che ci sia una commessa selezionata
         IncaricatoId: selectedCollaboratore.map(c => c.value).join(','), // Deve essere una stringa separata da virgole
         Colore: commessaColors[selectedCommesse[0]?.value] || '#000000',
         Progresso: event.Progresso || 0,
@@ -198,6 +199,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
       }
     }
   };
+  
   
   
 
@@ -224,7 +226,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
   const group = {
     allowGroupEdit: true,
     byGroupID: false,
-    resources: ['Collaboratori', 'Commesse'], // Verifica che i nomi siano corretti
+    resources: ['Collaboratori', 'Commesse']//, // Verifica che i nomi siano corretti
     groupOrder: 'Nome' // Rimuovi o verifica che esista nei dati delle risorse
   };
   
