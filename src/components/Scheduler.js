@@ -48,10 +48,46 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
   useEffect(() => {
     const newData = data.map(event => ({
       ...event,
-      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.map(id => parseInt(id)) : event.IncaricatoId
+      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.map(id => parseInt(id)) : event.IncaricatoId,
+      StartTime: new Date(event.Inizio), // Assicurati che Inizio sia nel formato corretto
+      EndTime: new Date(event.Fine), // Assicurati che Fine sia nel formato corretto
+      Subject: event.Descrizione || 'Nessuna descrizione',
     }));
     setModifiedData(newData);
   }, [data]);
+  
+  const resources = [
+    {
+      field: 'CollaboratoreId',
+      title: 'Collaboratori',
+      name: 'Collaboratori',
+      allowMultiple: true,
+      dataSource: resources.map(resource => ({
+        Id: resource.Id,
+        Nome: resource.Nome,
+        Colore: resource.Colore || '#000000',
+        Immagine: resource.Immagine
+      })),
+      textField: 'Nome',
+      idField: 'Id',
+      colorField: 'Colore'
+    },
+    {
+      field: 'CommessaName',
+      title: 'Commesse',
+      name: 'Commesse',
+      allowMultiple: true,
+      dataSource: commesse.map(commessa => ({
+        Id: commessa.CommessaName,
+        Nome: commessa.Descrizione,
+        Colore: commessaColors[commessa.CommessaName] || '#000000'
+      })),
+      textField: 'Nome',
+      idField: 'Id',
+      colorField: 'Colore'
+    }
+  ];
+
 
   const handleResourceChange = async (selectedResources) => {
     setSelectedResources(selectedResources);
@@ -102,18 +138,18 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
   };
   
 
-  const onActionComplete = (args) => {
-    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        const events = Array.isArray(args.data) ? args.data : [args.data];
-        events.forEach(event => {
-          event.CommessaName = Array.isArray(event.CommessaName) ? event.CommessaName[0] : event.CommessaName;
-          event.Color = commessaColors[event.CommessaName] || '#000000';
-        });
+  const onActionComplete = async (args) => {
+    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged') {
+      const eventData = Array.isArray(args.data) ? args.data[0] : args.data;
+      try {
+        const response = await axios.post('http://localhost:4443/api/eventi', eventData);
+        console.log('Evento salvato nel DB:', response.data);
+      } catch (error) {
+        console.error('Errore nel salvataggio dell\'evento:', error);
       }
-      onDataChange(args);
     }
   };
+  ;
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) return null;
@@ -143,27 +179,26 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged') {
       const event = Array.isArray(args.data) ? args.data[0] : args.data;
       
-      // Prepara i dati dell'evento da inviare al server
       const newEvent = {
         Descrizione: event.Subject || 'No Description',
-        Inizio: event.StartTime,
-        Fine: event.EndTime,
-        CommessaName: selectedCommesse[0]?.value || '',
-        IncaricatoId: selectedCollaboratore.map(c => c.value).join(','),
+        Inizio: event.StartTime.toISOString(), // Converte in stringa per il DB
+        Fine: event.EndTime.toISOString(), // Converte in stringa per il DB
+        CommessaName: selectedCommesse[0]?.value || '', // Verifica che questo sia corretto
+        IncaricatoId: selectedCollaboratore.map(c => c.value).join(','), // Deve essere una stringa separata da virgole
         Colore: commessaColors[selectedCommesse[0]?.value] || '#000000',
         Progresso: event.Progresso || 0,
         Dipendenza: event.Dipendenza || ''
       };
   
       try {
-        await axios.post('http://localhost:4443/api/eventi', newEvent);
-        alert('Evento salvato con successo');
+        const response = await axios.post('http://localhost:4443/api/eventi', newEvent);
+        console.log('Evento salvato nel DB:', response.data);
       } catch (error) {
         console.error('Errore nel salvataggio dell\'evento:', error);
-        alert('Errore nel salvataggio dell\'evento');
       }
     }
   };
+  
   
 
 
@@ -189,8 +224,10 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
   const group = {
     allowGroupEdit: true,
     byGroupID: false,
-    resources: ['Resources', 'Commesse']
+    resources: ['Collaboratori', 'Commesse'], // Verifica che i nomi siano corretti
+    groupOrder: 'Nome' // Rimuovi o verifica che esista nei dati delle risorse
   };
+  
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
     value: resource.Id,
@@ -222,64 +259,22 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources,app
 
       </div>
       <div className="scroll-container">
-        <ScheduleComponent
-          cssClass='group-editing'
-          width='100%'
-          height='650px'
-          selectedDate={new Date()}
-          currentView={currentView}
-          locale='it'
-          dateFormat='dd/MM/yyyy'
-          resourceHeaderTemplate={resourceHeaderTemplate}
-          eventSettings={{
-            dataSource: modifiedData,
-            fields: {
-              id: 'Id',
-              subject: { title: 'Task', name: 'Subject', default: '' },
-              description: { title: 'Summary', name: 'Description' },
-              startTime: { title: 'From', name: 'StartTime' },
-              endTime: { title: 'To', name: 'EndTime' },
-              color: { name: 'Color' },
-              IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
-              commessaName: { title: 'Commessa', name: 'CommessaName', validation: { required: true } }
-            },
-            template: monthEventTemplate,
-          }}
-          rowAutoHeight={true}
-          group={group}
-          actionComplete={onActionComplete}
-          viewChanged={handleViewChange}
-        >
-          <ViewsDirective>
-            <ViewDirective option='Day' allowVirtualScrolling={true} />
-            <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
-            <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
-            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} />
-          </ViewsDirective>
-          <ResourcesDirective>
-            <ResourceDirective
-              field='IncaricatoId'
-              title='Attendees'
-              name='Resources'
-              allowMultiple={true}
-              dataSource={getFilteredResources()}
-              textField='Nome'
-              idField='Id'
-              colorField='Colore'
-            />
-            <ResourceDirective
-              field='CommessaName'
-              title='Commessa'
-              name='Commesse'
-              allowMultiple={false}
-              dataSource={getFilteredCommesse()}
-              textField='Descrizione'
-              idField='CommessaName'
-              colorField='Colore'
-            />
-          </ResourcesDirective>
-          <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
-        </ScheduleComponent>
+      <ScheduleComponent
+  height='650px'
+  selectedDate={new Date()}
+  eventSettings={{ dataSource: scheduleData }}
+  group={{ resources: ['Collaboratori'] }}
+  resources={resources.map(collaboratore => ({
+    text: collaboratore.Nome,
+    id: collaboratore.Id,
+    color: collaboratore.Colore,
+    image: collaboratore.Immagine
+  }))}
+  onActionComplete={onActionComplete}
+>
+  <Inject services={[TimelineViews, Day, Week, WorkWeek, Month, Agenda]} />
+</ScheduleComponent>
+
       </div>
     </div>
   );

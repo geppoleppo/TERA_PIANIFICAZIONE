@@ -109,12 +109,21 @@ app.get('/api/commesse', (req, res) => {
 
 app.get('/api/eventi', (req, res) => {
     try {
-        const eventi = db.getAllEventi();
-        res.json(eventi);
+      const eventi = db.getAllEventi().map(evento => ({
+        Id: evento.Id,
+        StartTime: new Date(evento.Inizio),
+        EndTime: new Date(evento.Fine),
+        Subject: evento.Descrizione,
+        CommessaName: evento.CommessaName,
+        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.split(',').map(id => parseInt(id)) : []
+      }));
+      res.json(eventi);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      console.error('Errore nel recupero degli eventi:', error);
+      res.status(500).json({ error: error.message });
     }
-});
+  });
+  
 
 app.post('/api/eventi', (req, res) => {
     const { Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza } = req.body;

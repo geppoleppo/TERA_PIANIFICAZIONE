@@ -136,13 +136,17 @@ const getCommesseComuni = (collaboratoriIds) => {
 
 const getAllEventi = () => {
     try {
-        const query = `SELECT * FROM Eventi`;
-        return db.prepare(query).all();
+      const query = `SELECT * FROM Eventi`;
+      return db.prepare(query).all().map(evento => ({
+        ...evento,
+        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.split(',').map(id => parseInt(id)) : []
+      }));
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve events.");
+      console.error("Database error:", error);
+      throw new Error("Failed to retrieve events.");
     }
-};
+  };
+  
 
 const createEvento = (evento) => {
     try {
