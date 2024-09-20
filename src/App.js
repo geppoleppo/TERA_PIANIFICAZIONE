@@ -16,35 +16,46 @@ const App = () => {
 
 
   // Carica collaboratori e commesse dal DB
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const collaboratoriResponse = await axios.get('http://localhost:4443/api/collaboratori');
-        setResources(collaboratoriResponse.data);
-  
-        const commesseResponse = await axios.get('http://localhost:4443/api/commesse');
-        setCommesse(commesseResponse.data);
-  
-        const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
-        const eventiData = eventiResponse.data.map(evento => ({
-          ...evento,
-          StartTime: new Date(evento.Inizio),
-          EndTime: new Date(evento.Fine),
-          Subject: evento.Descrizione
-        }));
-        setScheduleData(eventiData);
-  
-        console.log("Collaboratori caricati:", collaboratoriResponse.data);
-        console.log("Commesse caricate:", commesseResponse.data);
-        console.log("Eventi caricati:", eventiData);
-  
-      } catch (error) {
-        console.error('Errore nel caricamento dei dati:', error);
-      }
+// Modifica nel file App.js
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const collaboratoriResponse = await axios.get('http://localhost:4443/api/collaboratori');
+      setResources(collaboratoriResponse.data);
+
+      const commesseResponse = await axios.get('http://localhost:4443/api/commesse');
+      setCommesse(commesseResponse.data);
+
+      const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
+      const eventiData = formatEventData(eventiResponse.data); // Usa la funzione formatEventData per formattare i dati
+      setScheduleData(eventiData);
+
+      console.log("Collaboratori caricati:", collaboratoriResponse.data);
+      console.log("Commesse caricate:", commesseResponse.data);
+      console.log("Eventi caricati:", eventiData);
+
+    } catch (error) {
+      console.error('Errore nel caricamento dei dati:', error);
+    }
+  };
+
+  fetchData();
+}, []);
+
+// Funzione per formattare i dati degli eventi
+const formatEventData = (eventi) => {
+  return eventi.map(evento => {
+    return {
+      Id: evento.Id,
+      Subject: evento.Subject || 'Nessun titolo',
+      Location: evento.Location || 'Nessuna posizione',
+      StartTime: new Date(evento.StartTime).toISOString(), // Converti a stringa ISO
+      EndTime: new Date(evento.EndTime).toISOString(),     // Converti a stringa ISO
+      CategoryColor: evento.CategoryColor || '#000000' // Aggiungi un colore di default se non presente
     };
-  
-    fetchData();
-  }, []);
+  });
+};
+
   
 
   // Gestisce il cambio di collaboratore
@@ -215,11 +226,10 @@ const App = () => {
   height='650px'
   selectedDate={new Date()}
   eventSettings={{ dataSource: scheduleData }}
-  group={{ 
-    allowGroupEdit: true, // Verifica questa impostazione
-    byGroupID: false, // Verifica se hai bisogno di questa opzione
-    resources: ['Collaboratori', 'Commesse'] // Controlla i nomi dei gruppi
-  }}
+  //group={{ 
+    //allowGroupEdit: true, 
+    //resources: ['Collaboratori'] 
+  //}}
   resources={[
     {
       field: 'CollaboratoreId',
@@ -230,7 +240,7 @@ const App = () => {
         Id: resource.Id,
         Nome: resource.Nome,
         Colore: resource.Colore || '#000000',
-        Immagine: resource.Immagine // Aggiungi tutti i campi necessari
+        Immagine: resource.Immagine
       })),
       textField: 'Nome',
       idField: 'Id',
@@ -241,21 +251,21 @@ const App = () => {
       title: 'Commesse',
       name: 'Commesse',
       allowMultiple: true,
-      dataSource: selectedCommesse.map(commessa => ({
-        CommessaName: commessa.value,
-        Descrizione: commessa.label,
-        Colore: commessaColors[commessa.value] || '#000000'
+      dataSource: commesse.map(commessa => ({
+        CommessaName: commessa.CommessaName,
+        Descrizione: commessa.Descrizione,
+        Colore: commessaColors[commessa.CommessaName] || '#000000'
       })),
-      textField: 'Nome',
-      idField: 'Id',
+      textField: 'CommessaName',
+      idField: 'CommessaName',
       colorField: 'Colore'
     }
   ]}
-  eventSettings={{ dataSource: scheduleData }}
   actionComplete={handleSchedulerDataChange}
 >
   <Inject services={[TimelineViews, Day, Week, WorkWeek, Month, Agenda, TimelineMonth]} />
 </ScheduleComponent>
+
 
     </div>
   );

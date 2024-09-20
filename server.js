@@ -111,21 +111,21 @@ app.get('/api/eventi', (req, res) => {
     try {
       const eventi = db.getAllEventi().map(evento => ({
         Id: evento.Id,
-        StartTime: new Date(evento.Inizio),
-        EndTime: new Date(evento.Fine),
-        Subject: evento.Descrizione,
-        CommessaName: evento.CommessaName,
-        IncaricatoId: evento.IncaricatoId.join(','), // Converti in stringa separata da virgole
-        Colore: evento.Colore,
-        Progresso: evento.Progresso,
-        Dipendenza: evento.Dipendenza
+        Subject: evento.Descrizione || 'Nessun titolo', // Cambia 'Descrizione' in 'Subject'
+        Location: 'Nessuna posizione', // Aggiungi un campo Location se necessario
+        StartTime: new Date(evento.Inizio).toISOString(), // Converti la data a stringa ISO
+        EndTime: new Date(evento.Fine).toISOString(),     // Converti la data a stringa ISO
+        CategoryColor: evento.Colore || '#1aaa55' // Usa il colore dal DB o un default
       }));
+  
       res.json(eventi);
     } catch (error) {
       console.error('Errore nel recupero degli eventi:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).send('Errore nel recupero degli eventi');
     }
   });
+  
+
   
   
 
