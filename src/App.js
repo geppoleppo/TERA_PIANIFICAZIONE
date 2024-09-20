@@ -238,7 +238,7 @@ const formatEventData = (eventi) => {
   eventSettings={{ dataSource: scheduleData }}
   group={{ 
    allowGroupEdit: true, 
-    resources: ['Collaboratori', 'Commesse'] 
+    resources: ['Collaboratori', 'CommessaName'] 
   }}
   resources={[
     {
