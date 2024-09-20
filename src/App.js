@@ -42,19 +42,29 @@ useEffect(() => {
   fetchData();
 }, []);
 
+
 // Funzione per formattare i dati degli eventi
 const formatEventData = (eventi) => {
   return eventi.map(evento => {
+    // Gestione dell'IncaricatoId come array o stringa
+    const collaboratoriId = Array.isArray(evento.IncaricatoId)
+      ? evento.IncaricatoId.map(id => parseInt(id, 10)) // Converti ogni elemento dell'array in numero
+      : evento.IncaricatoId
+      ? evento.IncaricatoId.split(',').map(id => parseInt(id, 10)) // Se è una stringa, dividila in array e converti in numeri
+      : [];
+
     return {
       Id: evento.Id,
       Subject: evento.Subject || 'Nessun titolo',
-      Location: evento.Location || 'Nessuna posizione',
       StartTime: new Date(evento.StartTime).toISOString(), // Converti a stringa ISO
       EndTime: new Date(evento.EndTime).toISOString(),     // Converti a stringa ISO
-      CategoryColor: evento.CategoryColor || '#000000' // Aggiungi un colore di default se non presente
+      CategoryColor: evento.CategoryColor || '#000000', // Aggiungi un colore di default se non presente
+      CollaboratoreId: collaboratoriId.length === 1 ? collaboratoriId[0] : collaboratoriId, // Usa solo il primo collaboratore se ce n'è solo uno, altrimenti mantieni l'array
+      CommessaName: evento.CommessaName || 'Nessuna commessa' // Assicurati che il campo CommessaName sia presente
     };
   });
 };
+
 
   
 
@@ -226,13 +236,13 @@ const formatEventData = (eventi) => {
   height='650px'
   selectedDate={new Date()}
   eventSettings={{ dataSource: scheduleData }}
-  //group={{ 
-    //allowGroupEdit: true, 
-    //resources: ['Collaboratori'] 
-  //}}
+  group={{ 
+   allowGroupEdit: true, 
+    resources: ['Collaboratori', 'Commesse'] 
+  }}
   resources={[
     {
-      field: 'CollaboratoreId',
+      field: 'CollaboratoreId', // Deve corrispondere al campo dell'evento
       title: 'Collaboratori',
       name: 'Collaboratori',
       allowMultiple: true,
@@ -265,6 +275,8 @@ const formatEventData = (eventi) => {
 >
   <Inject services={[TimelineViews, Day, Week, WorkWeek, Month, Agenda, TimelineMonth]} />
 </ScheduleComponent>
+
+
 
 
     </div>
