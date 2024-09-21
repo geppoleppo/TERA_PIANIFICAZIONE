@@ -1,26 +1,40 @@
+// Scheduler.js
 import React, { useState, useEffect } from 'react';
 import { ScheduleComponent, Day, Week, WorkWeek, Month, Agenda, TimelineViews, Inject, TimelineMonth, ResourcesDirective, ResourceDirective } from '@syncfusion/ej2-react-schedule';
 import Select from 'react-select';
 import axios from 'axios';
 import '../index.css';
 
-const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources, applyGanttFilter }) => {
+const Scheduler = ({ data = [], onDataChange, commessaColors, commesse, resources }) => {
   const [modifiedData, setModifiedData] = useState([]);
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
 
   useEffect(() => {
-    // Assicuriamoci che i dati degli eventi siano formattati correttamente
-    const newData = data.map(event => ({
-      ...event,
-      StartTime: new Date(event.StartTime),
-      EndTime: new Date(event.EndTime),
-      Subject: event.Subject || 'Nessun titolo',
-    }));
-    setModifiedData(newData);
+    if (Array.isArray(data)) {
+      const newData = data.map(event => {
+        // Verifica che StartTime e EndTime siano definiti, altrimenti imposta un valore di default
+        const startTime = event.StartTime ? new Date(event.StartTime) : new Date();
+        const endTime = event.EndTime ? new Date(event.EndTime) : new Date(startTime.getTime() + 30 * 60 * 1000); // 30 minuti dopo
+
+        return {
+          ...event,
+          StartTime: startTime,
+          EndTime: endTime,
+          Subject: event.Subject || 'Nessun titolo',
+          CollaboratoreId: Array.isArray(event.CollaboratoreId)
+            ? event.CollaboratoreId
+            : event.CollaboratoreId ? [parseInt(event.CollaboratoreId, 10)] : [],
+        };
+      });
+
+      setModifiedData(newData);
+    } else {
+      console.error("Data non è un array:", data);
+      setModifiedData([]);
+    }
   }, [data]);
 
-  // Funzione per il cambio di risorsa
   const handleResourceChange = async (selectedResources) => {
     setSelectedResources(selectedResources);
 
@@ -46,7 +60,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources, ap
 
   const handleCommessaChange = (selectedOptions) => {
     setSelectedCommesse(selectedOptions);
-    applyGanttFilter(selectedOptions);
+    // Chiama la funzione che filtra i dati del Gantt qui, se necessario.
   };
 
   return (
@@ -74,7 +88,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources, ap
         height='650px'
         selectedDate={new Date()}
         eventSettings={{ dataSource: modifiedData }}
-        group={{ resources: ['Collaboratori', 'Commesse'] }}
+        //group={{ resources: ['Collaboratori', 'Commesse'] }}
         actionComplete={(args) => onDataChange(args)}
       >
         <ResourcesDirective>

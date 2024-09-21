@@ -1,9 +1,10 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 import { TwitterPicker } from 'react-color';
-import { ScheduleComponent, Day, Week, WorkWeek, Month, Agenda, TimelineViews, Inject, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import './App.css';
+import Scheduler from './components/Scheduler';
 
 const App = () => {
   const [resources, setResources] = useState([]); // Collaboratori
@@ -14,81 +15,67 @@ const App = () => {
   const [scheduleData, setScheduleData] = useState([]);  // Dati per lo scheduler
   const [ganttData, setGanttData] = useState([]);        // Dati per il Gantt
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const collaboratoriResponse = await axios.get('http://localhost:4443/api/collaboratori');
+        setResources(collaboratoriResponse.data);
 
-  // Carica collaboratori e commesse dal DB
-// Modifica nel file App.js
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const collaboratoriResponse = await axios.get('http://localhost:4443/api/collaboratori');
-      setResources(collaboratoriResponse.data);
+        const commesseResponse = await axios.get('http://localhost:4443/api/commesse');
+        setCommesse(commesseResponse.data);
 
-      const commesseResponse = await axios.get('http://localhost:4443/api/commesse');
-      setCommesse(commesseResponse.data);
+        const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
+        const eventiData = formatEventData(eventiResponse.data); // Usa la funzione formatEventData per formattare i dati
+        setScheduleData(eventiData);
 
-      const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
-      const eventiData = formatEventData(eventiResponse.data); // Usa la funzione formatEventData per formattare i dati
-      setScheduleData(eventiData);
+        console.log("Collaboratori caricati:", collaboratoriResponse.data);
+        console.log("Commesse caricate:", commesseResponse.data);
+        console.log("Eventi caricati:", eventiData);
 
-      console.log("Collaboratori caricati:", collaboratoriResponse.data);
-      console.log("Commesse caricate:", commesseResponse.data);
-      console.log("Eventi caricati:", eventiData);
+      } catch (error) {
+        console.error('Errore nel caricamento dei dati:', error);
+      }
+    };
 
-    } catch (error) {
-      console.error('Errore nel caricamento dei dati:', error);
-    }
+    fetchData();
+  }, []);
+
+  const formatEventData = (eventi) => {
+    return eventi.map(evento => {
+      const collaboratoriId = Array.isArray(evento.IncaricatoId)
+        ? evento.IncaricatoId.map(id => parseInt(id, 10))
+        : evento.IncaricatoId
+        ? evento.IncaricatoId.split(',').map(id => parseInt(id, 10))
+        : [];
+
+      return {
+        Id: evento.Id,
+        Subject: evento.Subject || 'Nessun titolo',
+        StartTime: new Date(evento.StartTime).toISOString(),
+        EndTime: new Date(evento.EndTime).toISOString(),
+        CategoryColor: evento.CategoryColor || '#000000',
+        CollaboratoreId: collaboratoriId, // Ora CollaboratoreId è sempre un array
+        CommessaName: evento.CommessaName || 'Nessuna commessa'
+      };
+    });
   };
 
-  fetchData();
-}, []);
-
-
-// Funzione per formattare i dati degli eventi
-const formatEventData = (eventi) => {
-  return eventi.map(evento => {
-    // Gestione dell'IncaricatoId come array o stringa
-    const collaboratoriId = Array.isArray(evento.IncaricatoId)
-      ? evento.IncaricatoId.map(id => parseInt(id, 10)) // Converti ogni elemento dell'array in numero
-      : evento.IncaricatoId
-      ? evento.IncaricatoId.split(',').map(id => parseInt(id, 10)) // Se è una stringa, dividila in array e converti in numeri
-      : [];
-
-    return {
-      Id: evento.Id,
-      Subject: evento.Subject || 'Nessun titolo',
-      StartTime: new Date(evento.StartTime).toISOString(), // Converti a stringa ISO
-      EndTime: new Date(evento.EndTime).toISOString(),     // Converti a stringa ISO
-      CategoryColor: evento.CategoryColor || '#000000', // Aggiungi un colore di default se non presente
-      CollaboratoreId: collaboratoriId.length === 1 ? collaboratoriId[0] : collaboratoriId, // Usa solo il primo collaboratore se ce n'è solo uno, altrimenti mantieni l'array
-      CommessaName: evento.CommessaName || 'Nessuna commessa' // Assicurati che il campo CommessaName sia presente
-    };
-  });
-};
-
-
-  
-
-  // Gestisce il cambio di collaboratore
   const handleCollaboratoreChange = async (selectedOptions) => {
     setSelectedCollaboratore(selectedOptions);
 
     if (!selectedOptions || selectedOptions.length === 0) {
-      setSelectedCommesse([]);  // Nessun collaboratore selezionato, nessuna commessa
+      setSelectedCommesse([]); 
       return;
     }
 
     try {
-      // Array di Promises per ottenere le commesse di ciascun collaboratore
       const requests = selectedOptions.map(option => axios.get(`http://localhost:4443/api/commesse/collaboratore/${option.value}`));
-
-      // Risolviamo tutte le promesse
       const responses = await Promise.all(requests);
 
-      // Uniamo tutte le commesse e troviamo quelle comuni
       const commesseAssociate = responses
         .map(response => response.data.map(commessa => commessa.CommessaName))
         .reduce((commune, commessaList) => {
-          return commune.filter(commessa => commessaList.includes(commessa));  // Filtra le commesse comuni a tutti i collaboratori
+          return commune.filter(commessa => commessaList.includes(commessa));
         });
 
       const commesseVisualizzabili = commesseAssociate.map(commessaName => ({
@@ -103,7 +90,6 @@ const formatEventData = (eventi) => {
     }
   };
 
-  // Gestisce il cambio di colore
   const handleColorChange = (color, commessaName) => {
     setCommessaColors(prevColors => ({
       ...prevColors,
@@ -111,7 +97,6 @@ const formatEventData = (eventi) => {
     }));
   };
 
-  // Salva le commesse e i colori per il collaboratore selezionato
   const saveSelectedCommesse = async () => {
     try {
       const commesseToSave = selectedCommesse.map(option => ({
@@ -133,53 +118,6 @@ const formatEventData = (eventi) => {
     }
   };
 
-  // Definisci la funzione handleSchedulerDataChange
-  const handleSchedulerDataChange = (args) => {
-    // Controlla se args è valido
-    if (!args) {
-      console.error('Nessun argomento fornito:', args);
-      return;
-    }
-  
-    // Controlla il tipo di richiesta
-    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (!args.data) {
-        console.error('Dati dello scheduler non validi:', args);
-        return;
-      }
-  
-      // Gestisci i dati dell'evento creato, modificato o eliminato
-      console.log('Dati dello scheduler aggiornati:', args.data);
-      
-      setScheduleData((prevData) => {
-        // Se args.data è un array, potrebbe essere un elenco di eventi da aggiungere o aggiornare
-        if (Array.isArray(args.data)) {
-          return args.data;
-        }
-  
-        // Se è un singolo evento, aggiorna o aggiungi l'evento nel set di dati
-        const updatedData = prevData.map((event) =>
-          event.Id === args.data.Id ? args.data : event
-        );
-  
-        // Se non è stato trovato, aggiungi l'evento
-        if (!updatedData.some((event) => event.Id === args.data.Id)) {
-          updatedData.push(args.data);
-        }
-  
-        return updatedData;
-      });
-    } else {
-      // Ignora altri tipi di azioni, come 'dateNavigate', 'viewNavigate', ecc.
-      console.log('Azione dello scheduler non richiede aggiornamento dei dati:', args.requestType);
-    }
-  };
-  
-    // Debug dei dati prima del rendering
-    console.log("Risorse per Scheduler:", resources);
-    console.log("Commesse per Scheduler:", selectedCommesse);
-    console.log("Dati degli eventi per Scheduler:", scheduleData);
-
   return (
     <div className="app-container">
       {/* Prima sezione: Associazione commesse ai collaboratori */}
@@ -188,33 +126,31 @@ const formatEventData = (eventi) => {
 
         {/* Seleziona il collaboratore */}
         <Select
-  isMulti
-  options={resources
-    .filter(resource => resource && resource.Id && resource.Nome) // Filtra solo collaboratori validi
-    .map(collaboratore => ({
-      value: collaboratore.Id,
-      label: collaboratore.Nome
-    }))}
-  value={selectedCollaboratore}
-  onChange={handleCollaboratoreChange}
-  placeholder="Seleziona collaboratori"
-/>
-
+          isMulti
+          options={resources
+            .filter(resource => resource && resource.Id && resource.Nome)
+            .map(collaboratore => ({
+              value: collaboratore.Id,
+              label: collaboratore.Nome
+            }))}
+          value={selectedCollaboratore}
+          onChange={handleCollaboratoreChange}
+          placeholder="Seleziona collaboratori"
+        />
 
         {/* Seleziona le commesse per il collaboratore */}
         <Select
-  isMulti
-  options={commesse
-    .filter(commessa => commessa && commessa.CommessaName && commessa.Descrizione) // Filtra solo commesse valide
-    .map(commessa => ({
-      value: commessa.CommessaName,
-      label: commessa.CommessaName
-    }))}
-  value={selectedCommesse}
-  onChange={setSelectedCommesse}
-  placeholder="Seleziona commesse"
-/>
-
+          isMulti
+          options={commesse
+            .filter(commessa => commessa && commessa.CommessaName && commessa.Descrizione)
+            .map(commessa => ({
+              value: commessa.CommessaName,
+              label: commessa.CommessaName
+            }))}
+          value={selectedCommesse}
+          onChange={setSelectedCommesse}
+          placeholder="Seleziona commesse"
+        />
 
         {/* Seleziona il colore per ogni commessa */}
         {selectedCommesse.map((commessa, index) => (
@@ -231,54 +167,14 @@ const formatEventData = (eventi) => {
         <button onClick={saveSelectedCommesse}>Salva</button>
       </div>
 
-      {/* Scheduler Syncfusion */}
-      <ScheduleComponent
-  height='650px'
-  selectedDate={new Date()}
-  eventSettings={{ dataSource: scheduleData }}
-  group={{ 
-   allowGroupEdit: true, 
-    resources: ['Collaboratori', 'CommessaName'] 
-  }}
-  resources={[
-    {
-      field: 'CollaboratoreId', // Deve corrispondere al campo dell'evento
-      title: 'Collaboratori',
-      name: 'Collaboratori',
-      allowMultiple: true,
-      dataSource: resources.map(resource => ({
-        Id: resource.Id,
-        Nome: resource.Nome,
-        Colore: resource.Colore || '#000000',
-        Immagine: resource.Immagine
-      })),
-      textField: 'Nome',
-      idField: 'Id',
-      colorField: 'Colore'
-    },
-    {
-      field: 'CommessaName',
-      title: 'Commesse',
-      name: 'Commesse',
-      allowMultiple: true,
-      dataSource: commesse.map(commessa => ({
-        CommessaName: commessa.CommessaName,
-        Descrizione: commessa.Descrizione,
-        Colore: commessaColors[commessa.CommessaName] || '#000000'
-      })),
-      textField: 'CommessaName',
-      idField: 'CommessaName',
-      colorField: 'Colore'
-    }
-  ]}
-  actionComplete={handleSchedulerDataChange}
->
-  <Inject services={[TimelineViews, Day, Week, WorkWeek, Month, Agenda, TimelineMonth]} />
-</ScheduleComponent>
-
-
-
-
+      {/* Scheduler */}
+      <Scheduler
+        data={Array.isArray(scheduleData) ? scheduleData : []} // Controlla se scheduleData è un array
+        onDataChange={setScheduleData}
+        commessaColors={commessaColors}
+        commesse={commesse}
+        resources={resources}
+      />
     </div>
   );
 };

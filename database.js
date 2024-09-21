@@ -134,18 +134,20 @@ const getCommesseComuni = (collaboratoriIds) => {
 };
 
 
+// database.js
 const getAllEventi = () => {
     try {
       const query = `SELECT * FROM Eventi`;
       return db.prepare(query).all().map(evento => ({
         ...evento,
-        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.toString().split(',').map(id => parseInt(id)) : [] // Conversione sicura
+        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.toString().split(',').map(id => parseInt(id, 10)) : [] // Conversione sicura in array di numeri
       }));
     } catch (error) {
       console.error("Database error:", error);
       throw new Error("Failed to retrieve events.");
     }
-  };
+};
+
   
 
 const createEvento = (evento) => {
