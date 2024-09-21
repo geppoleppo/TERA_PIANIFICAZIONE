@@ -5,7 +5,7 @@ const db = require('./database');  // Importa tutte le funzioni dal modulo datab
 const mysql = require('mysql');
 
 const app = express();
-const port = 4001;
+const port = 4443;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -71,6 +71,21 @@ app.get('/api/collaboratori', (req, res) => {
     }
 });
 
+app.post('/api/commesse-comuni', (req, res) => {
+    const { collaboratoriIds } = req.body;
+  
+    try {
+      const commesseComuni = db.getCommesseComuni(collaboratoriIds);
+      res.json(commesseComuni);
+    } catch (error) {
+      console.error('Errore nel recupero delle commesse comuni:', error);
+      res.status(500).json({ error: 'Errore nel recupero delle commesse comuni' });
+    }
+  });
+  
+
+
+
 app.get('/api/commesse/collaboratore/:id', (req, res) => {
     const collaboratoreId = req.params.id;
     try {
@@ -94,21 +109,45 @@ app.get('/api/commesse', (req, res) => {
 
 app.get('/api/eventi', (req, res) => {
     try {
-        const eventi = db.getAllEventi();
-        res.json(eventi);
+      const eventi = db.getAllEventi().map(evento => ({
+        Id: evento.Id,
+        Subject: evento.Descrizione || 'Nessun titolo', // Cambia 'Descrizione' in 'Subject'
+        Location: 'Nessuna posizione', // Aggiungi un campo Location se necessario
+        StartTime: new Date(evento.Inizio).toISOString(), // Converti la data a stringa ISO
+        EndTime: new Date(evento.Fine).toISOString(),     // Converti la data a stringa ISO
+        CategoryColor: evento.Colore || '#1aaa55' // Usa il colore dal DB o un default
+      }));
+  
+      res.json(eventi);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      console.error('Errore nel recupero degli eventi:', error);
+      res.status(500).send('Errore nel recupero degli eventi');
     }
-});
+  });
+  
+
+  
+  
 
 app.post('/api/eventi', (req, res) => {
+    const { Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza } = req.body;
     try {
-        const newEvento = db.createEvento(req.body);
-        res.json(newEvento);
+      const newEvento = db.createEvento({
+        Descrizione,
+        Inizio,
+        Fine,
+        CommessaName,
+        IncaricatoId,
+        Colore,
+        Progresso,
+        Dipendenza
+      });
+      res.status(201).json(newEvento);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Errore nel salvataggio dell\'evento' });
     }
-});
+  });
+  
 
 app.put('/api/eventi/:id', (req, res) => {
     try {
@@ -141,18 +180,24 @@ app.post('/api/update-sqlite', (req, res) => {
 // Endpoint per associare una commessa a un collaboratore
 app.post('/api/associate-commesse-collaboratore', (req, res) => {
     const { collaboratoreId, commesse } = req.body;
-  
-    console.log('Dati ricevuti:', { collaboratoreId, commesse });
-  
+
     try {
-      commesse.forEach(commessa => {
-        console.log(`Associare commessa ${commessa.commessaName} a collaboratore ${collaboratoreId} con colore ${commessa.colore}`);
-        db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName, commessa.colore);
-      });
-      res.status(200).send('Commesse associate correttamente');
+        // Rimuovi tutte le commesse associate al collaboratore
+        db.removeAllCommesseFromCollaboratore(collaboratoreId);
+
+        // Associa le nuove commesse al collaboratore
+        commesse.forEach(commessa => {
+            db.associateCommessaCollaboratore(collaboratoreId, commessa.commessaName, commessa.colore);
+        });
+
+        res.status(200).send('Commesse associate correttamente');
     } catch (error) {
-      console.error('Errore nell\'associazione delle commesse:', error);
-      res.status(500).send('Errore nel salvataggio delle commesse');
+        console.error('Errore nell\'associazione delle commesse:', error);
+        res.status(500).send('Errore nel salvataggio delle commesse');
     }
-  });
-  
+});
+
+
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});

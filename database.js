@@ -35,16 +35,14 @@ const createTables = () => {
 
     // Nuova tabella per tracciare le commesse associate ai collaboratori
     const queryCommesseCollaboratori = `
-    CREATE TABLE IF NOT EXISTS CommesseCollaboratori (
-        CollaboratoreID INTEGER NOT NULL,
-        CommessaName TEXT NOT NULL,
-        Colore TEXT NOT NULL,  -- Nuovo campo per il colore
-        PRIMARY KEY (CollaboratoreID, CommessaName),
-        FOREIGN KEY (CollaboratoreID) REFERENCES Collaboratori(Id),
-        FOREIGN KEY (CommessaName) REFERENCES Commesse(CommessaName)
-    );
-`;
-
+        CREATE TABLE IF NOT EXISTS CommesseCollaboratori (
+            CollaboratoreID INTEGER NOT NULL,
+            CommessaName TEXT NOT NULL,
+            PRIMARY KEY (CollaboratoreID, CommessaName),
+            FOREIGN KEY (CollaboratoreID) REFERENCES Collaboratori(Id),
+            FOREIGN KEY (CommessaName) REFERENCES Commesse(CommessaName)
+        );
+    `;
 
     // Esegui le query per creare le tabelle
     db.prepare(queryCollaboratori).run();
@@ -104,56 +102,77 @@ const getCommesseByCollaboratore = (collaboratoreId) => {
 };
 
 
+// Associa nuove commesse al collaboratore (già esistente)
 const associateCommessaCollaboratore = (collaboratoreId, commessaName, colore) => {
     try {
-      const query = `
-          INSERT OR REPLACE INTO CommesseCollaboratori (CollaboratoreID, CommessaName, Colore)
-          VALUES (?, ?, ?);
-      `;
-      db.prepare(query).run(collaboratoreId, commessaName, colore);
-      console.log(`Commessa ${commessaName} associata al collaboratore ${collaboratoreId} con colore ${colore}`);
+        const query = `
+            INSERT OR REPLACE INTO CommesseCollaboratori (CollaboratoreID, CommessaName, Colore)
+            VALUES (?, ?, ?);
+        `;
+        db.prepare(query).run(collaboratoreId, commessaName, colore);
+        console.log(`Commessa ${commessaName} associata al collaboratore ${collaboratoreId}`);
     } catch (error) {
-      console.error("Errore nell'associare la commessa al collaboratore:", error);
-      throw new Error("Failed to associate project to collaborator.");
+        console.error("Errore nell'associare la commessa al collaboratore:", error);
+        throw new Error("Failed to associate project to collaborator.");
     }
-  };
-  
-  
+};
+const getCommesseComuni = (collaboratoriIds) => {
+    try {
+        const placeholders = collaboratoriIds.map(() => '?').join(',');
+        const query = `
+            SELECT CommessaName
+            FROM CommesseCollaboratori
+            WHERE CollaboratoreID IN (${placeholders})
+            GROUP BY CommessaName
+            HAVING COUNT(DISTINCT CollaboratoreID) = ?;
+        `;
+        return db.prepare(query).all(...collaboratoriIds, collaboratoriIds.length);
+    } catch (error) {
+        console.error("Errore nel recupero delle commesse comuni:", error);
+        throw new Error("Failed to retrieve common commesse.");
+    }
+};
+
 
 const getAllEventi = () => {
     try {
-        const query = `SELECT * FROM Eventi`;
-        return db.prepare(query).all();
+      const query = `SELECT * FROM Eventi`;
+      return db.prepare(query).all().map(evento => ({
+        ...evento,
+        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.toString().split(',').map(id => parseInt(id)) : [] // Conversione sicura
+      }));
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve events.");
+      console.error("Database error:", error);
+      throw new Error("Failed to retrieve events.");
     }
-};
+  };
+  
 
 const createEvento = (evento) => {
     try {
-        const query = `
-            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const params = [
-            evento.Descrizione,
-            evento.Inizio,
-            evento.Fine,
-            evento.CommessaName,
-            evento.IncaricatoId,
-            evento.Colore || '',
-            evento.Progresso || 0,
-            evento.Dipendenza || ''
-        ];
-        console.log('Create Event Params:', params);
-        const result = db.prepare(query).run(params);
-        return { ...evento, Id: result.lastInsertRowid };
+      const query = `
+        INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        evento.Descrizione,
+        evento.Inizio,
+        evento.Fine,
+        evento.CommessaName,
+        evento.IncaricatoId,  // Questo campo può contenere più collaboratori separati da virgola
+        evento.Colore || '',
+        evento.Progresso || 0,
+        evento.Dipendenza || ''
+      ];
+      console.log('Create Event Params:', params);
+      const result = db.prepare(query).run(params);
+      return { ...evento, Id: result.lastInsertRowid };
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to create event.");
+      console.error("Database error:", error);
+      throw new Error("Failed to create event.");
     }
-};
+  };
+  
 
 const updateEvento = (id, evento) => {
     try {
@@ -212,6 +231,22 @@ const updateCommesse = (commesse) => {
 };
 
 
+// Rimuovi tutte le commesse associate a un collaboratore
+const removeAllCommesseFromCollaboratore = (collaboratoreId) => {
+    try {
+        const query = `
+            DELETE FROM CommesseCollaboratori
+            WHERE CollaboratoreID = ?;
+        `;
+        db.prepare(query).run(collaboratoreId);
+        console.log(`Tutte le commesse rimosse per il collaboratore ${collaboratoreId}`);
+    } catch (error) {
+        console.error("Errore nella rimozione delle commesse dal collaboratore:", error);
+        throw new Error("Failed to remove all projects from collaborator.");
+    }
+};
+
+
 
 
 
@@ -228,6 +263,7 @@ const getSelectedCommesse = () => {
 
 
 module.exports = {
+    getCommesseComuni,
     getAllCollaboratori,
     getAllCommesse,
     getCommesseByCollaboratore,
@@ -237,5 +273,6 @@ module.exports = {
     updateEvento,
     deleteEvento,
     updateCommesse,
-    getSelectedCommesse
+    getSelectedCommesse,
+    removeAllCommesseFromCollaboratore
 };
