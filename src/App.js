@@ -165,9 +165,12 @@ const updateLocalData = useCallback((data, type) => {
 
   const selectedCommessaNames = selectedCommesse.map(c => c.value);
   const filteredScheduleData = updatedScheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+  
   setScheduleData(filteredScheduleData);
+  // Sincronizza direttamente ganttData con scheduleData
   setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
 }, [scheduleData, commessaColors, selectedCommesse, commesse]);
+
 
 // Funzione per aggiornare i dati dal database
 const reloadSchedulerData = useCallback(async () => {
@@ -216,9 +219,10 @@ const handleSchedulerDataChange = useCallback(debounce(async (args) => {
       break;
   }
 
-  // Ricarica i dati dal database per garantire la coerenza
-  reloadSchedulerData();
-}, 300), [port, updateLocalData, reloadSchedulerData]);
+  // Aggiorna Gantt con gli stessi dati di scheduleData
+  setGanttData(scheduleData.map(event => formatGanttData(event, commesse, commessaColors)));
+}, 300), [port, updateLocalData, scheduleData, commesse, commessaColors, reloadSchedulerData]);
+
 
 const handleGanttDataChange = useCallback(debounce((args) => {
   const task = convertToStandardFormat(args.data[0]);

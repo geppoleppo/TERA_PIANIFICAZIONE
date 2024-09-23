@@ -8,17 +8,17 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
     const verifyData = data.map(event => {
       const startDate = new Date(event.StartDate || event.StartTime);
       const endDate = new Date(event.EndDate || event.EndTime);
-
+  
       const isValidStartDate = !isNaN(startDate.getTime());
       const isValidEndDate = !isNaN(endDate.getTime());
-
+  
       // Mappa gli ID dei collaboratori ai loro nomi
       const incaricatoNames = Array.isArray(event.IncaricatoId)
         ? event.IncaricatoId.map(id => resources.find(r => r.Id === id)?.Nome || id).join(', ')
         : event.IncaricatoId
           ? resources.find(r => r.Id === event.IncaricatoId)?.Nome || event.IncaricatoId
           : '';
-
+  
       return {
         Id: event.Id || '',
         TaskName: event.TaskName || event.Subject || '',
@@ -34,9 +34,10 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
         Dipendenza: event.Dipendenza || ''
       };
     });
-
+  
     setFilteredData(verifyData);
   }, [data, commessaColors, resources]);
+  
 
   const taskbarTemplate = (props) => {
     const commessaColor = props.Color || '#000000';
