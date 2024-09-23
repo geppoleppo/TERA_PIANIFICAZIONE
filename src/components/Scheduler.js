@@ -1,102 +1,248 @@
+// Scheduler.js
 import React, { useState, useEffect } from 'react';
-import { ScheduleComponent, Day, Week, WorkWeek, Month, Agenda, TimelineViews, Inject, TimelineMonth, ResourcesDirective, ResourceDirective } from '@syncfusion/ej2-react-schedule';
 import Select from 'react-select';
 import axios from 'axios';
+import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
 import '../index.css';
 
-const Scheduler = ({ data = [], onDataChange, commessaColors, commesse, resources }) => {
-  const [modifiedData, setModifiedData] = useState([]);
-  const [selectedResources, setSelectedResources] = useState([]);
-  const [selectedCommesse, setSelectedCommesse] = useState([]);
+// Caricamento della localizzazione italiana
+import { loadCldr, L10n } from '@syncfusion/ej2-base';
+import * as numberingSystems from 'cldr-data/main/it/numbers.json';
+import * as gregorian from 'cldr-data/main/it/ca-gregorian.json';
+import * as timeZoneNames from 'cldr-data/main/it/timeZoneNames.json';
+import * as weekData from 'cldr-data/supplemental/weekData.json';
+loadCldr(numberingSystems, gregorian, timeZoneNames, weekData);
 
-
-// Scheduler.js
-useEffect(() => {
-  if (Array.isArray(data)) {
-      const newData = data.map(event => {
-          // Log di controllo per ogni evento
-          console.log("Evento nel Scheduler:", event);
-
-          return {
-              ...event,
-              StartTime: new Date(event.StartTime),
-              EndTime: new Date(event.EndTime),
-              Subject: event.Subject || 'Nessun titolo',
-              CollaboratoreId: event.CollaboratoreId // Usa l'array dei collaboratori ID
-          };
-      });
-      setModifiedData(newData);
-  } else {
-      console.error("Data non è un array:", data);
-      setModifiedData([]);
+L10n.load({
+  'it': {
+    'schedule': {
+      'day': 'Giorno',
+      'week': 'Settimana',
+      'workWeek': 'Settimana lavorativa',
+      'month': 'Mese',
+      'agenda': 'Agenda',
+      'today': 'Oggi',
+      'noEvents': 'Nessun evento',
+      'allDay': 'Tutto il giorno',
+      'start': 'Inizio',
+      'end': 'Fine',
+      'more': 'di più',
+      'close': 'Chiudi',
+      'cancel': 'Annulla',
+      'noTitle': '(Nessun titolo)',
+    },
   }
-}, [data]);
+});
 
+const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) => {
+  const [selectedResources, setSelectedResources] = useState([]);
+  const [filteredCommesse, setFilteredCommesse] = useState([]);
+  const [selectedCommesse, setSelectedCommesse] = useState([]);
+  const [currentView, setCurrentView] = useState('Month');
+  const [modifiedData, setModifiedData] = useState([]);
 
-  const handleResourceChange = async (selectedResources) => {
-    setSelectedResources(selectedResources);
+  useEffect(() => {
+    const newData = data.map(event => ({
+      ...event,
+      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.map(id => parseInt(id)) : event.IncaricatoId
+    }));
+    setModifiedData(newData);
+  }, [data]);
 
-    if (selectedResources && selectedResources.length > 0) {
-      const resourceIds = selectedResources.map(option => option.value);
+  // Funzione per gestire la selezione dei collaboratori e caricare le commesse comuni
+  const handleResourceChange = async (selectedOptions) => {
+    setSelectedResources(selectedOptions.map(option => option.value));
 
-      try {
-        const response = await axios.post('http://localhost:4443/api/commesse-comuni', {
-          collaboratoriIds: resourceIds
+    if (!selectedOptions || selectedOptions.length === 0) {
+      setFilteredCommesse([]); 
+      return;
+    }
+
+    try {
+      // Chiamata API per ottenere le commesse comuni ai collaboratori selezionati
+      const requests = selectedOptions.map(option => axios.get(`http://localhost:4443/api/commesse/collaboratore/${option.value}`));
+      const responses = await Promise.all(requests);
+
+      const commesseAssociate = responses
+        .map(response => response.data.map(commessa => commessa.CommessaName))
+        .reduce((commune, commessaList) => {
+          return commune.filter(commessa => commessaList.includes(commessa));
         });
-        const commesseComuni = response.data.map(commessa => ({
-          value: commessa.CommessaName,
-          label: commessa.CommessaName
-        }));
-        setSelectedCommesse(commesseComuni);
-      } catch (error) {
-        console.error('Errore nel caricamento delle commesse comuni:', error);
-      }
-    } else {
-      setSelectedCommesse([]);
+
+      const commesseVisualizzabili = commesseAssociate.map(commessaName => ({
+        value: commessaName,
+        label: commessaName
+      }));
+
+      setFilteredCommesse(commesseVisualizzabili);
+
+    } catch (error) {
+      console.error('Errore nel caricamento delle commesse per i collaboratori selezionati:', error);
     }
   };
 
   const handleCommessaChange = (selectedOptions) => {
-    setSelectedCommesse(selectedOptions);
-    // Chiama la funzione che filtra i dati del Gantt qui, se necessario.
+    setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
   };
+
+  const getFilteredResources = () => {
+    if (selectedResources.length === 0) return resources;
+    return resources.filter(resource => selectedResources.includes(resource.Id));
+  };
+
+  const getFilteredCommesse = () => {
+    if (selectedCommesse.length === 0) return commesse;
+    return commesse.filter(commessa => selectedCommesse.includes(commessa.CommessaName));
+  };
+
+  const onActionComplete = (args) => {
+    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
+      if (args.data) {
+        const events = Array.isArray(args.data) ? args.data : [args.data];
+        events.forEach(event => {
+          event.CommessaName = Array.isArray(event.CommessaName) ? event.CommessaName[0] : event.CommessaName;
+          event.Color = commessaColors[event.CommessaName] || '#000000';
+        });
+      }
+      onDataChange(args);
+    }
+  };
+
+  const resourceHeaderTemplate = (props) => {
+    if (!props.resourceData) return null;
+    const commessa = props.resourceData.Descrizione;
+    if (commessa) {
+      return (
+        <div className="template-wrap">
+          <div className="commessa-details">
+            <div className="commessa-name">{commessa}</div>
+          </div>
+        </div>
+      );
+    }
+
+    const resource = resources.find(resource => resource.Id === props.resourceData.Id);
+    return (
+      <div className="template-wrap">
+        {resource && <img src={resource.Immagine} alt={resource.Nome} className="resource-image" />}
+        <div className="resource-details">
+          <div className="resource-name">{resource ? resource.Nome : ''}</div>
+        </div>
+      </div>
+    );
+  };
+
+  const monthEventTemplate = (props) => {
+    const commessaName = Array.isArray(props.CommessaName) ? props.CommessaName[0] : props.CommessaName;
+    const commessa = commesse.find(commessa => commessa.CommessaName === commessaName);
+
+    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
+    const subjectText = props.Subject ? props.Subject : '';
+    const color = commessaColors[commessaName] || '#000000';
+
+    return (
+      <div className="template-wrap" style={{ backgroundColor: color }}>
+        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
+      </div>
+    );
+  };
+
+  const handleViewChange = (args) => {
+    setCurrentView(args.currentView);
+  };
+
+  const group = {
+    allowGroupEdit: true,
+    byGroupID: false,
+    resources: ['Resources', 'Commesse']
+  };
+
+  const resourceOptions = resources.map(resource => ({
+    value: resource.Id,
+    label: resource.Nome
+  }));
 
   return (
     <div>
-      {/* Filtri per selezione risorse e commesse */}
       <div className="filter-selectors">
+        {/* Selezione Collaboratori */}
+        <Select
+          isMulti
+          options={resourceOptions}
+          onChange={handleResourceChange}
+          placeholder="Seleziona Collaboratori"
+          className="filter-dropdown"
+        />
+        {/* Selezione Commesse Comuni ai Collaboratori */}
+        <Select
+          isMulti
+          options={filteredCommesse}
+          onChange={handleCommessaChange}
+          value={filteredCommesse.filter(commessa => selectedCommesse.includes(commessa.value))}
+          placeholder="Seleziona Commesse"
+          className="filter-dropdown"
+        />
       </div>
-
-      {/* Scheduler component */}
-      <ScheduleComponent
-        height='650px'
-        selectedDate={new Date()}
-        eventSettings={{ dataSource: modifiedData }}
-        group={{ resources: ['Collaboratori'] }}
-        actionComplete={(args) => onDataChange(args)}
-      >
-<ResourcesDirective>
-    <ResourceDirective
-        field='CollaboratoreId'
-        title='Collaboratori'
-        name='Collaboratori'
-        CommessaName ='CommessaName'
-        allowMultiple={true}
-        dataSource={resources.map(resource => ({
-            Id: resource.Id,
-            Nome: resource.Nome,
-            Colore: resource.Colore,
-            Immagine: resource.Immagine,
-            CommessaName:resource.CommessaName
-        }))}
-        textField='Nome'
-        idField='Id'
-        colorField='Colore'
-    />
-</ResourcesDirective>
-
-        <Inject services={[Day, Week, WorkWeek, Month, Agenda, TimelineViews, TimelineMonth]} />
-      </ScheduleComponent>
+      <div className="scroll-container">
+        <ScheduleComponent
+          cssClass='group-editing'
+          width='100%'
+          height='650px'
+          selectedDate={new Date()}
+          currentView={currentView}
+          locale='it'
+          dateFormat='dd/MM/yyyy'
+          resourceHeaderTemplate={resourceHeaderTemplate}
+          eventSettings={{
+            dataSource: modifiedData,
+            fields: {
+              id: 'Id',
+              subject: { title: 'Task', name: 'Subject', default: '' },
+              description: { title: 'Summary', name: 'Description' },
+              startTime: { title: 'From', name: 'StartTime' },
+              endTime: { title: 'To', name: 'EndTime' },
+              color: { name: 'Color' },
+              IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
+              commessaName: { title: 'Commessa', name: 'CommessaName', validation: { required: true } }
+            },
+            template: monthEventTemplate,
+          }}
+          rowAutoHeight={true}
+          group={group}
+          actionComplete={onActionComplete}
+          viewChanged={handleViewChange}
+        >
+          <ViewsDirective>
+            <ViewDirective option='Day' allowVirtualScrolling={true} />
+            <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
+            <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
+            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} />
+          </ViewsDirective>
+          <ResourcesDirective>
+            <ResourceDirective
+              field='IncaricatoId'
+              title='Attendees'
+              name='Resources'
+              allowMultiple={true}
+              dataSource={getFilteredResources()} // Filtra le risorse
+              textField='Nome'
+              idField='Id'
+              colorField='Colore'
+            />
+            <ResourceDirective
+              field='CommessaName'
+              title='Commessa'
+              name='Commesse'
+              allowMultiple={false}
+              dataSource={getFilteredCommesse()} // Filtra le commesse
+              textField='Descrizione'
+              idField='CommessaName'
+              colorField='Colore'
+            />
+          </ResourcesDirective>
+          <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
+        </ScheduleComponent>
+      </div>
     </div>
   );
 };
