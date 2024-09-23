@@ -72,7 +72,7 @@ useEffect(() => {
         height='650px'
         selectedDate={new Date()}
         eventSettings={{ dataSource: modifiedData }}
-        //group={{ resources: ['CommessaName'] }}
+        group={{ resources: ['Collaboratori'] }}
         actionComplete={(args) => onDataChange(args)}
       >
 <ResourcesDirective>
@@ -80,12 +80,14 @@ useEffect(() => {
         field='CollaboratoreId'
         title='Collaboratori'
         name='Collaboratori'
+        CommessaName ='CommessaName'
         allowMultiple={true}
         dataSource={resources.map(resource => ({
             Id: resource.Id,
             Nome: resource.Nome,
             Colore: resource.Colore,
-            Immagine: resource.Immagine
+            Immagine: resource.Immagine,
+            CommessaName:resource.CommessaName
         }))}
         textField='Nome'
         idField='Id'
