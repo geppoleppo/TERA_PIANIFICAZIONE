@@ -33,26 +33,12 @@ const createTables = () => {
         );
     `;
 
-    // Nuova tabella per tracciare le commesse associate ai collaboratori
-    const queryCommesseCollaboratori = `
-        CREATE TABLE IF NOT EXISTS CommesseCollaboratori (
-            CollaboratoreID INTEGER NOT NULL,
-            CommessaName TEXT NOT NULL,
-            PRIMARY KEY (CollaboratoreID, CommessaName),
-            FOREIGN KEY (CollaboratoreID) REFERENCES Collaboratori(Id),
-            FOREIGN KEY (CommessaName) REFERENCES Commesse(CommessaName)
-        );
-    `;
-
-    // Esegui le query per creare le tabelle
     db.prepare(queryCollaboratori).run();
     db.prepare(queryCommesse).run();
     db.prepare(queryEventi).run();
-    db.prepare(queryCommesseCollaboratori).run(); // Nuova tabella per associare commesse e collaboratori
 };
 
 createTables();
-
 
 const verifyTables = () => {
     try {
@@ -64,7 +50,6 @@ const verifyTables = () => {
 };
 
 verifyTables();
-
 
 const getAllCollaboratori = () => {
     try {
@@ -86,122 +71,40 @@ const getAllCommesse = () => {
     }
 };
 
-const getCommesseByCollaboratore = (collaboratoreId) => {
-    try {
-        const query = `
-            SELECT C.CommessaName, C.Descrizione, C.Colore
-            FROM Commesse C
-            JOIN CommesseCollaboratori CC ON C.CommessaName = CC.CommessaName
-            WHERE CC.CollaboratoreID = ?;
-        `;
-        return db.prepare(query).all(collaboratoreId);
-    } catch (error) {
-        console.error("Errore nel recupero delle commesse per il collaboratore:", error);
-        throw new Error("Failed to retrieve projects for collaborator.");
-    }
-};
-
-
-// Associa nuove commesse al collaboratore (già esistente)
-const associateCommessaCollaboratore = (collaboratoreId, commessaName, colore) => {
-    try {
-        const query = `
-            INSERT OR REPLACE INTO CommesseCollaboratori (CollaboratoreID, CommessaName, Colore)
-            VALUES (?, ?, ?);
-        `;
-        db.prepare(query).run(collaboratoreId, commessaName, colore);
-        console.log(`Commessa ${commessaName} associata al collaboratore ${collaboratoreId}`);
-    } catch (error) {
-        console.error("Errore nell'associare la commessa al collaboratore:", error);
-        throw new Error("Failed to associate project to collaborator.");
-    }
-};
-const getCommesseComuni = (collaboratoriIds) => {
-    try {
-        const placeholders = collaboratoriIds.map(() => '?').join(',');
-        const query = `
-            SELECT CommessaName
-            FROM CommesseCollaboratori
-            WHERE CollaboratoreID IN (${placeholders})
-            GROUP BY CommessaName
-            HAVING COUNT(DISTINCT CollaboratoreID) = ?;
-        `;
-        return db.prepare(query).all(...collaboratoriIds, collaboratoriIds.length);
-    } catch (error) {
-        console.error("Errore nel recupero delle commesse comuni:", error);
-        throw new Error("Failed to retrieve common commesse.");
-    }
-};
-
-
-// database.js
 const getAllEventi = () => {
     try {
         const query = `SELECT * FROM Eventi`;
-        const eventi = db.prepare(query).all(); // Recupera tutti gli eventi dal DB
-
-        // Stampa tutti gli eventi recuperati
-        console.log("Eventi recuperati dal database:", eventi);
-
-        // Formattazione di CollaboratoreId
-        const eventiFormattati = eventi.map(evento => {
-            // Conversione di CollaboratoreId da stringa a array di numeri
-            const collaboratoriArray = evento.CollaboratoreId 
-                ? evento.CollaboratoreId.split(',').map(id => parseInt(id.trim(), 10)) 
-                : [];
-
-            // Log del valore formattato
-            console.log("CollaboratoreId come array:", collaboratoriArray);
-
-            return {
-                ...evento,
-                CollaboratoreId: collaboratoriArray // Sostituiamo il campo con l'array di numeri
-            };
-        });
-
-        // Stampa gli eventi formattati prima di restituirli
-        console.log("Eventi formattati:", eventiFormattati);
-
-        return eventiFormattati;
-
+        return db.prepare(query).all();
     } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to retrieve events.");
     }
 };
 
-
-
-
-
-
-  
-
 const createEvento = (evento) => {
     try {
-      const query = `
-        INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const params = [
-        evento.Descrizione,
-        evento.Inizio,
-        evento.Fine,
-        evento.CommessaName,
-        evento.IncaricatoId,  // Questo campo può contenere più collaboratori separati da virgola
-        evento.Colore || '',
-        evento.Progresso || 0,
-        evento.Dipendenza || ''
-      ];
-      console.log('Create Event Params:', params);
-      const result = db.prepare(query).run(params);
-      return { ...evento, Id: result.lastInsertRowid };
+        const query = `
+            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        const params = [
+            evento.Descrizione,
+            evento.Inizio,
+            evento.Fine,
+            evento.CommessaName,
+            evento.IncaricatoId,
+            evento.Colore || '',
+            evento.Progresso || 0,
+            evento.Dipendenza || ''
+        ];
+        console.log('Create Event Params:', params);
+        const result = db.prepare(query).run(params);
+        return { ...evento, Id: result.lastInsertRowid };
     } catch (error) {
-      console.error("Database error:", error);
-      throw new Error("Failed to create event.");
+        console.error("Database error:", error);
+        throw new Error("Failed to create event.");
     }
-  };
-  
+};
 
 const updateEvento = (id, evento) => {
     try {
@@ -242,43 +145,19 @@ const deleteEvento = (id) => {
 
 const updateCommesse = (commesse) => {
     try {
-        const insert = db.prepare(`
-            INSERT OR REPLACE INTO Commesse (CommessaName, Descrizione, Colore)
-            VALUES (?, ?, ?)
-        `);
+        db.prepare(`DELETE FROM Commesse`).run();
+        const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore) VALUES (?, ?, ?)`);
         const insertMany = db.transaction((commesse) => {
             for (const commessa of commesse) {
-                insert.run(commessa.NOME, commessa.Descrizione || 'Descrizione non disponibile', commessa.Colore || '#FFFFFF');
+                insert.run(commessa.descrizione, commessa.descrizione, commessa.colore);
             }
         });
         insertMany(commesse);
-        console.log('Commesse aggiornate con successo in SQLite');
     } catch (error) {
-        console.error("Errore nell'aggiornamento delle commesse in SQLite:", error);
+        console.error("Database error:", error);
         throw new Error("Failed to update commesse.");
     }
 };
-
-
-// Rimuovi tutte le commesse associate a un collaboratore
-const removeAllCommesseFromCollaboratore = (collaboratoreId) => {
-    try {
-        const query = `
-            DELETE FROM CommesseCollaboratori
-            WHERE CollaboratoreID = ?;
-        `;
-        db.prepare(query).run(collaboratoreId);
-        console.log(`Tutte le commesse rimosse per il collaboratore ${collaboratoreId}`);
-    } catch (error) {
-        console.error("Errore nella rimozione delle commesse dal collaboratore:", error);
-        throw new Error("Failed to remove all projects from collaborator.");
-    }
-};
-
-
-
-
-
 
 const getSelectedCommesse = () => {
     try {
@@ -290,18 +169,13 @@ const getSelectedCommesse = () => {
     }
 };
 
-
 module.exports = {
-    getCommesseComuni,
     getAllCollaboratori,
     getAllCommesse,
-    getCommesseByCollaboratore,
-    associateCommessaCollaboratore,
     getAllEventi,
     createEvento,
     updateEvento,
     deleteEvento,
     updateCommesse,
-    getSelectedCommesse,
-    removeAllCommesseFromCollaboratore
+    getSelectedCommesse
 };
