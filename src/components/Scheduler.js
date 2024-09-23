@@ -72,7 +72,7 @@ useEffect(() => {
         height='650px'
         selectedDate={new Date()}
         eventSettings={{ dataSource: modifiedData }}
-        group={{ resources: ['Collaboratori', 'CommessaName'] }}
+        //group={{ resources: ['CommessaName'] }}
         actionComplete={(args) => onDataChange(args)}
       >
 <ResourcesDirective>

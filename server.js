@@ -115,7 +115,9 @@ app.get('/api/eventi', (req, res) => {
         Location: 'Nessuna posizione', // Aggiungi un campo Location se necessario
         StartTime: new Date(evento.Inizio).toISOString(), // Converti la data a stringa ISO
         EndTime: new Date(evento.Fine).toISOString(),     // Converti la data a stringa ISO
-        CategoryColor: evento.Colore || '#1aaa55' // Usa il colore dal DB o un default
+        CategoryColor: evento.Colore || '#1aaa55', // Usa il colore dal DB o un default
+        CollaboratoreId:evento.CollaboratoreId 
+
       }));
   
       res.json(eventi);

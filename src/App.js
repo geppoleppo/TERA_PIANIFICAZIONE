@@ -42,6 +42,10 @@ const App = () => {
 
 // App.js
 const formatEventData = (eventi) => {
+  console.log("EVENTI:", {
+    eventi
+});
+
   return eventi.map(evento => {
       // Verifica che CollaboratoreId sia un array o una stringa e lo converte
       const collaboratoriId = Array.isArray(evento.CollaboratoreId)
@@ -52,7 +56,6 @@ const formatEventData = (eventi) => {
 
       // Log di controllo
       console.log("Evento formattato:", {
-          ...evento,
           CollaboratoreId: collaboratoriId
       });
 
