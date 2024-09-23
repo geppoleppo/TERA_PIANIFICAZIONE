@@ -102,5 +102,5 @@ app.post('/api/update-sqlite', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running at http://192.168.1.201:${port}`);
+    console.log(`Server running at http://localhost:${port}`);
 });
