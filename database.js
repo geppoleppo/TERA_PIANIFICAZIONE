@@ -137,16 +137,43 @@ const getCommesseComuni = (collaboratoriIds) => {
 // database.js
 const getAllEventi = () => {
     try {
-      const query = `SELECT * FROM Eventi`;
-      return db.prepare(query).all().map(evento => ({
-        ...evento,
-        IncaricatoId: evento.IncaricatoId ? evento.IncaricatoId.toString().split(',').map(id => parseInt(id, 10)) : [] // Conversione sicura in array di numeri
-      }));
+        const query = `SELECT * FROM Eventi`;
+        const eventi = db.prepare(query).all(); // Recupera tutti gli eventi dal DB
+
+        // Stampa tutti gli eventi recuperati
+        console.log("Eventi recuperati dal database:", eventi);
+
+        // Formattazione di CollaboratoreId
+        const eventiFormattati = eventi.map(evento => {
+            // Conversione di CollaboratoreId da stringa a array di numeri
+            const collaboratoriArray = evento.CollaboratoreId 
+                ? evento.CollaboratoreId.split(',').map(id => parseInt(id.trim(), 10)) 
+                : [];
+
+            // Log del valore formattato
+            console.log("CollaboratoreId come array:", collaboratoriArray);
+
+            return {
+                ...evento,
+                CollaboratoreId: collaboratoriArray // Sostituiamo il campo con l'array di numeri
+            };
+        });
+
+        // Stampa gli eventi formattati prima di restituirli
+        console.log("Eventi formattati:", eventiFormattati);
+
+        return eventiFormattati;
+
     } catch (error) {
-      console.error("Database error:", error);
-      throw new Error("Failed to retrieve events.");
+        console.error("Database error:", error);
+        throw new Error("Failed to retrieve events.");
     }
 };
+
+
+
+
+
 
   
 

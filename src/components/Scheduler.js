@@ -1,4 +1,3 @@
-// Scheduler.js
 import React, { useState, useEffect } from 'react';
 import { ScheduleComponent, Day, Week, WorkWeek, Month, Agenda, TimelineViews, Inject, TimelineMonth, ResourcesDirective, ResourceDirective } from '@syncfusion/ej2-react-schedule';
 import Select from 'react-select';
@@ -10,30 +9,29 @@ const Scheduler = ({ data = [], onDataChange, commessaColors, commesse, resource
   const [selectedResources, setSelectedResources] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
 
-  useEffect(() => {
-    if (Array.isArray(data)) {
+
+// Scheduler.js
+useEffect(() => {
+  if (Array.isArray(data)) {
       const newData = data.map(event => {
-        // Verifica che StartTime e EndTime siano definiti, altrimenti imposta un valore di default
-        const startTime = event.StartTime ? new Date(event.StartTime) : new Date();
-        const endTime = event.EndTime ? new Date(event.EndTime) : new Date(startTime.getTime() + 30 * 60 * 1000); // 30 minuti dopo
+          // Log di controllo per ogni evento
+          console.log("Evento nel Scheduler:", event);
 
-        return {
-          ...event,
-          StartTime: startTime,
-          EndTime: endTime,
-          Subject: event.Subject || 'Nessun titolo',
-          CollaboratoreId: Array.isArray(event.CollaboratoreId)
-            ? event.CollaboratoreId
-            : event.CollaboratoreId ? [parseInt(event.CollaboratoreId, 10)] : [],
-        };
+          return {
+              ...event,
+              StartTime: new Date(event.StartTime),
+              EndTime: new Date(event.EndTime),
+              Subject: event.Subject || 'Nessun titolo',
+              CollaboratoreId: event.CollaboratoreId // Usa l'array dei collaboratori ID
+          };
       });
-
       setModifiedData(newData);
-    } else {
+  } else {
       console.error("Data non è un array:", data);
       setModifiedData([]);
-    }
-  }, [data]);
+  }
+}, [data]);
+
 
   const handleResourceChange = async (selectedResources) => {
     setSelectedResources(selectedResources);
@@ -67,20 +65,6 @@ const Scheduler = ({ data = [], onDataChange, commessaColors, commesse, resource
     <div>
       {/* Filtri per selezione risorse e commesse */}
       <div className="filter-selectors">
-        <Select
-          isMulti
-          options={resources.map(resource => ({ value: resource.Id, label: resource.Nome }))}
-          onChange={handleResourceChange}
-          placeholder="Seleziona Collaboratori"
-          className="filter-dropdown"
-        />
-        <Select
-          isMulti
-          options={commesse.map(commessa => ({ value: commessa.CommessaName, label: commessa.CommessaName }))}
-          onChange={handleCommessaChange}
-          placeholder="Seleziona Commesse"
-          className="filter-dropdown"
-        />
       </div>
 
       {/* Scheduler component */}
@@ -88,40 +72,27 @@ const Scheduler = ({ data = [], onDataChange, commessaColors, commesse, resource
         height='650px'
         selectedDate={new Date()}
         eventSettings={{ dataSource: modifiedData }}
-        //group={{ resources: ['Collaboratori', 'Commesse'] }}
+        group={{ resources: ['Collaboratori', 'CommessaName'] }}
         actionComplete={(args) => onDataChange(args)}
       >
-        <ResourcesDirective>
-          <ResourceDirective
-            field='CollaboratoreId'
-            title='Collaboratori'
-            name='Collaboratori'
-            allowMultiple={true}
-            dataSource={resources.map(resource => ({
-              Id: resource.Id,
-              Nome: resource.Nome,
-              Colore: resource.Colore,
-              Immagine: resource.Immagine
-            }))}
-            textField='Nome'
-            idField='Id'
-            colorField='Colore'
-          />
-          <ResourceDirective
-            field='CommessaName'
-            title='Commesse'
-            name='Commesse'
-            allowMultiple={true}
-            dataSource={commesse.map(commessa => ({
-              CommessaName: commessa.CommessaName,
-              Descrizione: commessa.Descrizione,
-              Colore: commessaColors[commessa.CommessaName] || '#000000'
-            }))}
-            textField='CommessaName'
-            idField='CommessaName'
-            colorField='Colore'
-          />
-        </ResourcesDirective>
+<ResourcesDirective>
+    <ResourceDirective
+        field='CollaboratoreId'
+        title='Collaboratori'
+        name='Collaboratori'
+        allowMultiple={true}
+        dataSource={resources.map(resource => ({
+            Id: resource.Id,
+            Nome: resource.Nome,
+            Colore: resource.Colore,
+            Immagine: resource.Immagine
+        }))}
+        textField='Nome'
+        idField='Id'
+        colorField='Colore'
+    />
+</ResourcesDirective>
+
         <Inject services={[Day, Week, WorkWeek, Month, Agenda, TimelineViews, TimelineMonth]} />
       </ScheduleComponent>
     </div>

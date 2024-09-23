@@ -40,25 +40,52 @@ const App = () => {
     fetchData();
   }, []);
 
-  const formatEventData = (eventi) => {
-    return eventi.map(evento => {
-      const collaboratoriId = Array.isArray(evento.IncaricatoId)
-        ? evento.IncaricatoId.map(id => parseInt(id, 10))
-        : evento.IncaricatoId
-        ? evento.IncaricatoId.split(',').map(id => parseInt(id, 10))
-        : [];
+// App.js
+const formatEventData = (eventi) => {
+  return eventi.map(evento => {
+      // Verifica che CollaboratoreId sia un array o una stringa e lo converte
+      const collaboratoriId = Array.isArray(evento.CollaboratoreId)
+          ? evento.CollaboratoreId
+          : evento.CollaboratoreId
+          ? evento.CollaboratoreId.split(',').map(id => parseInt(id.trim(), 10))
+          : [];
+
+      // Log di controllo
+      console.log("Evento formattato:", {
+          ...evento,
+          CollaboratoreId: collaboratoriId
+      });
 
       return {
-        Id: evento.Id,
-        Subject: evento.Subject || 'Nessun titolo',
-        StartTime: new Date(evento.StartTime).toISOString(),
-        EndTime: new Date(evento.EndTime).toISOString(),
-        CategoryColor: evento.CategoryColor || '#000000',
-        CollaboratoreId: collaboratoriId, // Ora CollaboratoreId è sempre un array
-        CommessaName: evento.CommessaName || 'Nessuna commessa'
+          Id: evento.Id,
+          Subject: evento.Subject || 'Nessun titolo',
+          StartTime: new Date(evento.StartTime).toISOString(),
+          EndTime: new Date(evento.EndTime).toISOString(),
+          CategoryColor: evento.CategoryColor || '#000000',
+          CollaboratoreId: collaboratoriId, // Passiamo l'array formattato
+          CommessaName: evento.CommessaName || 'Nessuna commessa'
       };
-    });
+  });
+};
+
+
+// App.js
+useEffect(() => {
+  const fetchData = async () => {
+      try {
+          const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
+          const eventiData = formatEventData(eventiResponse.data); // Usa la funzione formatEventData per formattare i dati
+          console.log("Eventi formattati ricevuti dal backend:", eventiData); // Log nel frontend
+          setScheduleData(eventiData);
+      } catch (error) {
+          console.error('Errore nel caricamento dei dati:', error);
+      }
   };
+
+  fetchData();
+}, []);
+
+
 
   const handleCollaboratoreChange = async (selectedOptions) => {
     setSelectedCollaboratore(selectedOptions);
@@ -169,12 +196,13 @@ const App = () => {
 
       {/* Scheduler */}
       <Scheduler
-        data={Array.isArray(scheduleData) ? scheduleData : []} // Controlla se scheduleData è un array
-        onDataChange={setScheduleData}
-        commessaColors={commessaColors}
-        commesse={commesse}
-        resources={resources}
-      />
+    data={Array.isArray(scheduleData) ? scheduleData : []}
+    onDataChange={setScheduleData}
+    commessaColors={commessaColors}
+    commesse={commesse}
+    resources={resources}
+/>
+
     </div>
   );
 };
