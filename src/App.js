@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Scheduler from './components/Scheduler';
 import Gantt from './components/Gantt';
 import axios from 'axios';
@@ -6,7 +6,14 @@ import Select from 'react-select';
 import { TwitterPicker } from 'react-color';
 import './App.css';
 
-
+// Funzione debounce definita qui
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
 const App = () => {
   const [scheduleData, setScheduleData] = useState([]);
@@ -16,7 +23,6 @@ const App = () => {
   const [commesse, setCommesse] = useState([]);
   const [mysqlCommesse, setMysqlCommesse] = useState([]);
   const [selectedCommesse, setSelectedCommesse] = useState([]);
-  const [ganttKey, setGanttKey] = useState(0);
   const port = 3001;
 
   useEffect(() => {
@@ -28,10 +34,10 @@ const App = () => {
           mysqlCommesseResponse,
           selectedCommesseResponse
         ] = await Promise.all([
-          axios.get('http://localhost:'+port+'/api/collaboratori'),
-          axios.get('http://localhost:'+port+'/api/commesse'),
-          axios.get('http://localhost:'+port+'/api/commesse-mysql'),
-          axios.get('http://localhost:'+port+'/api/commesse')
+          axios.get('http://localhost:' + port + '/api/collaboratori'),
+          axios.get('http://localhost:' + port + '/api/commesse'),
+          axios.get('http://localhost:' + port + '/api/commesse-mysql'),
+          axios.get('http://localhost:' + port + '/api/commesse')
         ]);
 
         const staticCollaboratori = collaboratoriResponse.data;
@@ -40,7 +46,7 @@ const App = () => {
           value: commessa.NOME,
           label: commessa.NOME
         }));
-        const selectedCommesse = commesseResponse.data.map(commessa => ({
+        const selectedCommesse = selectedCommesseResponse.data.map(commessa => ({
           value: commessa.CommessaName,
           label: commessa.Descrizione,
           color: commessa.Colore
@@ -57,7 +63,7 @@ const App = () => {
         }, {});
         setCommessaColors(colors);
 
-        const eventiResponse = await axios.get('http://localhost:'+port+'/api/eventi');
+        const eventiResponse = await axios.get('http://localhost:' + port + '/api/eventi');
         const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, colors));
 
         setScheduleData(staticSchedulerData);
@@ -68,14 +74,14 @@ const App = () => {
     };
 
     fetchData();
-  }, []);
+  }, [port]);
 
-  const handleCommesseChange = (selectedOptions) => {
+  const handleCommesseChange = useCallback((selectedOptions) => {
     setSelectedCommesse(selectedOptions);
     applyGanttFilter(selectedOptions);
-  };
+  }, [scheduleData, commesse, commessaColors]);
 
-  const handleColorChange = (color, index) => {
+  const handleColorChange = useCallback((color, index) => {
     const updatedSelectedCommesse = [...selectedCommesse];
     updatedSelectedCommesse[index].color = color.hex;
     setSelectedCommesse(updatedSelectedCommesse);
@@ -85,7 +91,7 @@ const App = () => {
       return acc;
     }, {});
     setCommessaColors(colors);
-  };
+  }, [selectedCommesse]);
 
   const saveSelectedCommesse = async () => {
     try {
@@ -93,9 +99,9 @@ const App = () => {
         descrizione: option.label,
         colore: option.color || '#000000'
       }));
-      await axios.post('http://localhost:'+port+'/api/update-sqlite', { commesse: commesseToSave });
+      await axios.post('http://localhost:' + port + '/api/update-sqlite', { commesse: commesseToSave });
       // Fetch updated data and update state
-      const updatedCommesseResponse = await axios.get('http://localhost:'+port+'/api/commesse');
+      const updatedCommesseResponse = await axios.get('http://localhost:' + port + '/api/commesse');
       setCommesse(updatedCommesseResponse.data);
 
       // Filter scheduler data based on selected commesse
@@ -108,7 +114,7 @@ const App = () => {
     }
   };
 
-  const removeCommessa = (index) => {
+  const removeCommessa = useCallback((index) => {
     const updatedSelectedCommesse = [...selectedCommesse];
     updatedSelectedCommesse.splice(index, 1);
     setSelectedCommesse(updatedSelectedCommesse);
@@ -124,105 +130,108 @@ const App = () => {
     const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
     setScheduleData(filteredScheduleData);
     setGanttData(filteredScheduleData.map(event => formatGanttData(event, commesse, colors)));
-  };
+  }, [selectedCommesse, scheduleData, commesse, commessaColors]);
 
-  const applyGanttFilter = (selectedOptions) => {
+  const applyGanttFilter = useCallback((selectedOptions) => {
     const selectedCommessaNames = selectedOptions.map(option => option.value);
     const filteredGanttData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
     setGanttData(filteredGanttData.map(event => formatGanttData(event, commesse, commessaColors)));
-  };
+  }, [scheduleData, commesse, commessaColors]);
 
-  const debounce = (func, wait) => {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
-    };
-  };
 
-  const handleSchedulerDataChange = debounce((args) => {
-    const event = convertToStandardFormat(args.data[0]);
+// Aggiornamento della funzione updateLocalData
+const updateLocalData = useCallback((data, type) => {
+  let updatedScheduleData = [...scheduleData];
 
-    switch (args.requestType) {
-      case 'eventCreated':
-        axios.post('http://localhost:'+port+'/api/eventi', event)
-          .then(response => {
-            updateLocalData(response.data, 'add');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to create event:', error));
-        break;
-      case 'eventChanged':
-        axios.put(`http://localhost:'+port+'/api/eventi/${event.Id}`, event)
-          .then(() => {
-            updateLocalData(event, 'update');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to update event:', error));
-        break;
-      case 'eventRemoved':
-        axios.delete(`http://localhost:'+port+'/api/eventi/${event.Id}`)
-          .then(() => {
-            updateLocalData(event, 'delete');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to delete event:', error));
-        break;
-      default:
-        break;
-    }
-  }, 300);
-
-  const handleGanttDataChange = debounce((args) => {
-    const task = convertToStandardFormat(args.data[0]);
-
-    switch (args.requestType) {
-      case 'eventChanged':
-        axios.put(`http://localhost:'+port+'/api/eventi/${task.Id}`, task)
-          .then(() => {
-            updateLocalData(task, 'update');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to update task:', error));
-        break;
-      case 'eventRemoved':
-        axios.delete(`http://localhost:'+port+'/api/eventi/${task.Id}`)
-          .then(() => {
-            updateLocalData(task, 'delete');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to delete task:', error));
-        break;
-      default:
-        break;
-    }
-  }, 300);
-
-  const updateLocalData = (data, type) => {
-    let updatedScheduleData = [...scheduleData];
-    switch (type) {
-      case 'add':
+  switch (type) {
+    case 'add':
+      // Aggiungi il nuovo evento solo se non è già presente
+      if (!updatedScheduleData.find(item => item.Id === data.Id)) {
         updatedScheduleData = [...updatedScheduleData, formatEventForScheduler(data, commessaColors)];
-        break;
-      case 'update':
-        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? formatEventForScheduler(data, commessaColors) : item);
-        break;
-      case 'delete':
-        updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
-        break;
-      default:
-        break;
-    }
-    const selectedCommessaNames = selectedCommesse.map(c => c.value);
-    const filteredScheduleData = updatedScheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-    setScheduleData(filteredScheduleData);
-    setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
-    setGanttKey(prevKey => prevKey + 1); // Increment key to force re-render
-  };
+      }
+      break;
+    case 'update':
+      updatedScheduleData = updatedScheduleData.map(item => 
+        item.Id === data.Id ? formatEventForScheduler(data, commessaColors) : item
+      );
+      break;
+    case 'delete':
+      updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
+      break;
+    default:
+      break;
+  }
 
-  const reloadSchedulerData = async () => {
+  const selectedCommessaNames = selectedCommesse.map(c => c.value);
+  const filteredScheduleData = updatedScheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+  setScheduleData(filteredScheduleData);
+  setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
+}, [scheduleData, commessaColors, selectedCommesse, commesse]);
+
+// Modifica di handleSchedulerDataChange
+const handleSchedulerDataChange = useCallback(debounce(async (args) => {
+  const event = convertToStandardFormat(args.data[0]);
+
+  switch (args.requestType) {
+    case 'eventCreated':
+      try {
+        const response = await axios.post(`http://localhost:${port}/api/eventi`, event);
+        updateLocalData(response.data, 'add');
+      } catch (error) {
+        console.error('Failed to create event:', error);
+      }
+      break;
+    case 'eventChanged':
+      try {
+        await axios.put(`http://localhost:${port}/api/eventi/${event.Id}`, event);
+        updateLocalData(event, 'update');
+      } catch (error) {
+        console.error('Failed to update event:', error);
+      }
+      break;
+    case 'eventRemoved':
+      try {
+        await axios.delete(`http://localhost:${port}/api/eventi/${event.Id}`);
+        updateLocalData(event, 'delete');
+      } catch (error) {
+        console.error('Failed to delete event:', error);
+      }
+      break;
+    default:
+      break;
+  }
+}, 300), [port, updateLocalData]);
+
+const handleGanttDataChange = useCallback(debounce((args) => {
+  const task = convertToStandardFormat(args.data[0]);
+
+  switch (args.requestType) {
+    case 'eventChanged':
+      axios.put(`http://localhost:${port}/api/eventi/${task.Id}`, task)
+        .then(() => {
+          updateLocalData(task, 'update');
+          reloadSchedulerData();
+        })
+        .catch(error => console.error('Failed to update task:', error));
+      break;
+    case 'eventRemoved':
+      axios.delete(`http://localhost:${port}/api/eventi/${task.Id}`)
+        .then(() => {
+          updateLocalData(task, 'delete');
+          reloadSchedulerData();
+        })
+        .catch(error => console.error('Failed to delete task:', error));
+      break;
+    default:
+      break;
+  }
+}, 300), [port]);
+
+
+
+  const reloadSchedulerData = useCallback(async () => {
     try {
-      const eventiResponse = await axios.get('http://localhost:'+port+'/api/eventi');
+      const eventiResponse = await axios.get('http://localhost:' + port + '/api/eventi');
       const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
 
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
@@ -232,9 +241,9 @@ const App = () => {
     } catch (error) {
       console.error('Errore nel caricamento dei dati:', error);
     }
-  };
+  }, [commessaColors, selectedCommesse, commesse, port]);
 
-  const convertToStandardFormat = (event) => {
+  const convertToStandardFormat = useCallback((event) => {
     const startDate = event.StartTime || event.StartDate || new Date().toISOString();
     const endDate = event.EndTime || event.EndDate || new Date().toISOString();
 
@@ -252,7 +261,7 @@ const App = () => {
       Dipendenza: event.Predecessor || '',
       Colore: event.Color || commessaColors[event.CommessaName] || '#000000'
     };
-  };
+  }, [commessaColors]);
 
   const formatEventForScheduler = (event, colors) => {
     return {
@@ -314,7 +323,6 @@ const App = () => {
         commesse={commesse}
       />
       <Gantt
-        key={ganttKey}
         data={ganttData}
         onDataChange={handleGanttDataChange}
         commessaColors={commessaColors}
