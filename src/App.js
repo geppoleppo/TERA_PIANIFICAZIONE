@@ -140,6 +140,7 @@ const App = () => {
 
 
 // Aggiornamento della funzione updateLocalData
+// Funzione per aggiornare localmente i dati
 const updateLocalData = useCallback((data, type) => {
   let updatedScheduleData = [...scheduleData];
 
@@ -168,7 +169,21 @@ const updateLocalData = useCallback((data, type) => {
   setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
 }, [scheduleData, commessaColors, selectedCommesse, commesse]);
 
-// Modifica di handleSchedulerDataChange
+// Funzione per aggiornare i dati dal database
+const reloadSchedulerData = useCallback(async () => {
+  try {
+    const eventiResponse = await axios.get(`http://localhost:${port}/api/eventi`);
+    const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
+
+    const selectedCommessaNames = selectedCommesse.map(c => c.value);
+    const filteredScheduleData = staticSchedulerData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+    setScheduleData(filteredScheduleData);
+    setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
+  } catch (error) {
+    console.error('Errore nel caricamento dei dati:', error);
+  }
+}, [commessaColors, selectedCommesse, commesse, port]);
+
 const handleSchedulerDataChange = useCallback(debounce(async (args) => {
   const event = convertToStandardFormat(args.data[0]);
 
@@ -200,7 +215,10 @@ const handleSchedulerDataChange = useCallback(debounce(async (args) => {
     default:
       break;
   }
-}, 300), [port, updateLocalData]);
+
+  // Ricarica i dati dal database per garantire la coerenza
+  reloadSchedulerData();
+}, 300), [port, updateLocalData, reloadSchedulerData]);
 
 const handleGanttDataChange = useCallback(debounce((args) => {
   const task = convertToStandardFormat(args.data[0]);
@@ -210,6 +228,7 @@ const handleGanttDataChange = useCallback(debounce((args) => {
       axios.put(`http://localhost:${port}/api/eventi/${task.Id}`, task)
         .then(() => {
           updateLocalData(task, 'update');
+          // Ricarica i dati dopo l'aggiornamento
           reloadSchedulerData();
         })
         .catch(error => console.error('Failed to update task:', error));
@@ -218,6 +237,7 @@ const handleGanttDataChange = useCallback(debounce((args) => {
       axios.delete(`http://localhost:${port}/api/eventi/${task.Id}`)
         .then(() => {
           updateLocalData(task, 'delete');
+          // Ricarica i dati dopo la cancellazione
           reloadSchedulerData();
         })
         .catch(error => console.error('Failed to delete task:', error));
@@ -225,23 +245,8 @@ const handleGanttDataChange = useCallback(debounce((args) => {
     default:
       break;
   }
-}, 300), [port]);
+}, 300), [port, reloadSchedulerData]);
 
-
-
-  const reloadSchedulerData = useCallback(async () => {
-    try {
-      const eventiResponse = await axios.get('http://localhost:' + port + '/api/eventi');
-      const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
-
-      const selectedCommessaNames = selectedCommesse.map(c => c.value);
-      const filteredScheduleData = staticSchedulerData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-      setScheduleData(filteredScheduleData);
-      setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
-    } catch (error) {
-      console.error('Errore nel caricamento dei dati:', error);
-    }
-  }, [commessaColors, selectedCommesse, commesse, port]);
 
   const convertToStandardFormat = useCallback((event) => {
     const startDate = event.StartTime || event.StartDate || new Date().toISOString();
