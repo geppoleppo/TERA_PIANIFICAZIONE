@@ -18,6 +18,13 @@ const App = () => {
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [ganttKey, setGanttKey] = useState(0);
   const port = 3001;
+  // Definisci lo stato per i collaboratori selezionati
+const [selectedResources, setSelectedResources] = useState([]);
+
+const handleResourceSelection = (selectedOptions) => {
+  const selectedIds = selectedOptions.map(option => option.value);
+  setSelectedResources(selectedIds);
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,15 +96,27 @@ const App = () => {
 
   const saveSelectedCommesse = async () => {
     try {
-      const commesseToSave = selectedCommesse.map(option => ({
-        descrizione: option.label,
-        colore: option.color || '#000000'
-      }));
-      await axios.post(`http://localhost:`+port+`/api/update-sqlite`, { commesse: commesseToSave });
+      console.log('Commesse selezionate da salvare:', selectedCommesse);
+      const commesseToSave = selectedCommesse.map(option => {
+        console.log('Collaboratori selezionati:', selectedResources); // Log per verificare i collaboratori
+        let newCollaboratori = selectedResources.join(',');
+  
+        return {
+          descrizione: option.label, // Verifica che label non sia undefined
+          colore: option.color || '#000000', // Assicurati che color sia definito
+          collaboratori: newCollaboratori // Collaboratori aggiornati
+        };
+      });
+  
+      // Verifica i dati che stai inviando al server
+      console.log('Commesse pronte per essere inviate al server:', commesseToSave);
+  
+      await axios.post(`http://localhost:${port}/api/update-sqlite`, { commesse: commesseToSave });
+  
       // Fetch updated data and update state
-      const updatedCommesseResponse = await axios.get(`http://localhost:`+port+`/api/commesse`);
+      const updatedCommesseResponse = await axios.get(`http://localhost:${port}/api/commesse`);
       setCommesse(updatedCommesseResponse.data);
-
+  
       // Filter scheduler data based on selected commesse
       const selectedCommessaNames = selectedCommesse.map(c => c.value);
       const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
@@ -107,6 +126,33 @@ const App = () => {
       console.error('Failed to update SQLite:', error);
     }
   };
+  
+  
+  
+  
+  
+// Funzione per ottenere le commesse comuni
+const getCommonCommesse = async () => {
+  try {
+    if (selectedResources.length === 0) return;
+
+    const commesseResponse = await axios.get(`http://localhost:${port}/api/commesse`);
+    const allCommesse = commesseResponse.data;
+
+    const commonCommesse = allCommesse.filter(commessa => {
+      const commessaCollaboratori = commessa.Collaboratori ? commessa.Collaboratori.split(',') : [];
+      return selectedResources.every(id => commessaCollaboratori.includes(id.toString()));
+    });
+
+    setScheduleData(commonCommesse);
+    setGanttData(commonCommesse.map(event => formatGanttData(event, commesse, commessaColors)));
+  } catch (error) {
+    console.error('Errore nel caricamento delle commesse comuni:', error);
+  }
+};
+
+
+  
 
   const removeCommessa = (index) => {
     const updatedSelectedCommesse = [...selectedCommesse];
@@ -284,28 +330,37 @@ const App = () => {
 
   return (
     <div className="app-container">
+
       <div className="menu-container">
-        <Select
-          isMulti
-          options={mysqlCommesse}
-          value={selectedCommesse}
-          onChange={handleCommesseChange}
-          placeholder="Seleziona commesse da monitorare"
+  <Select
+    isMulti
+    options={mysqlCommesse}
+    value={selectedCommesse}
+    onChange={handleCommesseChange}
+    placeholder="Seleziona commesse da monitorare"
+  />
+  <Select
+    isMulti
+    options={resources.map(resource => ({ value: resource.Id, label: resource.Nome }))}
+    onChange={handleResourceSelection}
+    placeholder="Seleziona collaboratori"
+  />
+  <div className="commesse-container">
+    {selectedCommesse.map((commessa, index) => (
+      <div key={index} className="commessa-card">
+        <span>{commessa.label}</span>
+        <TwitterPicker
+          color={commessa.color || '#000000'}
+          onChangeComplete={(color) => handleColorChange(color, index)}
         />
-        <div className="commesse-container">
-          {selectedCommesse.map((commessa, index) => (
-            <div key={index} className="commessa-card">
-              <span>{commessa.label}</span>
-              <TwitterPicker
-                color={commessa.color || '#000000'}
-                onChangeComplete={(color) => handleColorChange(color, index)}
-              />
-              <button onClick={() => removeCommessa(index)}>Rimuovi</button>
-            </div>
-          ))}
-        </div>
-        <button onClick={saveSelectedCommesse}>Memorizza</button>
+        <button onClick={() => removeCommessa(index)}>Rimuovi</button>
       </div>
+    ))}
+  </div>
+  <button onClick={saveSelectedCommesse}>Memorizza</button>
+  <button onClick={getCommonCommesse}>Carica Commesse Comuni</button>
+</div>
+
       <Scheduler
         data={scheduleData}
         resources={resources}

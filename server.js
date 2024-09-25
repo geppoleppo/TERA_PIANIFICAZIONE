@@ -1,3 +1,4 @@
+const sqlite3 = require('sqlite3').verbose(); // Importa il modulo sqlite3
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -91,15 +92,58 @@ app.delete('/api/eventi/:id', (req, res) => {
     }
 });
 
+// Aggiorna o inserisce le commesse nel database SQLite
+// Endpoint per aggiornare le commesse in SQLite
 app.post('/api/update-sqlite', (req, res) => {
+    const { commesse } = req.body;
+  
     try {
-        const { commesse } = req.body;
-        db.updateCommesse(commesse);
-        res.json({ message: 'Commesse updated in SQLite' });
+      const db = new sqlite3.Database('database.sqlite'); // Assicurati che il percorso sia corretto
+  
+      // Log dei dati ricevuti
+      console.log('Dati ricevuti per aggiornamento commesse:', commesse);
+  
+      // Inizia una transazione
+      db.serialize(() => {
+        db.run("BEGIN TRANSACTION", (err) => {
+          if (err) {
+            console.error('Errore durante l\'inizio della transazione:', err.message);
+            return res.status(500).json({ success: false, message: 'Errore durante l\'inizio della transazione', error: err.message });
+          }
+  
+          commesse.forEach(commessa => {
+            console.log('Elaborazione commessa:', commessa);
+  
+            db.run(`
+              INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori)
+              VALUES (?, ?, ?, ?)
+              ON CONFLICT(CommessaName) 
+              DO UPDATE SET Collaboratori = excluded.Collaboratori, Colore = excluded.Colore;
+            `, [commessa.descrizione, commessa.descrizione, commessa.colore, commessa.collaboratori], function (err) {
+              if (err) {
+                console.error('Errore durante l\'inserimento o aggiornamento della commessa:', err.message);
+              }
+            });
+          });
+  
+          db.run("COMMIT", (err) => {
+            if (err) {
+              console.error('Errore durante il commit della transazione:', err.message);
+              return res.status(500).json({ success: false, message: 'Commit failed', error: err.message });
+            }
+            res.json({ success: true, message: 'Commesse updated successfully' });
+          });
+        });
+      });
+  
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      console.error('Errore generale durante l\'aggiornamento delle commesse:', error.message);
+      res.status(500).json({ success: false, message: 'Error updating commesse', error: error.message });
     }
-});
+  });
+  
+  
+  
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

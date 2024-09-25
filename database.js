@@ -12,11 +12,12 @@ const createTables = () => {
     `;
 
     const queryCommesse = `
-        CREATE TABLE IF NOT EXISTS Commesse (
-            CommessaName TEXT PRIMARY KEY,
-            Descrizione TEXT NOT NULL,
-            Colore TEXT NOT NULL
-        );
+CREATE TABLE IF NOT EXISTS Commesse (
+  CommessaName TEXT PRIMARY KEY,
+  Descrizione TEXT NOT NULL,
+  Colore TEXT NOT NULL,
+  Collaboratori TEXT
+);
     `;
 
     const queryEventi = `
@@ -145,19 +146,20 @@ const deleteEvento = (id) => {
 
 const updateCommesse = (commesse) => {
     try {
-        db.prepare(`DELETE FROM Commesse`).run();
-        const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore) VALUES (?, ?, ?)`);
-        const insertMany = db.transaction((commesse) => {
-            for (const commessa of commesse) {
-                insert.run(commessa.descrizione, commessa.descrizione, commessa.colore);
-            }
-        });
-        insertMany(commesse);
+      db.prepare(`DELETE FROM Commesse`).run();
+      const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori) VALUES (?, ?, ?, ?)`);
+      const insertMany = db.transaction((commesse) => {
+        for (const commessa of commesse) {
+          insert.run(commessa.descrizione, commessa.descrizione, commessa.colore, commessa.collaboratori);
+        }
+      });
+      insertMany(commesse);
     } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update commesse.");
+      console.error("Database error:", error);
+      throw new Error("Failed to update commesse.");
     }
-};
+  };
+  
 
 const getSelectedCommesse = () => {
     try {
