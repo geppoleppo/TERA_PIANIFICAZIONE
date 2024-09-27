@@ -1,6 +1,8 @@
 const Database = require('better-sqlite3');
 const db = new Database('TERA_GESTIONALE_DB.db', { verbose: console.log });
+const mysql = require('mysql');
 
+// Creazione delle tabelle
 const createTables = () => {
     const queryCollaboratori = `
         CREATE TABLE IF NOT EXISTS Collaboratori (
@@ -12,12 +14,12 @@ const createTables = () => {
     `;
 
     const queryCommesse = `
-CREATE TABLE IF NOT EXISTS Commesse (
-  CommessaName TEXT PRIMARY KEY,
-  Descrizione TEXT NOT NULL,
-  Colore TEXT NOT NULL,
-  Collaboratori TEXT
-);
+        CREATE TABLE IF NOT EXISTS Commesse (
+            CommessaName TEXT PRIMARY KEY,
+            Descrizione TEXT NOT NULL,
+            Colore TEXT NOT NULL,
+            Collaboratori TEXT
+        );
     `;
 
     const queryEventi = `
@@ -41,6 +43,7 @@ CREATE TABLE IF NOT EXISTS Commesse (
 
 createTables();
 
+// Verifica tabelle
 const verifyTables = () => {
     try {
         const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
@@ -52,6 +55,96 @@ const verifyTables = () => {
 
 verifyTables();
 
+// Popola il database SQLite con commesse da MySQL
+// Popola il database SQLite con commesse da MySQL
+const populateCommesseFromMySQL = (mysqlConnection) => {
+    mysqlConnection.query('SELECT NOME, DESCRIZIONE FROM COMMESSE', (err, results) => {
+        if (err) {
+            console.error('Errore durante il fetch delle commesse da MySQL:', err);
+        } else {
+            const insertOrUpdate = db.prepare(`
+                INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(CommessaName) DO UPDATE SET
+                    Descrizione = excluded.Descrizione,
+                    Colore = excluded.Colore;
+            `);
+
+            const insertMany = db.transaction((commesse) => {
+                for (const commessa of commesse) {
+                    insertOrUpdate.run(
+                        commessa.NOME,
+                        commessa.NOME,
+                        '#000000', // Colore di default
+                        '' // Collaboratori inizialmente vuoto
+                    );
+                }
+            });
+            insertMany(results);
+            console.log('Database SQLite popolato con commesse da MySQL.');
+        }
+    });
+};
+
+
+// Funzione per aggiornare i collaboratori selezionati
+const updateCollaboratoriSelezionati = (commesseSelezionate) => {
+    try {
+        const insertOrUpdate = db.prepare(`
+            INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(CommessaName)
+            DO UPDATE SET
+                Collaboratori = excluded.Collaboratori;
+        `);
+
+        const updateCollaboratori = db.transaction((commesseSelezionate) => {
+            for (const commessa of commesseSelezionate) {
+                // Recupera i collaboratori esistenti per la commessa dal database SQLite
+                const commessaDb = db.prepare(`SELECT Collaboratori FROM Commesse WHERE CommessaName = ?`).get(commessa.descrizione);
+
+                // Inizializza il campo Collaboratori esistente, se non esiste sarà un array vuoto
+                let existingCollaboratori = commessaDb && commessaDb.Collaboratori 
+                    ? commessaDb.Collaboratori.split(',').map(c => c.trim()) 
+                    : [];
+
+   // Collaboratori selezionati nel menu
+console.log(`collaboratori selezionati: ${commessa.collaboratori}`);
+
+// Assicurati che collaboratori sia un array
+const nuoviCollaboratori = Array.isArray(commessa.collaboratori)
+    ? commessa.collaboratori.map(c => c.trim())
+    : (typeof commessa.collaboratori === 'string' ? commessa.collaboratori.split(',').map(c => c.trim()) : []);
+
+console.log(`nuovi collaboratori: ${nuoviCollaboratori}`);
+                // Unione di collaboratori esistenti e nuovi, evitando duplicati
+                const allCollaboratori = [...new Set([...existingCollaboratori, ...nuoviCollaboratori])];
+
+                // Controllo se ci sono collaboratori da aggiornare
+                if (allCollaboratori.length > 0) {
+                    // Aggiorna la commessa con i collaboratori uniti
+                    insertOrUpdate.run(
+                        commessa.descrizione,
+                        commessa.descrizione,
+                        commessa.colore,
+                        allCollaboratori.join(',')  // Unisce i collaboratori in una stringa separata da virgole
+                    );
+                } else {
+                    console.log(`Nessun collaboratore da aggiornare per la commessa ${commessa.descrizione}`);
+                }
+            }
+        });
+
+        updateCollaboratori(commesseSelezionate);
+        console.log('Collaboratori aggiornati correttamente.');
+    } catch (error) {
+        console.error('Errore durante l\'aggiornamento dei collaboratori:', error);
+    }
+};
+
+
+
+// Mantengo tutte le funzioni esistenti
 const getAllCollaboratori = () => {
     try {
         const query = `SELECT * FROM Collaboratori`;
@@ -144,82 +237,15 @@ const deleteEvento = (id) => {
     }
 };
 
-const updateCommesse = (commesseSelezionate) => {
-    try {
-        const existingCommesse = db.prepare(`SELECT * FROM Commesse`).all(); // Recupera tutte le commesse esistenti
-
-        const insertOrUpdate = db.prepare(`
-            INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(CommessaName) DO UPDATE SET
-                Descrizione = excluded.Descrizione,
-                Colore = excluded.Colore;
-        `);
-
-        const updateCollaboratori = db.prepare(`
-            UPDATE Commesse
-            SET Collaboratori = ?
-            WHERE CommessaName = ?
-        `);
-
-        const insertMany = db.transaction(() => {
-            for (const commessaSelezionata of commesseSelezionate) {
-                // Assicuriamoci che collaboratori sia un array
-                const collaboratori = Array.isArray(commessaSelezionata.collaboratori) ? commessaSelezionata.collaboratori.join(',') : '';
-
-                // Controlla se la commessa esiste
-                const existingCommessa = existingCommesse.find(commessa => commessa.CommessaName === commessaSelezionata.descrizione);
-
-                if (!existingCommessa) {
-                    // Inserisci nuova commessa
-                    insertOrUpdate.run(
-                        commessaSelezionata.descrizione,
-                        commessaSelezionata.descrizione,
-                        commessaSelezionata.colore,
-                        collaboratori
-                    );
-                } else {
-                    // La commessa esiste già, ora aggiorna i collaboratori
-                    const existingCollaboratori = existingCommessa.Collaboratori.split(',').map(item => item.trim());
-
-                    // Aggiungi nuovi collaboratori se non presenti
-                    const newCollaboratori = collaboratori.split(',').map(item => item.trim());
-                    const updatedCollaboratori = [...new Set([...existingCollaboratori, ...newCollaboratori])]; // Unione senza duplicati
-
-                    // Aggiorna la commessa con i collaboratori aggiornati
-                    updateCollaboratori.run(updatedCollaboratori.join(','), existingCommessa.CommessaName);
-                }
-            }
-        });
-
-        insertMany(); // Esegui l'inserimento/aggiornamento
-        console.log("Commesse aggiornate correttamente");
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update commesse.");
-    }
-};
-
-
-  
-
-const getSelectedCommesse = () => {
-    try {
-        const query = `SELECT * FROM Commesse`;
-        return db.prepare(query).all();
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve selected commesse.");
-    }
-};
-
 module.exports = {
+    populateCommesseFromMySQL,
+    updateCollaboratoriSelezionati,
     getAllCollaboratori,
     getAllCommesse,
     getAllEventi,
     createEvento,
     updateEvento,
     deleteEvento,
-    updateCommesse,
-    getSelectedCommesse
+    verifyTables,
+    createTables
 };
