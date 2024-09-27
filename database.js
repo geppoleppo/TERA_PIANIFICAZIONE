@@ -144,21 +144,43 @@ const deleteEvento = (id) => {
     }
 };
 
-const updateCommesse = (commesse) => {
+const updateCommesse = (commesseSelezionate) => {
     try {
-      db.prepare(`DELETE FROM Commesse`).run();
-      const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori) VALUES (?, ?, ?, ?)`);
-      const insertMany = db.transaction((commesse) => {
-        for (const commessa of commesse) {
-          insert.run(commessa.descrizione, commessa.descrizione, commessa.colore, commessa.collaboratori);
-        }
-      });
-      insertMany(commesse);
+        const existingCommesse = db.prepare(`SELECT * FROM Commesse`).all(); // Recupera tutte le commesse esistenti
+
+        const insertOrUpdate = db.prepare(`
+            INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(CommessaName) DO UPDATE SET
+                Descrizione = excluded.Descrizione,
+                Colore = excluded.Colore,
+                Collaboratori = excluded.Collaboratori;
+        `);
+
+        // Inserisci o aggiorna le commesse selezionate
+        const insertMany = db.transaction(() => {
+            for (const commessaSelezionata of commesseSelezionate) {
+                // Assicuriamoci che collaboratori sia un array
+                const collaboratori = Array.isArray(commessaSelezionata.collaboratori) ? commessaSelezionata.collaboratori.join(',') : '';
+
+                // Inserisci o aggiorna la commessa
+                insertOrUpdate.run(
+                    commessaSelezionata.descrizione,
+                    commessaSelezionata.descrizione,
+                    commessaSelezionata.colore,
+                    collaboratori
+                );
+            }
+        });
+
+        insertMany(); // Esegui l'inserimento/aggiornamento
+        console.log("Commesse aggiornate correttamente");
     } catch (error) {
-      console.error("Database error:", error);
-      throw new Error("Failed to update commesse.");
+        console.error("Database error:", error);
+        throw new Error("Failed to update commesse.");
     }
-  };
+};
+
   
 
 const getSelectedCommesse = () => {
