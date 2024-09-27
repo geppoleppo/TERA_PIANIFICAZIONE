@@ -153,23 +153,42 @@ const updateCommesse = (commesseSelezionate) => {
             VALUES (?, ?, ?, ?)
             ON CONFLICT(CommessaName) DO UPDATE SET
                 Descrizione = excluded.Descrizione,
-                Colore = excluded.Colore,
-                Collaboratori = excluded.Collaboratori;
+                Colore = excluded.Colore;
         `);
 
-        // Inserisci o aggiorna le commesse selezionate
+        const updateCollaboratori = db.prepare(`
+            UPDATE Commesse
+            SET Collaboratori = ?
+            WHERE CommessaName = ?
+        `);
+
         const insertMany = db.transaction(() => {
             for (const commessaSelezionata of commesseSelezionate) {
                 // Assicuriamoci che collaboratori sia un array
                 const collaboratori = Array.isArray(commessaSelezionata.collaboratori) ? commessaSelezionata.collaboratori.join(',') : '';
 
-                // Inserisci o aggiorna la commessa
-                insertOrUpdate.run(
-                    commessaSelezionata.descrizione,
-                    commessaSelezionata.descrizione,
-                    commessaSelezionata.colore,
-                    collaboratori
-                );
+                // Controlla se la commessa esiste
+                const existingCommessa = existingCommesse.find(commessa => commessa.CommessaName === commessaSelezionata.descrizione);
+
+                if (!existingCommessa) {
+                    // Inserisci nuova commessa
+                    insertOrUpdate.run(
+                        commessaSelezionata.descrizione,
+                        commessaSelezionata.descrizione,
+                        commessaSelezionata.colore,
+                        collaboratori
+                    );
+                } else {
+                    // La commessa esiste già, ora aggiorna i collaboratori
+                    const existingCollaboratori = existingCommessa.Collaboratori.split(',').map(item => item.trim());
+
+                    // Aggiungi nuovi collaboratori se non presenti
+                    const newCollaboratori = collaboratori.split(',').map(item => item.trim());
+                    const updatedCollaboratori = [...new Set([...existingCollaboratori, ...newCollaboratori])]; // Unione senza duplicati
+
+                    // Aggiorna la commessa con i collaboratori aggiornati
+                    updateCollaboratori.run(updatedCollaboratori.join(','), existingCommessa.CommessaName);
+                }
             }
         });
 
@@ -180,6 +199,7 @@ const updateCommesse = (commesseSelezionate) => {
         throw new Error("Failed to update commesse.");
     }
 };
+
 
   
 
