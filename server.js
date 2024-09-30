@@ -27,7 +27,7 @@ mysqlConnection.connect(err => {
 });
 
 // Popolamento iniziale di SQLite con commesse da MySQL
-db.populateCommesseFromMySQL(mysqlConnection);
+//db.populateCommesseFromMySQL(mysqlConnection);
 
 // Endpoint per aggiornare collaboratori delle commesse selezionate
 app.post('/api/update-sqlite', (req, res) => {
