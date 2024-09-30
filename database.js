@@ -146,7 +146,7 @@ const deleteEvento = (id) => {
 
 const updateCommesse = (commesseSelezionate) => {
     try {
-        const existingCommesse = db.prepare(`SELECT * FROM Commesse`).all(); // Recupera tutte le commesse esistenti
+        const existingCommesse = db.prepare(`SELECT * FROM Commesse`).all();
 
         const insertOrUpdate = db.prepare(`
             INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori)
@@ -164,14 +164,25 @@ const updateCommesse = (commesseSelezionate) => {
 
         const insertMany = db.transaction(() => {
             for (const commessaSelezionata of commesseSelezionate) {
-                // Assicuriamoci che collaboratori sia un array
-                const collaboratori = Array.isArray(commessaSelezionata.collaboratori) ? commessaSelezionata.collaboratori.join(',') : '';
-
-                // Controlla se la commessa esiste
+                // Log per controllo
+                console.log("COLLABORATORI:", commessaSelezionata.collaboratori);
+        
+                // Gestisci diversi tipi di 'collaboratori'
+                let collaboratori;
+                if (Array.isArray(commessaSelezionata.collaboratori)) {
+                    collaboratori = commessaSelezionata.collaboratori.join(',');
+                } else if (typeof commessaSelezionata.collaboratori === 'string') {
+                    collaboratori = commessaSelezionata.collaboratori;
+                } else {
+                    // Se 'collaboratori' è un numero o un altro tipo, lo convertiamo in stringa
+                    collaboratori = String(commessaSelezionata.collaboratori);
+                }
+        
+                console.log("COLLABORATORI2:", collaboratori);
+        
                 const existingCommessa = existingCommesse.find(commessa => commessa.CommessaName === commessaSelezionata.descrizione);
-
+        
                 if (!existingCommessa) {
-                    // Inserisci nuova commessa
                     insertOrUpdate.run(
                         commessaSelezionata.descrizione,
                         commessaSelezionata.descrizione,
@@ -179,26 +190,24 @@ const updateCommesse = (commesseSelezionate) => {
                         collaboratori
                     );
                 } else {
-                    // La commessa esiste già, ora aggiorna i collaboratori
-                    const existingCollaboratori = existingCommessa.Collaboratori.split(',').map(item => item.trim());
-
-                    // Aggiungi nuovi collaboratori se non presenti
+                    const existingCollaboratori = existingCommessa.Collaboratori ? existingCommessa.Collaboratori.split(',').map(item => item.trim()) : [];
                     const newCollaboratori = collaboratori.split(',').map(item => item.trim());
-                    const updatedCollaboratori = [...new Set([...existingCollaboratori, ...newCollaboratori])]; // Unione senza duplicati
-
-                    // Aggiorna la commessa con i collaboratori aggiornati
+                    const updatedCollaboratori = [...new Set([...existingCollaboratori, ...newCollaboratori])];
+        
                     updateCollaboratori.run(updatedCollaboratori.join(','), existingCommessa.CommessaName);
                 }
             }
         });
+        
 
-        insertMany(); // Esegui l'inserimento/aggiornamento
+        insertMany();
         console.log("Commesse aggiornate correttamente");
     } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to update commesse.");
     }
 };
+
 
 
   

@@ -21,10 +21,37 @@ const App = () => {
   // Definisci lo stato per i collaboratori selezionati
 const [selectedResources, setSelectedResources] = useState([]);
 
-const handleResourceSelection = (selectedOptions) => {
+const handleResourceSelection = async (selectedOptions) => {
   const selectedIds = selectedOptions.map(option => option.value);
   setSelectedResources(selectedIds);
+
+  // Carica le commesse comuni ai collaboratori selezionati
+  try {
+    if (selectedIds.length === 0) {
+      setSelectedCommesse([]);  // Nessuna commessa se non ci sono collaboratori selezionati
+      return;
+    }
+
+    const commesseResponse = await axios.get(`http://localhost:${port}/api/commesse`);
+    const allCommesse = commesseResponse.data;
+
+    const commonCommesse = allCommesse.filter(commessa => {
+      const commessaCollaboratori = commessa.Collaboratori ? commessa.Collaboratori.split(',') : [];
+      return selectedIds.every(id => commessaCollaboratori.includes(id.toString()));
+    });
+
+    const formattedCommesse = commonCommesse.map(commessa => ({
+      value: commessa.CommessaName,
+      label: commessa.Descrizione,
+      color: commessa.Colore
+    }));
+
+    setSelectedCommesse(formattedCommesse);
+  } catch (error) {
+    console.error('Errore nel caricamento delle commesse comuni:', error);
+  }
 };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -332,6 +359,13 @@ const getCommonCommesse = async () => {
     <div className="app-container">
 
       <div className="menu-container">
+  
+      <Select
+    isMulti
+    options={resources.map(resource => ({ value: resource.Id, label: resource.Nome }))}
+    onChange={handleResourceSelection}
+    placeholder="Seleziona collaboratori"
+  />
   <Select
     isMulti
     options={mysqlCommesse}
@@ -339,12 +373,7 @@ const getCommonCommesse = async () => {
     onChange={handleCommesseChange}
     placeholder="Seleziona commesse da monitorare"
   />
-  <Select
-    isMulti
-    options={resources.map(resource => ({ value: resource.Id, label: resource.Nome }))}
-    onChange={handleResourceSelection}
-    placeholder="Seleziona collaboratori"
-  />
+
   <div className="commesse-container">
     {selectedCommesse.map((commessa, index) => (
       <div key={index} className="commessa-card">
