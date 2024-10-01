@@ -60,7 +60,7 @@ const handleResourceSelection = async (selectedOptions) => {
           axios.get(`http://localhost:`+port+`/api/collaboratori`),
           axios.get(`http://localhost:`+port+`/api/commesse`),
           axios.get(`http://localhost:`+port+`/api/commesse-mysql`),
-          axios.get(`http://localhost:`+port+`/api/commesse`)
+          
         ]);
 
         const staticCollaboratori = collaboratoriResponse.data;
@@ -78,7 +78,7 @@ const handleResourceSelection = async (selectedOptions) => {
         setResources(staticCollaboratori);
         setCommesse(staticCommesse);
         setMysqlCommesse(mysqlCommesse);
-        setSelectedCommesse(selectedCommesse);
+//        setSelectedCommesse(selectedCommesse);
 
         const colors = selectedCommesse.reduce((acc, commessa) => {
           acc[commessa.value] = commessa.color;
@@ -100,6 +100,7 @@ const handleResourceSelection = async (selectedOptions) => {
   }, []);
 
   const handleCommesseChange = (selectedOptions) => {
+    console.log('SELECTDED OPTIONS:',selectedOptions)
     setSelectedCommesse(selectedOptions);
     applyGanttFilter(selectedOptions);
   };
