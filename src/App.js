@@ -27,25 +27,29 @@ const handleResourceSelection = async (selectedOptions) => {
   const selectedIds = selectedOptions.map(option => option.value);
   setSelectedResources(selectedIds);
 
-  if (selectedIds.length === 1) {  // Selezionato solo un collaboratore
+  if (selectedIds.length > 0) {  // Selezionati uno o più collaboratori
     const commesseResponse = await axios.get(`http://localhost:${port}/api/commesse`);
     const allCommesse = commesseResponse.data;
 
-    const associatedCommesse = allCommesse.filter(commessa => {
+    // Filtra le commesse comuni a tutti i collaboratori selezionati
+    const commonCommesse = allCommesse.filter(commessa => {
       const commessaCollaboratori = commessa.Collaboratori ? commessa.Collaboratori.split(',') : [];
-      return commessaCollaboratori.includes(selectedIds[0].toString());
+      return selectedIds.every(id => commessaCollaboratori.includes(id.toString()));
     });
 
-    const formattedCommesse = associatedCommesse.map(commessa => ({
+    const formattedCommesse = commonCommesse.map(commessa => ({
       value: commessa.CommessaName,
       label: commessa.Descrizione,
       color: commessa.Colore
     }));
 
     setInitialCommesse(formattedCommesse);  // Memorizza lo stato iniziale
-    setSelectedCommesse(formattedCommesse); // Visualizza le commesse associate
+    setSelectedCommesse(formattedCommesse); // Visualizza le commesse comuni associate
+  } else {
+    setSelectedCommesse([]);  // Nessun collaboratore selezionato, svuota il menu delle commesse
   }
 };
+
 
 
   useEffect(() => {
