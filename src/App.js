@@ -153,12 +153,13 @@ const handleResourceSelection = async (selectedOptions) => {
           // Rimuovi il collaboratore corrente dai collaboratori associati
           const collaboratori = commessa.data.Collaboratori
           .split(',')
-          .filter(collaboratore => !selectedResources.map(String).includes(collaboratore.trim()));
+          .map(collaboratore => collaboratore.trim()) // Assicuriamoci di rimuovere spazi vuoti
+          .filter(collaboratore => !selectedResources.map(String).includes(collaboratore));
+        
+        console.log("Collaboratori dopo la rimozione:", collaboratori);
+        
             
-  
-          console.log("Collaboratori dopo la rimozione:", collaboratori);
-  
-          // Aggiorna i collaboratori nel database
+            // Aggiorna i collaboratori nel database
           await axios.post(`http://localhost:${port}/api/update-commessa`, {
             commessaName: commessaRimossa.value,
             collaboratori: collaboratori.join(',')  // Unisci i collaboratori rimanenti
