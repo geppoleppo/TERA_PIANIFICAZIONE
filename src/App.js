@@ -20,35 +20,30 @@ const App = () => {
   const port = 3001;
   // Definisci lo stato per i collaboratori selezionati
 const [selectedResources, setSelectedResources] = useState([]);
+const [initialCommesse, setInitialCommesse] = useState([]);
+
 
 const handleResourceSelection = async (selectedOptions) => {
   const selectedIds = selectedOptions.map(option => option.value);
   setSelectedResources(selectedIds);
 
-  // Carica le commesse comuni ai collaboratori selezionati
-  try {
-    if (selectedIds.length === 0) {
-      setSelectedCommesse([]);  // Nessuna commessa se non ci sono collaboratori selezionati
-      return;
-    }
-
+  if (selectedIds.length === 1) {  // Selezionato solo un collaboratore
     const commesseResponse = await axios.get(`http://localhost:${port}/api/commesse`);
     const allCommesse = commesseResponse.data;
 
-    const commonCommesse = allCommesse.filter(commessa => {
+    const associatedCommesse = allCommesse.filter(commessa => {
       const commessaCollaboratori = commessa.Collaboratori ? commessa.Collaboratori.split(',') : [];
-      return selectedIds.every(id => commessaCollaboratori.includes(id.toString()));
+      return commessaCollaboratori.includes(selectedIds[0].toString());
     });
 
-    const formattedCommesse = commonCommesse.map(commessa => ({
+    const formattedCommesse = associatedCommesse.map(commessa => ({
       value: commessa.CommessaName,
       label: commessa.Descrizione,
       color: commessa.Colore
     }));
 
-    setSelectedCommesse(formattedCommesse);
-  } catch (error) {
-    console.error('Errore nel caricamento delle commesse comuni:', error);
+    setInitialCommesse(formattedCommesse);  // Memorizza lo stato iniziale
+    setSelectedCommesse(formattedCommesse); // Visualizza le commesse associate
   }
 };
 
@@ -122,37 +117,70 @@ const handleResourceSelection = async (selectedOptions) => {
   };
 
   const saveSelectedCommesse = async () => {
+    console.log("Funzione saveSelectedCommesse invocata");  // Log per verificare l'invocazione della funzione
+  
     try {
-      console.log('Commesse selezionate da salvare:', selectedCommesse);
-      const commesseToSave = selectedCommesse.map(option => {
-        console.log('Collaboratori selezionati:', selectedResources); // Log per verificare i collaboratori
-        let newCollaboratori = selectedResources.join(',');
+      console.log("selectedCommesse:", selectedCommesse);  // Controlla le commesse selezionate
+      console.log("selectedResources:", selectedResources);  // Controlla i collaboratori selezionati
+      console.log("initialCommesse:", initialCommesse);  // Controlla le commesse iniziali
   
-        return {
-          descrizione: option.label, // Verifica che label non sia undefined
-          colore: option.color || '#000000', // Assicurati che color sia definito
-          collaboratori: newCollaboratori // Collaboratori aggiornati
-        };
-      });
+      // Mappa le commesse selezionate
+      const commesseToSave = selectedCommesse.map(option => ({
+        descrizione: option.label,
+        colore: option.color || '#000000',
+        collaboratori: selectedResources.join(',')  // Collaboratori attuali uniti da virgole
+      }));
   
-      // Verifica i dati che stai inviando al server
-      console.log('Commesse pronte per essere inviate al server:', commesseToSave);
+      console.log("COMMESSE to save:", commesseToSave);  // Verifica il contenuto delle commesse da salvare
   
+      // Identifica le commesse rimosse rispetto a quelle iniziali
+      const commesseRimosse = initialCommesse.filter(initialCommessa =>
+        !selectedCommesse.some(selectedCommessa => selectedCommessa.value === initialCommessa.value)
+      );
+  
+      console.log("COMMESSE RIMOSSE:", commesseRimosse);  // Verifica il contenuto delle commesse rimosse
+  
+      // Verifica se ci sono commesse rimosse
+      if (commesseRimosse.length > 0) {
+        for (const commessaRimossa of commesseRimosse) {
+          console.log("Elaborando commessa rimossa:", commessaRimossa);
+  
+          // Ottieni la commessa corrente dal database
+          const commessa = await axios.get(`http://localhost:${port}/api/commessa/${commessaRimossa.value}`);
+          console.log("Collaboratori prima della rimozione:", commessa.data.Collaboratori);
+          
+          
+  
+          // Rimuovi il collaboratore corrente dai collaboratori associati
+          const collaboratori = commessa.data.Collaboratori
+          .split(',')
+          .filter(collaboratore => !selectedResources.map(String).includes(collaboratore.trim()));
+            
+  
+          console.log("Collaboratori dopo la rimozione:", collaboratori);
+  
+          // Aggiorna i collaboratori nel database
+          await axios.post(`http://localhost:${port}/api/update-commessa`, {
+            commessaName: commessaRimossa.value,
+            collaboratori: collaboratori.join(',')  // Unisci i collaboratori rimanenti
+          });
+        }
+      } else {
+        console.log("Nessuna commessa rimossa");
+      }
+  
+      // Salva le commesse selezionate (aggiunta/aggiornamento)
       await axios.post(`http://localhost:${port}/api/update-sqlite`, { commesse: commesseToSave });
   
       // Fetch updated data and update state
       const updatedCommesseResponse = await axios.get(`http://localhost:${port}/api/commesse`);
       setCommesse(updatedCommesseResponse.data);
-  
-      // Filter scheduler data based on selected commesse
-      const selectedCommessaNames = selectedCommesse.map(c => c.value);
-      const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-      setScheduleData(filteredScheduleData);
-      setGanttData(filteredScheduleData.map(event => formatGanttData(event, updatedCommesseResponse.data, commessaColors)));
     } catch (error) {
       console.error('Failed to update SQLite:', error);
     }
   };
+  
+
   
   
   
@@ -386,7 +414,8 @@ const getCommonCommesse = async () => {
       </div>
     ))}
   </div>
-  <button onClick={saveSelectedCommesse}>Memorizza</button>
+  <button onClick={() => { console.log('Pulsante Memorizza cliccato'); saveSelectedCommesse(); }}>Memorizza</button>
+
   <button onClick={getCommonCommesse}>Carica Commesse Comuni</button>
 </div>
 

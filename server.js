@@ -2,6 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./database'); // Importa correttamente il database
+console.log('Contenuto di db:', db);
+
+console.log('MENTAAAA',db)
 const mysql = require('mysql');
 
 const app = express();
@@ -97,6 +100,45 @@ app.delete('/api/eventi/:id', (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Endpoint per ottenere una singola commessa basata sul nome della commessa
+const { getCommessaByName } = require('./database'); // Importa la funzione dal database.js
+
+app.get('/api/commessa/:commessaName', (req, res) => {
+    const { commessaName } = req.params;
+
+    try {
+        // Utilizza la funzione definita in database.js per ottenere la commessa
+        const commessa = getCommessaByName(commessaName);
+
+        if (!commessa) {
+            return res.status(404).json({ error: 'Commessa non trovata' });
+        }
+
+        res.json(commessa);
+    } catch (error) {
+        console.error('Errore durante il recupero della commessa:', error.message);
+        res.status(500).json({ error: 'Errore nel recupero della commessa' });
+    }
+});
+ 
+
+const { updateCollaboratoriCommessa } = require('./database'); // Importa la funzione dal database.js
+
+app.post('/api/update-commessa', (req, res) => {
+    const { commessaName, collaboratori } = req.body;
+  
+    try {
+        // Chiama la funzione nel file database.js per aggiornare i collaboratori
+        updateCollaboratoriCommessa(commessaName, collaboratori);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating commessa:', error.message);
+        res.status(500).json({ success: false, message: 'Error updating commessa', error: error.message });
+    }
+});
+  
 
 // Endpoint per aggiornare commesse in SQLite
 app.post('/api/update-sqlite', (req, res) => {

@@ -1,5 +1,8 @@
 const Database = require('better-sqlite3');
 const db = new Database('TERA_GESTIONALE_DB.db', { verbose: console.log });
+console.log('Database creato:', db);
+// Esporta l'oggetto db
+module.exports = db;
 
 const createTables = () => {
     const queryCollaboratori = `
@@ -206,11 +209,17 @@ const updateCommesse = (commesseSelezionate) => {
     }
 };
 
+// Funzione per ottenere una singola commessa per nome
+const getCommessaByName = (commessaName) => {
+    try {
+        const query = `SELECT * FROM Commesse WHERE CommessaName = ?`;
+        return db.prepare(query).get(commessaName);
+    } catch (error) {
+        console.error("Errore durante il recupero della commessa:", error);
+        throw new Error("Failed to retrieve the commessa.");
+    }
+};
 
-
-
-
-  
 
 const getSelectedCommesse = () => {
     try {
@@ -222,6 +231,22 @@ const getSelectedCommesse = () => {
     }
 };
 
+// Funzione per aggiornare i collaboratori di una commessa
+const updateCollaboratoriCommessa = (commessaName, collaboratori) => {
+    try {
+        const query = `
+            UPDATE Commesse
+            SET Collaboratori = ?
+            WHERE CommessaName = ?
+        `;
+        db.prepare(query).run(collaboratori, commessaName);
+        console.log(`Collaboratori aggiornati per la commessa: ${commessaName}`);
+    } catch (error) {
+        console.error("Errore durante l'aggiornamento della commessa:", error);
+        throw new Error("Failed to update commessa.");
+    }
+};
+
 module.exports = {
     getAllCollaboratori,
     getAllCommesse,
@@ -230,5 +255,7 @@ module.exports = {
     updateEvento,
     deleteEvento,
     updateCommesse,
-    getSelectedCommesse
+    getSelectedCommesse,
+    getCommessaByName,
+    updateCollaboratoriCommessa
 };
