@@ -159,9 +159,7 @@ const updateCommesse = (commesseSelezionate) => {
 
         const insertMany = db.transaction(() => {
             for (const commessaSelezionata of commesseSelezionate) {
-                // Log per controllo
-                console.log("COLLABORATORI:", commessaSelezionata.collaboratori);
-
+                              
                 // Gestisci diversi tipi di 'collaboratori'
                 let collaboratori;
                 if (Array.isArray(commessaSelezionata.collaboratori)) {
@@ -173,7 +171,22 @@ const updateCommesse = (commesseSelezionate) => {
                     collaboratori = String(commessaSelezionata.collaboratori);
                 }
 
-                console.log("COLLABORATORI2:", collaboratori);
+                // Controlla se la commessa esiste già
+                const existingCommessa = existingCommesse.find(commessa => commessa.CommessaName === commessaSelezionata.descrizione);
+
+                if (existingCommessa) {
+                    // Se la commessa esiste già, recupera i collaboratori esistenti
+                    const existingCollaboratori = existingCommessa.Collaboratori
+                        ? existingCommessa.Collaboratori.split(',').map(item => item.trim())
+                        : [];
+
+                    // Unisci i nuovi collaboratori con quelli esistenti senza duplicati
+                    const newCollaboratori = collaboratori.split(',').map(item => item.trim());
+                    const updatedCollaboratori = [...new Set([...existingCollaboratori, ...newCollaboratori])];
+
+                    // Usa la nuova lista di collaboratori unita per l'aggiornamento
+                    collaboratori = updatedCollaboratori.join(',');
+                }
 
                 // Inserisci o aggiorna la commessa in base al conflitto sul nome
                 insertOrUpdate.run(
@@ -192,6 +205,7 @@ const updateCommesse = (commesseSelezionate) => {
         throw new Error("Failed to update commesse.");
     }
 };
+
 
 
 
