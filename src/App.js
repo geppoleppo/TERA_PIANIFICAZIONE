@@ -148,8 +148,7 @@ const handleResourceSelection = async (selectedOptions) => {
           // Ottieni la commessa corrente dal database
           const commessa = await axios.get(`http://localhost:${port}/api/commessa/${commessaRimossa.value}`);
           console.log("Collaboratori prima della rimozione:", commessa.data.Collaboratori);
-          
-          
+                   
   
           // Rimuovi il collaboratore corrente dai collaboratori associati
           const collaboratori = commessa.data.Collaboratori
@@ -181,9 +180,6 @@ const handleResourceSelection = async (selectedOptions) => {
   };
   
 
-  
-  
-  
   
   
 // Funzione per ottenere le commesse comuni

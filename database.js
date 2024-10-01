@@ -209,6 +209,7 @@ const updateCommesse = (commesseSelezionate) => {
     }
 };
 
+
 // Funzione per ottenere una singola commessa per nome
 const getCommessaByName = (commessaName) => {
     try {
@@ -247,6 +248,46 @@ const updateCollaboratoriCommessa = (commessaName, collaboratori) => {
     }
 };
 
+// Funzione per aggiornare o inserire le commesse in SQLite
+const syncCommesseToSQLite = (commesseToSync) => {
+    try {
+        const existingCommesse = db.prepare(`SELECT CommessaName FROM Commesse`).all();
+        const existingCommesseNames = existingCommesse.map(commessa => commessa.CommessaName);
+
+        // Filtra le commesse che non esistono già nel database SQLite
+        const newCommesse = commesseToSync.filter(commessa => !existingCommesseNames.includes(commessa.descrizione));
+
+        if (newCommesse.length > 0) {
+            // Inserisci solo le nuove commesse
+            const insertOrUpdate = db.prepare(`
+                INSERT INTO Commesse (CommessaName, Descrizione, Colore, Collaboratori)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(CommessaName) DO NOTHING;
+            `);
+
+            const insertMany = db.transaction(() => {
+                for (const commessa of newCommesse) {
+                    insertOrUpdate.run(
+                        commessa.descrizione,
+                        commessa.descrizione,
+                        commessa.colore,
+                        commessa.collaboratori
+                    );
+                }
+            });
+
+            insertMany();
+            console.log('Commesse sincronizzate correttamente:', newCommesse.length, 'commesse aggiunte.');
+        } else {
+            console.log('Nessuna nuova commessa da sincronizzare.');
+        }
+    } catch (error) {
+        console.error("Errore durante la sincronizzazione delle commesse:", error);
+        throw new Error("Errore durante la sincronizzazione delle commesse.");
+    }
+};
+
+
 module.exports = {
     getAllCollaboratori,
     getAllCommesse,
@@ -257,5 +298,7 @@ module.exports = {
     updateCommesse,
     getSelectedCommesse,
     getCommessaByName,
-    updateCollaboratoriCommessa
+    updateCollaboratoriCommessa,
+    syncCommesseToSQLite
+    
 };

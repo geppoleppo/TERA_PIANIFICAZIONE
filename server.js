@@ -2,9 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./database'); // Importa correttamente il database
-console.log('Contenuto di db:', db);
 
-console.log('MENTAAAA',db)
 const mysql = require('mysql');
 
 const app = express();
@@ -26,8 +24,48 @@ mysqlConnection.connect(err => {
         console.error('Error connecting to MySQL:', err);
     } else {
         console.log('Connected to MySQL');
+
+        // Sincronizza le commesse dal MySQL al SQLite all'avvio del server
+        syncCommesse();
     }
 });
+
+
+const { syncCommesseToSQLite } = require('./database'); // Importa la funzione di sincronizzazione
+
+const syncCommesse = async () => {
+    try {
+        // Fetch commesse da MySQL
+        mysqlConnection.query('SELECT NOME, DESCRIZIONE, COLLABORATORI FROM COMMESSE', (err, results) => {
+            if (err) {
+                console.error('Error fetching commesse from MySQL:', err);
+                return;
+            }
+
+            // Prepariamo le commesse per la sincronizzazione
+            const commesseToSync = results.map(commessa => ({
+                descrizione: commessa.NOME,
+                colore: '#000000', // Puoi modificare il colore se necessario
+                collaboratori: '', // Lasciamo vuoto per ora
+            }));
+
+            // Chiama la funzione per sincronizzare le commesse in SQLite
+            syncCommesseToSQLite(commesseToSync);
+        });
+    } catch (error) {
+        console.error('Error syncing commesse:', error);
+    }
+};
+
+// Sincronizza le commesse all'avvio del server
+syncCommesse();
+
+
+
+
+
+
+
 
 // Endpoint MySQL
 app.get('/api/commesse-mysql', (req, res) => {
