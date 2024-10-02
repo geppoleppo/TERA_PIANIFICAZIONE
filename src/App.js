@@ -22,33 +22,47 @@ const App = () => {
 const [selectedResources, setSelectedResources] = useState([]);
 const [initialCommesse, setInitialCommesse] = useState([]);
 
+  // Aggiungi log per verificare i dati PRIMA del return
+  console.log("Dati passati al Scheduler:");
+  console.log("scheduleData:", scheduleData);
+  console.log("resources:", resources);
+  console.log("selectedResources:", selectedResources);
+  console.log("selectedCommesse:", selectedCommesse);
 
-const handleResourceSelection = async (selectedOptions) => {
-  const selectedIds = selectedOptions.map(option => option.value);
-  setSelectedResources(selectedIds);
 
-  if (selectedIds.length > 0) {  // Selezionati uno o più collaboratori
-    const commesseResponse = await axios.get(`http://localhost:${port}/api/commesse`);
-    const allCommesse = commesseResponse.data;
-
-    // Filtra le commesse comuni a tutti i collaboratori selezionati
-    const commonCommesse = allCommesse.filter(commessa => {
-      const commessaCollaboratori = commessa.Collaboratori ? commessa.Collaboratori.split(',') : [];
-      return selectedIds.every(id => commessaCollaboratori.includes(id.toString()));
-    });
-
-    const formattedCommesse = commonCommesse.map(commessa => ({
-      value: commessa.CommessaName,
-      label: commessa.Descrizione,
-      color: commessa.Colore
-    }));
-
-    setInitialCommesse(formattedCommesse);  // Memorizza lo stato iniziale
-    setSelectedCommesse(formattedCommesse); // Visualizza le commesse comuni associate
-  } else {
-    setSelectedCommesse([]);  // Nessun collaboratore selezionato, svuota il menu delle commesse
-  }
-};
+  const handleResourceSelection = async (selectedOptions) => {
+    const selectedIds = selectedOptions.map(option => option.value);
+    setSelectedResources(selectedIds);
+  
+    if (selectedIds.length > 0) {
+      try {
+        // Chiamata API per recuperare tutte le commesse
+        const commesseResponse = await axios.get(`http://localhost:${port}/api/commesse`);
+        const allCommesse = commesseResponse.data;
+  
+        // Filtra le commesse comuni ai collaboratori selezionati
+        const commonCommesse = allCommesse.filter(commessa => {
+          const commessaCollaboratori = commessa.Collaboratori ? commessa.Collaboratori.split(',') : [];
+          return selectedIds.every(id => commessaCollaboratori.includes(id.toString()));
+        });
+  
+        const formattedCommesse = commonCommesse.map(commessa => ({
+          value: commessa.CommessaName,
+          label: commessa.Descrizione,
+          color: commessa.Colore
+        }));
+  
+        console.log("Formatted Commesse:", formattedCommesse);  // Verifica il risultato
+        setSelectedCommesse(formattedCommesse);  // Aggiorna le commesse selezionate
+      } catch (error) {
+        console.error("Errore durante il caricamento delle commesse:", error);
+      }
+    } else {
+      setSelectedCommesse([]);  // Se nessun collaboratore è selezionato
+    }
+  };
+  
+  
 
 
 
@@ -420,22 +434,30 @@ const getCommonCommesse = async () => {
 
   <button onClick={getCommonCommesse}>Carica Commesse Comuni</button>
 </div>
+{console.log("scheduleData:", scheduleData)}
+    {console.log("resources:", resources)}
+    {console.log("Commesse selezionate passate al Scheduler:", selectedCommesse)};
 
-      <Scheduler
-        data={scheduleData}
-        resources={resources}
-        onDataChange={handleSchedulerDataChange}
-        commessaColors={commessaColors}
-        commesse={commesse}
-      />
-      <Gantt
-        key={ganttKey}
-        data={ganttData}
-        onDataChange={handleGanttDataChange}
-        commessaColors={commessaColors}
-        commesse={commesse}
-        resources={resources}
-      />
+        <Scheduler
+  data={scheduleData}
+  resources={resources}
+  onDataChange={handleSchedulerDataChange}
+  commessaColors={commessaColors}
+  commesse={selectedCommesse}
+  selectedResources={selectedResources}
+  selectedCommesse={selectedCommesse}
+/>
+
+<Gantt
+  key={ganttKey}
+  data={ganttData}
+  resources={resources}
+  onDataChange={handleGanttDataChange}
+  commessaColors={commessaColors}
+  commesse={commesse}
+  selectedResources={selectedResources}  // Passa i collaboratori selezionati
+  selectedCommesse={selectedCommesse}    // Passa le commesse selezionate
+/>
     </div>
   );
 };

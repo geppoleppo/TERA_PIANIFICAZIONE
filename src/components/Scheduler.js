@@ -33,9 +33,17 @@ L10n.load({
   }
 });
 
-const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) => {
-  const [selectedResources, setSelectedResources] = useState([]);
-  const [selectedCommesse, setSelectedCommesse] = useState([]);
+const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources, selectedResources = [], selectedCommesse = [] }) => {
+  console.log("Scheduler inizializzato con i seguenti dati:");
+  console.log("Data:", data);
+  console.log("Resources:", resources);
+  console.log("Selected Resources:", selectedResources);
+  console.log("Selected Commesse:", selectedCommesse);
+  console.log("Commesse ricevute dal componente Scheduler:", commesse);
+
+
+  //const [selectedResources, setSelectedResources] = useState([]);
+  //const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [currentView, setCurrentView] = useState('Month'); 
   const [modifiedData, setModifiedData] = useState([]);
 
@@ -75,11 +83,27 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     if (selectedResources.length === 0) return [];
     return resources.filter(resource => selectedResources.includes(resource.Id));
   };
-
+  
+  console.log("Selected Commesse:", selectedCommesse);
+  console.log("Tutte le Commesse:", commesse);
+  
   const getFilteredCommesse = () => {
-    if (selectedCommesse.length === 0) return [];
-    return commesse.filter(commessa => selectedCommesse.includes(commessa.CommessaName));
+    if (commesse.length === 0) return [];
+  
+    // Verifica se esiste il campo corretto nelle commesse
+    return commesse.filter(commessa => {
+      console.log("Commessa analizzata:", commessa);  // Mostra la struttura della commessa
+      const commessaName = commessa.label;  // Prova altri nomi comuni
+      return selectedCommesse.some(sel => {
+        const selValueNormalized = sel.value.trim().toLowerCase();
+        const commessaNameNormalized = commessaName ? commessaName.trim().toLowerCase() : "";
+        console.log(`Comparazione normalizzata: ${selValueNormalized} === ${commessaNameNormalized}`);
+        return selValueNormalized === commessaNameNormalized;
+      });
+    });
   };
+  
+  console.log("Commesse filtrate:", getFilteredCommesse());
 
   const onActionComplete = (args) => {
     if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
@@ -96,17 +120,21 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
 
   const resourceHeaderTemplate = (props) => {
     if (!props.resourceData) return null;
-    const commessa = props.resourceData.Descrizione;
-    if (commessa) {
+  
+    // Se la commessa ha un campo 'label', mostralo
+    const commessaName = props.resourceData.label;
+  
+    if (commessaName) {
       return (
         <div className="template-wrap">
           <div className="commessa-details">
-            <div className="commessa-name">{commessa}</div>
+            <div className="commessa-name">{commessaName}</div>
           </div>
         </div>
       );
     }
-
+  
+    // Visualizza i collaboratori (risorse)
     const resource = resources.find(resource => resource.Id === props.resourceData.Id);
     return (
       <div className="template-wrap">
@@ -117,21 +145,25 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
       </div>
     );
   };
+  
 
   const monthEventTemplate = (props) => {
     const commessaName = Array.isArray(props.CommessaName) ? props.CommessaName[0] : props.CommessaName;
-    const commessa = commesse.find(commessa => commessa.CommessaName === commessaName);
-
-    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
+  
+    // Trova la commessa nel tuo array di commesse
+    const commessa = commesse.find(c => c.value === commessaName);
+  
+    const commessaText = commessa ? commessa.label : 'Nessuna commessa selezionata';
     const subjectText = props.Subject ? props.Subject : '';
     const color = commessaColors[commessaName] || '#000000';
-
+  
     return (
       <div className="template-wrap" style={{ backgroundColor: color }}>
         <div className="subject">{`${commessaText} - ${subjectText}`}</div>
       </div>
     );
   };
+  
 
   const handleViewChange = (args) => {
     setCurrentView(args.currentView);
@@ -141,7 +173,11 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
     allowGroupEdit: true,
     byGroupID: false,
     resources: ['Resources', 'Commesse']
+    
   };
+
+  console.log("Risorse passate al Scheduler:", getFilteredResources());
+  console.log("Commesse passate al Scheduler:", getFilteredCommesse());
 
   const resourceOptions = [{ value: 'select-all', label: 'Select All' }, ...resources.map(resource => ({
     value: resource.Id,
@@ -156,20 +192,8 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
   return (
     <div>
       <div className="filter-selectors">
-        <Select
-          isMulti
-          options={resourceOptions}
-          onChange={handleResourceChange}
-          placeholder="Select Resources"
-          className="filter-dropdown"
-        />
-        <Select
-          isMulti
-          options={commessaOptions}
-          onChange={handleCommessaChange}
-          placeholder="Select Commesse"
-          className="filter-dropdown"
-        />
+
+
       </div>
       <div className="scroll-container">
         <ScheduleComponent
@@ -181,6 +205,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
           locale='it'
           dateFormat='dd/MM/yyyy'
           resourceHeaderTemplate={resourceHeaderTemplate}
+          
           eventSettings={{
             dataSource: modifiedData,
             fields: {
@@ -199,6 +224,7 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
           group={group}
           actionComplete={onActionComplete}
           viewChanged={handleViewChange}
+          
         >
           <ViewsDirective>
             <ViewDirective option='Day' allowVirtualScrolling={true} />
@@ -207,27 +233,28 @@ const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) 
             <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} />
           </ViewsDirective>
           <ResourcesDirective>
-            <ResourceDirective
-              field='IncaricatoId'
-              title='Attendees'
-              name='Resources'
-              allowMultiple={true}
-              dataSource={getFilteredResources()}
-              textField='Nome'
-              idField='Id'
-              colorField='Colore'
-            />
-            <ResourceDirective
-              field='CommessaName'
-              title='Commessa'
-              name='Commesse'
-              allowMultiple={false}
-              dataSource={getFilteredCommesse()}
-              textField='Descrizione'
-              idField='CommessaName'
-              colorField='Colore'
-            />
-          </ResourcesDirective>
+  <ResourceDirective
+    field='IncaricatoId'
+    title='Attendees'
+    name='Resources'
+    allowMultiple={true}
+    dataSource={getFilteredResources()}  // Usa i collaboratori filtrati
+    textField='Nome'
+    idField='Id'
+    colorField='Colore'
+  />
+  <ResourceDirective
+  field='CommessaName'
+  title='Commessa'
+  name='Commesse'
+  allowMultiple={false}
+  dataSource={getFilteredCommesse()}  // Usa le commesse filtrate
+  textField='label'                   // Usa il campo 'label' per mostrare il nome della commessa
+  idField='value'                     // Usa il campo 'value' come identificatore della commessa
+  colorField='color'                  // Colore della commessa
+/>
+</ResourcesDirective>
+
           <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
         </ScheduleComponent>
       </div>
