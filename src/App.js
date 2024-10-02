@@ -62,7 +62,13 @@ const [initialCommesse, setInitialCommesse] = useState([]);
     }
   };
   
-  
+  const [schedulerKey, setSchedulerKey] = useState(0);  // Stato per la chiave dello Scheduler
+
+  // Effetto per forzare il ri-rendering quando cambia la selezione dei collaboratori o delle commesse
+  useEffect(() => {
+    setSchedulerKey(prevKey => prevKey + 1);  // Cambia la chiave ogni volta che cambiano le risorse o le commesse
+  }, [selectedResources, selectedCommesse]); 
+
 
 
 
@@ -215,12 +221,20 @@ const getCommonCommesse = async () => {
       return selectedResources.every(id => commessaCollaboratori.includes(id.toString()));
     });
 
-    setScheduleData(commonCommesse);
-    setGanttData(commonCommesse.map(event => formatGanttData(event, commesse, commessaColors)));
+    const formattedCommesse = commonCommesse.map(commessa => ({
+      value: commessa.CommessaName,
+      label: commessa.Descrizione,
+      color: commessa.Colore
+    }));
+
+    setSelectedCommesse(formattedCommesse);  // Aggiorna le commesse selezionate per lo Scheduler
+    setScheduleData(commonCommesse);  // Aggiorna i dati dello Scheduler
+    setGanttData(commonCommesse.map(event => formatGanttData(event, commesse, commessaColors)));  // Aggiorna i dati del Gantt
   } catch (error) {
     console.error('Errore nel caricamento delle commesse comuni:', error);
   }
 };
+
 
 
   
@@ -439,6 +453,7 @@ const getCommonCommesse = async () => {
     {console.log("Commesse selezionate passate al Scheduler:", selectedCommesse)};
 
         <Scheduler
+        key={schedulerKey}  // Cambia la chiave per forzare il ri-rendering
   data={scheduleData}
   resources={resources}
   onDataChange={handleSchedulerDataChange}
