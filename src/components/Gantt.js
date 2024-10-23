@@ -71,6 +71,7 @@ const Gantt = ({ data, onDataChange, commessaColors, commesse, resources }) => {
 
   return (
     <GanttComponent
+      key={filteredData}
       dataSource={filteredData}
       taskFields={taskFields}
       height='650px'

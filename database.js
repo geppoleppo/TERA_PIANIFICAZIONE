@@ -12,12 +12,15 @@ const createTables = () => {
     `;
 
     const queryCommesse = `
-        CREATE TABLE IF NOT EXISTS Commesse (
-            CommessaName TEXT PRIMARY KEY,
-            Descrizione TEXT NOT NULL,
-            Colore TEXT NOT NULL
-        );
-    `;
+    CREATE TABLE IF NOT EXISTS Commesse (
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        CommessaName TEXT NOT NULL,
+        Descrizione TEXT NOT NULL,
+        Colore TEXT NOT NULL,
+        CollaboratoriCommessa TEXT  -- Questo campo memorizza gli ID dei collaboratori
+    );
+`;
+
 
     const queryEventi = `
         CREATE TABLE IF NOT EXISTS Eventi (
