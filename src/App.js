@@ -90,24 +90,37 @@ const App = () => {
 
   const saveSelectedCommesse = async () => {
     try {
-      const commesseToSave = selectedCommesse.map(option => ({
-        descrizione: option.label,
-        colore: option.color || '#000000'
-      }));
+      const commesseToSave = selectedCommesse.map(commessa => {
+        const collaboratoriIds = commessa.CollaboratoriCommessa
+          ? commessa.CollaboratoriCommessa.split(',').map(Number)
+          : [];
+  
+        // Aggiungi o rimuovi i collaboratori selezionati
+        selectedCollaboratoriIds.forEach(id => {
+          if (!collaboratoriIds.includes(id)) {
+            collaboratoriIds.push(id); // Aggiungi collaboratore
+          } else {
+            collaboratoriIds.splice(collaboratoriIds.indexOf(id), 1); // Rimuovi collaboratore
+          }
+        });
+  
+        return {
+          ...commessa,
+          CollaboratoriCommessa: collaboratoriIds.join(',')
+        };
+      });
+  
       await axios.post('http://localhost:3001/api/update-sqlite', { commesse: commesseToSave });
-      // Fetch updated data and update state
+  
       const updatedCommesseResponse = await axios.get('http://localhost:3001/api/commesse');
       setCommesse(updatedCommesseResponse.data);
-
-      // Filter scheduler data based on selected commesse
-      const selectedCommessaNames = selectedCommesse.map(c => c.value);
-      const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-      setScheduleData(filteredScheduleData);
-      setGanttData(filteredScheduleData.map(event => formatGanttData(event, updatedCommesseResponse.data, commessaColors)));
+  
     } catch (error) {
-      console.error('Failed to update SQLite:', error);
+      console.error('Errore durante il salvataggio delle commesse:', error);
     }
   };
+  
+  
 
   const removeCommessa = (index) => {
     const updatedSelectedCommesse = [...selectedCommesse];
@@ -126,6 +139,46 @@ const App = () => {
     setScheduleData(filteredScheduleData);
     setGanttData(filteredScheduleData.map(event => formatGanttData(event, commesse, colors)));
   };
+
+  const updateSchedulerAndGantt = (filteredCommesse) => {
+    const selectedCommessaNames = filteredCommesse.map(c => c.CommessaName);
+  
+    const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
+    setScheduleData(filteredScheduleData);
+    setGanttData(filteredScheduleData.map(event => formatGanttData(event, commesse, commessaColors)));
+  };
+  
+  
+
+  const handleCollaboratoreChange = async (selectedOptions) => {
+    const selectedCollaboratoriIds = selectedOptions.map(option => option.value);
+  
+    // Ottieni le commesse da SQLite filtrate per i collaboratori selezionati
+    try {
+      const commesseResponse = await axios.get('http://localhost:3001/api/commesse');
+      const allCommesse = commesseResponse.data;
+  
+      const filteredCommesse = allCommesse.filter(commessa => {
+        if (!commessa.CollaboratoriCommessa) return false;
+        const collaboratoriIds = commessa.CollaboratoriCommessa.split(',').map(Number);
+        return selectedCollaboratoriIds.every(id => collaboratoriIds.includes(id));
+      });
+  
+      setSelectedCommesse(filteredCommesse.map(commessa => ({
+        value: commessa.CommessaName,
+        label: commessa.Descrizione,
+        color: commessa.Colore
+      })));
+  
+      updateSchedulerAndGantt(filteredCommesse);
+  
+    } catch (error) {
+      console.error('Errore nel caricamento delle commesse associate:', error);
+    }
+  };
+  
+  
+
 
   const applyGanttFilter = (selectedOptions) => {
     const selectedCommessaNames = selectedOptions.map(option => option.value);
@@ -286,13 +339,13 @@ const App = () => {
   return (
     <div className="app-container">
       <div className="menu-container">
-        <Select
-          isMulti
-          options={mysqlCommesse}
-          value={selectedCommesse}
-          onChange={handleCommesseChange}
-          placeholder="Seleziona commesse da monitorare"
-        />
+      <Select
+  isMulti
+  options={resources.map(resource => ({ value: resource.Id, label: resource.Nome }))}
+  onChange={handleCollaboratoreChange}  // Chiama la funzione di gestione collaboratori
+  placeholder="Seleziona Collaboratori"
+/>
+
         <div className="commesse-container">
           {selectedCommesse.map((commessa, index) => (
             <div key={index} className="commessa-card">
