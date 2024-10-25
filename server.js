@@ -109,9 +109,6 @@ app.get('/api/eventi', (req, res) => {
 });
 
 
-
-
-
   
   const port = 3001; // Assicurati che questa sia la porta corretta e non in conflitto
   app.listen(port, () => {

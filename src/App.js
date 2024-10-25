@@ -4,8 +4,8 @@ import { ScheduleComponent, TimelineViews, TimelineMonth, Agenda, DragAndDrop, I
 import { extend } from '@syncfusion/ej2-base';
 
 const App = () => {
-  //const [events, setEvents] = useState([]);
-  const [events, setEvents] = useState([
+  const [events, setEvents] = useState([]);
+  /**const [events, setEvents] = useState([
     {
       Id: 1,
       Subject: "Riunione Progetto",
@@ -38,7 +38,7 @@ const App = () => {
       
 
     }
-  ]);
+  ]);**/
   
 
 
@@ -110,14 +110,27 @@ const App = () => {
     { text: 'PROJECT 3', id: 3, color: '#df5286' }
   ];
 
-  const categoryResources = [
-    { text: 'Nancy', id: 1, groupId: 1, color: '#df5286' },
-    { text: 'Steven', id: 2, groupId: 1, color: '#7fa900' },
-    { text: 'Robert', id: 3, groupId: 2, color: '#ea7a57' },
-    { text: 'Smith', id: 4, groupId: 2, color: '#5978ee' },
-    { text: 'Micheal', id: 5, groupId: 3, color: '#df5286' },
-    { text: 'Root', id: 6, groupId: 3, color: '#00bdae' }
-  ];
+  const [categoryResources, setCategoryResources] = useState([]);
+
+  // Funzione per caricare `categoryResources` da `Collaboratori`
+  const fetchCategoryResources = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/collaboratori'); // Assicurati che questo endpoint sia corretto
+      const data = await response.json();
+      setCategoryResources(data.map(collaboratore => ({
+        text: collaboratore.Nome,
+        id: collaboratore.Id,
+        groupId: collaboratore.groupId || 1,
+        color: collaboratore.Colore || '#df5286'
+      })));
+    } catch (error) {
+      console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategoryResources();
+  }, []);
 
   // Gestisce il completamento delle azioni di creazione e rimozione eventi
   function onActionComplete(args) {
