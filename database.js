@@ -1,184 +1,47 @@
-const Database = require('better-sqlite3');
-const db = new Database('TERA_GESTIONALE_DB.db', { verbose: console.log });
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-const createTables = () => {
-    const queryCollaboratori = `
-        CREATE TABLE IF NOT EXISTS Collaboratori (
-            Id INTEGER PRIMARY KEY,
-            Nome TEXT NOT NULL,
-            Colore TEXT NOT NULL,
-            Immagine TEXT
-        );
-    `;
+// Imposta il percorso del file del database
+const dbPath = path.resolve(__dirname, 'TERA_GESTIONALE_DB.db');
 
-    const queryCommesse = `
-    CREATE TABLE IF NOT EXISTS Commesse (
-        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        CommessaName TEXT NOT NULL,
-        Descrizione TEXT NOT NULL,
-        Colore TEXT NOT NULL,
-        CollaboratoriCommessa TEXT  -- Questo campo memorizza gli ID dei collaboratori
-    );
-`;
+// Crea la connessione al database
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Errore di connessione a SQLite:', err.message);
+  } else {
+    console.log('Connesso al database SQLite.');
+  }
+});
 
+// Funzione per eseguire una query di lettura
+function getRecords(query, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+}
 
-    const queryEventi = `
-        CREATE TABLE IF NOT EXISTS Eventi (
-            Id INTEGER PRIMARY KEY,
-            Descrizione TEXT NOT NULL,
-            Inizio TEXT NOT NULL,
-            Fine TEXT NOT NULL,
-            CommessaName TEXT,
-            IncaricatoId TEXT,
-            Colore TEXT,
-            Progresso INTEGER,
-            Dipendenza TEXT
-        );
-    `;
-
-    db.prepare(queryCollaboratori).run();
-    db.prepare(queryCommesse).run();
-    db.prepare(queryEventi).run();
-};
-
-createTables();
-
-const verifyTables = () => {
-    try {
-        const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-        console.log("Tables in the database:", tables);
-    } catch (error) {
-        console.error("Error verifying tables:", error);
-    }
-};
-
-verifyTables();
-
-const getAllCollaboratori = () => {
-    try {
-        const query = `SELECT * FROM Collaboratori`;
-        return db.prepare(query).all();
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve collaborators.");
-    }
-};
-
-const getAllCommesse = () => {
-    try {
-        const query = `SELECT * FROM Commesse`;
-        return db.prepare(query).all();
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve projects.");
-    }
-};
-
-const getAllEventi = () => {
-    try {
-        const query = `SELECT * FROM Eventi`;
-        return db.prepare(query).all();
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve events.");
-    }
-};
-
-const createEvento = (evento) => {
-    try {
-        const query = `
-            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const params = [
-            evento.Descrizione,
-            evento.Inizio,
-            evento.Fine,
-            evento.CommessaName,
-            evento.IncaricatoId,
-            evento.Colore || '',
-            evento.Progresso || 0,
-            evento.Dipendenza || ''
-        ];
-        console.log('Create Event Params:', params);
-        const result = db.prepare(query).run(params);
-        return { ...evento, Id: result.lastInsertRowid };
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to create event.");
-    }
-};
-
-const updateEvento = (id, evento) => {
-    try {
-        const query = `
-            UPDATE Eventi
-            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?
-            WHERE Id = ?
-        `;
-        const params = [
-            evento.Descrizione || evento.Subject || 'No Description',
-            evento.Inizio || new Date().toISOString(),
-            evento.Fine || new Date().toISOString(),
-            evento.CommessaName,
-            evento.Colore || '',
-            evento.Progresso || 0,
-            evento.IncaricatoId,
-            evento.Dipendenza || '',
-            id
-        ];
-        console.log('Update Event Params:', params);
-        const result = db.prepare(query).run(params);
-        return { ...evento, Id: id };
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update event.");
-    }
-};
-
-const deleteEvento = (id) => {
-    try {
-        const query = `DELETE FROM Eventi WHERE Id = ?`;
-        db.prepare(query).run(id);
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to delete event.");
-    }
-};
-
-const updateCommesse = (commesse) => {
-    try {
-        db.prepare(`DELETE FROM Commesse`).run();
-        const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore) VALUES (?, ?, ?)`);
-        const insertMany = db.transaction((commesse) => {
-            for (const commessa of commesse) {
-                insert.run(commessa.descrizione, commessa.descrizione, commessa.colore);
-            }
-        });
-        insertMany(commesse);
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to update commesse.");
-    }
-};
-
-const getSelectedCommesse = () => {
-    try {
-        const query = `SELECT * FROM Commesse`;
-        return db.prepare(query).all();
-    } catch (error) {
-        console.error("Database error:", error);
-        throw new Error("Failed to retrieve selected commesse.");
-    }
-};
+// Funzione per eseguire una query di inserimento/aggiornamento/eliminazione
+function runQuery(query, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(query, params, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ id: this.lastID });
+      }
+    });
+  });
+}
 
 module.exports = {
-    getAllCollaboratori,
-    getAllCommesse,
-    getAllEventi,
-    createEvento,
-    updateEvento,
-    deleteEvento,
-    updateCommesse,
-    getSelectedCommesse
-};
+    db,         // Esporta la connessione al database
+    getRecords, // Esporta la funzione per ottenere i dati
+    runQuery    // Esporta la funzione per eseguire query di inserimento/aggiornamento/eliminazione
+  };
+  

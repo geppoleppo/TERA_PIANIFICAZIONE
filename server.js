@@ -1,106 +1,120 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const db = require('./database');
-const mysql = require('mysql');
-
+const { getRecords, runQuery } = require('./database');
+const cors = require('cors'); // Importa il pacchetto cors
 const app = express();
-const port = 3001;
 
-app.use(cors());
-app.use(bodyParser.json());
 
-const mysqlConnection = mysql.createConnection({
-    host: '93.49.98.201',
-    port: 8085,
-    user: 'geppolo',
-    password: 'geppolo',
-    database: 'gestionale'
+app.use(cors({
+  origin: 'http://localhost:3000', // Imposta l'origine del frontend
+  methods: ['GET', 'POST', 'DELETE'], // Limita i metodi consentiti
+  allowedHeaders: ['Content-Type']
+}));
+app.use(express.json()); // Middleware per leggere JSON dal body
+
+
+
+app.get('/api/collaboratori', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM Collaboratori';
+    const collaboratori = await getRecords(query);
+    res.json(collaboratori);
+  } catch (error) {
+    res.status(500).json({ error: 'Errore durante l\'acquisizione dei collaboratori.' });
+  }
 });
 
-mysqlConnection.connect(err => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err);
-    } else {
-        console.log('Connected to MySQL');
-    }
-});
+app.use(cors()); // Abilita CORS per tutte le richieste
+app.use(express.json());
 
-app.get('/api/commesse-mysql', (req, res) => {
-    mysqlConnection.query('SELECT NOME FROM COMMESSE', (err, results) => {
-        if (err) {
-            console.error('Error fetching commesse:', err);
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(results);
-        }
+// Aggiungi un nuovo evento
+app.post('/api/eventi', (req, res) => {
+  //console.log('Corpo della richiesta:', req.body);
+  
+  const {
+    Subject,       // `Subject` sarà la descrizione
+    StartTime,     // `StartTime` sarà l’inizio dell’evento
+    EndTime,       // `EndTime` sarà la fine dell’evento
+    ProjectId,     // `ProjectId` mappa a `CommessaName`
+    TaskId         // `TaskId` mappa a `IncaricatoId`
+  } = req.body;
+
+  // Mappa i campi ai nomi usati nella query SQL
+  const Descrizione = Subject;
+  const Inizio = StartTime;
+  const Fine = EndTime;
+  const CommessaName = ProjectId;
+  const IncaricatoId = TaskId;
+  const Colore = '#000000'; // Imposta un colore di default o mappa come necessario
+  const Progresso = 0; // Imposta un valore di default per il progresso
+  const Dipendenza = ''; // Imposta un valore vuoto per la dipendenza
+
+  const query = `
+    INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  runQuery(query, [Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza])
+    .then(result => {
+      console.log('Evento salvato con successo:', result);
+      res.status(201).json({ message: 'Evento aggiunto con successo.', id: result.id });
+    })
+    .catch(err => {
+      console.error('Errore durante il salvataggio dell\'evento:', err);
+      res.status(500).json({ error: 'Errore durante il salvataggio dell\'evento.' });
     });
 });
 
-app.get('/api/collaboratori', (req, res) => {
-    try {
-        const collaboratori = db.getAllCollaboratori();
-        res.json(collaboratori);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
-app.get('/api/commesse', (req, res) => {
-    try {
-        const commesse = db.getSelectedCommesse();
-        res.json(commesse);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
-app.get('/api/eventi', (req, res) => {
-    try {
-        const eventi = db.getAllEventi();
-        res.json(eventi);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
-app.post('/api/eventi', (req, res) => {
-    try {
-        const newEvento = db.createEvento(req.body);
-        res.json(newEvento);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.put('/api/eventi/:id', (req, res) => {
-    try {
-        const updatedEvento = db.updateEvento(req.params.id, req.body);
-        res.json(updatedEvento);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
+// Modifica l’endpoint di DELETE
 app.delete('/api/eventi/:id', (req, res) => {
-    try {
-        db.deleteEvento(req.params.id);
-        res.json({ message: 'Event deleted' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+  const { id } = req.params;
+
+  const query = `DELETE FROM Eventi WHERE Id = ?`;
+
+  runQuery(query, [id])
+    .then(() => {
+      res.status(200).json({ message: 'Evento eliminato con successo.' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: 'Errore durante l\'eliminazione dell\'evento.' });
+    });
+});
+;
+  
+  
+app.get('/api/eventi', (req, res) => {
+  const query = 'SELECT * FROM Eventi';
+
+  getRecords(query)
+    .then(eventi => {
+      console.log('Dati eventi dal database:', eventi); // Log per conferma dati
+      const mappedEvents = eventi.map(evento => ({
+        Id: evento.Id,
+        Subject: evento.Descrizione,          // Mappa `Descrizione` a `Subject`
+        Location: "Studio Collaboratori",     // Imposta un valore fisso per `Location`
+        StartTime: evento.Inizio,             // Mappa `Inizio` a `StartTime`
+        EndTime: evento.Fine,                 // Mappa `Fine` a `EndTime`
+        CategoryColor: evento.Colore || '#1aaa55', // Usa `Colore` o un colore predefinito
+      }));
+
+      console.log('Eventi mappati per il frontend:', mappedEvents); // Log per conferma mappatura
+      res.json(mappedEvents);
+    })
+    .catch(err => {
+      console.error('Errore durante il caricamento degli eventi dal database:', err);
+      res.status(500).json({ error: 'Errore durante il caricamento degli eventi.' });
+    });
 });
 
-app.post('/api/update-sqlite', (req, res) => {
-    try {
-        const { commesse } = req.body;
-        db.updateCommesse(commesse);
-        res.json({ message: 'Commesse updated in SQLite' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
-app.listen(port, () => {
-    console.log(`Server running at http://192.168.1.201:${port}`);
-});
+
+
+
+  
+  const port = 3001; // Assicurati che questa sia la porta corretta e non in conflitto
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+  

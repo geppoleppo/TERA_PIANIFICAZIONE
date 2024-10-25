@@ -1,382 +1,165 @@
-import React, { useState, useEffect } from 'react';
-import Scheduler from './components/Scheduler';
-import Gantt from './components/Gantt';
-import axios from 'axios';
-import Select from 'react-select';
-import { TwitterPicker } from 'react-color';
+import React, { useEffect, useState } from 'react';
 import './App.css';
+import { ScheduleComponent, TimelineViews, TimelineMonth, Agenda, DragAndDrop, Inject, Resize } from '@syncfusion/ej2-react-schedule';
+import { extend } from '@syncfusion/ej2-base';
 
 const App = () => {
-  const [scheduleData, setScheduleData] = useState([]);
-  const [ganttData, setGanttData] = useState([]);
-  const [resources, setResources] = useState([]);
-  const [commessaColors, setCommessaColors] = useState({});
-  const [commesse, setCommesse] = useState([]);
-  const [mysqlCommesse, setMysqlCommesse] = useState([]);
-  const [selectedCommesse, setSelectedCommesse] = useState([]);
-  const [ganttKey, setGanttKey] = useState(0);
+  //const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState([
+    {
+      Id: 1,
+      Subject: "Riunione Progetto",
+      Location: "Sala Riunioni",
+      StartTime: "2023-01-04T10:00:00.000Z",
+      EndTime: "2023-01-04T11:30:00.000Z",
+      ProjectId: 1,           // Associa all'ID di un progetto in `projectResources`
+      TaskId: [1, 3],          // Associa agli ID di categorie in `categoryResources`
+      CategoryColor: "#1aaa55" // Colore della categoria
+    },
+    {
+      Id: 2,
+      Subject: "Sviluppo Codice",
+      Location: "Studio",
+      StartTime: "2023-01-04T13:00:00.000Z",
+      EndTime: "2023-01-04T15:00:00.000Z",
+      ProjectId: 2,
+      TaskId: [2, 4],
+      CategoryColor: "#56ca85"
+    },
+    {
+      Id: 3,
+      Subject: "Aggiornamento Cliente",
+      Location: "Sala Conferenze",
+      StartTime: "2023-01-05T09:00:00.000Z",
+      EndTime: "2023-01-05T10:30:00.000Z",
+      ProjectId: 3,
+      TaskId: [3, 5],
+      CategoryColor: "#56ca85"
+      
 
+    }
+  ]);
+  
+
+
+
+  // Funzione per caricare gli eventi dal database
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/eventi');
+      const data = await response.json();
+  
+      // Assumi che `ProjectId` e `TaskId` siano stati definiti per ogni evento
+      const mappedEvents = data.map(event => ({
+        ...event,
+        ProjectId: event.ProjectId || 1, // Usa un valore predefinito o mappa da DB
+        TaskId: event.TaskId || [1],      // Usa un valore predefinito o mappa da DB
+      }));
+  
+      setEvents(mappedEvents);
+    } catch (error) {
+      console.error('Errore durante il caricamento degli eventi:', error);
+    }
+  };
+  
+  
+  
+  
+  
+  // Funzione per salvare un nuovo evento nel database
+  const saveEvent = async (eventData) => {
+    try {
+      const response = await fetch('http://localhost:3001/api/eventi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData) 
+      });
+      const data = await response.json();
+      console.log(data.message);
+      fetchEvents(); // Ricarica gli eventi dopo il salvataggio
+    } catch (error) {
+      console.error("Errore durante il salvataggio dell'evento:", error);
+    }
+  };
+  
+  // Funzione per eliminare un evento dal database
+  const deleteEvent = async (eventId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/eventi/${eventId}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      console.log(data.message);
+      fetchEvents(); // Ricarica gli eventi dopo l'eliminazione
+    } catch (error) {
+      console.error("Errore durante l'eliminazione dell'evento:", error);
+    }
+  };
+  
+  // Effettua il caricamento degli eventi quando il componente è montato
   useEffect(() => {
-    
-    const fetchData = async () => {
-     
-      try {
-        
-        const [
-          collaboratoriResponse,
-          commesseResponse,
-          mysqlCommesseResponse,
-          selectedCommesseResponse
-        ] = await Promise.all([
-          
-          axios.get('http://localhost:3001/api/collaboratori'),
-          axios.get('http://localhost:3001/api/commesse'),
-          axios.get('http://localhost:3001/api/commesse-mysql'),
-          axios.get('http://localhost:3001/api/commesse')
-        ]);
-
-        const staticCollaboratori = collaboratoriResponse.data;
-        const staticCommesse = commesseResponse.data;
-        const mysqlCommesse = mysqlCommesseResponse.data.map(commessa => ({
-          value: commessa.NOME,
-          label: commessa.NOME
-        }));
-        const selectedCommesse = commesseResponse.data.map(commessa => ({
-          value: commessa.CommessaName,
-          label: commessa.Descrizione,
-          color: commessa.Colore
-        }));
-
-        setResources(staticCollaboratori);
-        setCommesse(staticCommesse);
-        setMysqlCommesse(mysqlCommesse);
-        setSelectedCommesse(selectedCommesse);
-
-        const colors = selectedCommesse.reduce((acc, commessa) => {
-          acc[commessa.value] = commessa.color;
-          return acc;
-        }, {});
-        setCommessaColors(colors);
-
-        const eventiResponse = await axios.get('http://localhost:3001/api/eventi');
-        const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, colors));
-
-        setScheduleData(staticSchedulerData);
-        setGanttData(staticSchedulerData.map(event => formatGanttData(event, staticCommesse, colors)));
-      } catch (error) {
-        console.error('Errore nel caricamento dei dati:', error);
-      }
-    };
-
-    fetchData();
+    console.log('Eventi caricati:', events);
+    console.log('Progetti:', projectResources);
+    console.log('Categorie:', categoryResources);
+    fetchEvents();
   }, []);
 
-  const handleCommesseChange = (selectedOptions) => {
-    setSelectedCommesse(selectedOptions);
-    applyGanttFilter(selectedOptions);
-  };
+  const projectResources = [
+    { text: 'PROJECT 1', id: 1, color: '#cb6bb2' },
+    { text: 'PROJECT 2', id: 2, color: '#56ca85' },
+    { text: 'PROJECT 3', id: 3, color: '#df5286' }
+  ];
 
-  const handleColorChange = (color, index) => {
-    const updatedSelectedCommesse = [...selectedCommesse];
-    updatedSelectedCommesse[index].color = color.hex;
-    setSelectedCommesse(updatedSelectedCommesse);
+  const categoryResources = [
+    { text: 'Nancy', id: 1, groupId: 1, color: '#df5286' },
+    { text: 'Steven', id: 2, groupId: 1, color: '#7fa900' },
+    { text: 'Robert', id: 3, groupId: 2, color: '#ea7a57' },
+    { text: 'Smith', id: 4, groupId: 2, color: '#5978ee' },
+    { text: 'Micheal', id: 5, groupId: 3, color: '#df5286' },
+    { text: 'Root', id: 6, groupId: 3, color: '#00bdae' }
+  ];
 
-    const colors = updatedSelectedCommesse.reduce((acc, commessa) => {
-      acc[commessa.value] = commessa.color;
-      return acc;
-    }, {});
-    setCommessaColors(colors);
-  };
-
-  const saveSelectedCommesse = async () => {
-    try {
-      const commesseToSave = selectedCommesse.map(commessa => {
-        const collaboratoriIds = commessa.CollaboratoriCommessa
-          ? commessa.CollaboratoriCommessa.split(',').map(Number)
-          : [];
-  
-        // Aggiungi o rimuovi i collaboratori selezionati
-        selectedCollaboratoriIds.forEach(id => {
-          if (!collaboratoriIds.includes(id)) {
-            collaboratoriIds.push(id); // Aggiungi collaboratore
-          } else {
-            collaboratoriIds.splice(collaboratoriIds.indexOf(id), 1); // Rimuovi collaboratore
-          }
-        });
-  
-        return {
-          ...commessa,
-          CollaboratoriCommessa: collaboratoriIds.join(',')
-        };
-      });
-  
-      await axios.post('http://localhost:3001/api/update-sqlite', { commesse: commesseToSave });
-  
-      const updatedCommesseResponse = await axios.get('http://localhost:3001/api/commesse');
-      setCommesse(updatedCommesseResponse.data);
-  
-    } catch (error) {
-      console.error('Errore durante il salvataggio delle commesse:', error);
+  // Gestisce il completamento delle azioni di creazione e rimozione eventi
+  function onActionComplete(args) {
+    if (args.requestType === 'eventCreated') {
+      args.addedRecords.forEach(event => saveEvent(event));
+    } else if (args.requestType === 'eventRemoved') {
+      args.deletedRecords.forEach(event => deleteEvent(event.Id));
     }
-  };
-  
-  
+  }
 
-  const removeCommessa = (index) => {
-    const updatedSelectedCommesse = [...selectedCommesse];
-    updatedSelectedCommesse.splice(index, 1);
-    setSelectedCommesse(updatedSelectedCommesse);
-
-    const colors = updatedSelectedCommesse.reduce((acc, commessa) => {
-      acc[commessa.value] = commessa.color;
-      return acc;
-    }, {});
-    setCommessaColors(colors);
-
-    // Filter scheduler data based on updated selected commesse
-    const selectedCommessaNames = updatedSelectedCommesse.map(c => c.value);
-    const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-    setScheduleData(filteredScheduleData);
-    setGanttData(filteredScheduleData.map(event => formatGanttData(event, commesse, colors)));
-  };
-
-  const updateSchedulerAndGantt = (filteredCommesse) => {
-    const selectedCommessaNames = filteredCommesse.map(c => c.CommessaName);
-  
-    const filteredScheduleData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-    setScheduleData(filteredScheduleData);
-    setGanttData(filteredScheduleData.map(event => formatGanttData(event, commesse, commessaColors)));
-  };
-  
-  
-
-  const handleCollaboratoreChange = async (selectedOptions) => {
-    const selectedCollaboratoriIds = selectedOptions.map(option => option.value);
-  
-    // Ottieni le commesse da SQLite filtrate per i collaboratori selezionati
-    try {
-      const commesseResponse = await axios.get('http://localhost:3001/api/commesse');
-      const allCommesse = commesseResponse.data;
-  
-      const filteredCommesse = allCommesse.filter(commessa => {
-        if (!commessa.CollaboratoriCommessa) return false;
-        const collaboratoriIds = commessa.CollaboratoriCommessa.split(',').map(Number);
-        return selectedCollaboratoriIds.every(id => collaboratoriIds.includes(id));
-      });
-  
-      setSelectedCommesse(filteredCommesse.map(commessa => ({
-        value: commessa.CommessaName,
-        label: commessa.Descrizione,
-        color: commessa.Colore
-      })));
-  
-      updateSchedulerAndGantt(filteredCommesse);
-  
-    } catch (error) {
-      console.error('Errore nel caricamento delle commesse associate:', error);
-    }
-  };
-  
-  
-
-
-  const applyGanttFilter = (selectedOptions) => {
-    const selectedCommessaNames = selectedOptions.map(option => option.value);
-    const filteredGanttData = scheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-    setGanttData(filteredGanttData.map(event => formatGanttData(event, commesse, commessaColors)));
-  };
-
-  const debounce = (func, wait) => {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
-    };
-  };
-
-  const handleSchedulerDataChange = debounce((args) => {
-    const event = convertToStandardFormat(args.data[0]);
-
-    switch (args.requestType) {
-      case 'eventCreated':
-        axios.post('http://localhost:3001/api/eventi', event)
-          .then(response => {
-            updateLocalData(response.data, 'add');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to create event:', error));
-        break;
-      case 'eventChanged':
-        axios.put(`http://localhost:3001/api/eventi/${event.Id}`, event)
-          .then(() => {
-            updateLocalData(event, 'update');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to update event:', error));
-        break;
-      case 'eventRemoved':
-        axios.delete(`http://localhost:3001/api/eventi/${event.Id}`)
-          .then(() => {
-            updateLocalData(event, 'delete');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to delete event:', error));
-        break;
-      default:
-        break;
-    }
-  }, 300);
-
-  const handleGanttDataChange = debounce((args) => {
-    const task = convertToStandardFormat(args.data[0]);
-
-    switch (args.requestType) {
-      case 'eventChanged':
-        axios.put(`http://localhost:3001/api/eventi/${task.Id}`, task)
-          .then(() => {
-            updateLocalData(task, 'update');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to update task:', error));
-        break;
-      case 'eventRemoved':
-        axios.delete(`http://localhost:3001/api/eventi/${task.Id}`)
-          .then(() => {
-            updateLocalData(task, 'delete');
-            reloadSchedulerData();
-          })
-          .catch(error => console.error('Failed to delete task:', error));
-        break;
-      default:
-        break;
-    }
-  }, 300);
-
-  const updateLocalData = (data, type) => {
-    let updatedScheduleData = [...scheduleData];
-    switch (type) {
-      case 'add':
-        updatedScheduleData = [...updatedScheduleData, formatEventForScheduler(data, commessaColors)];
-        break;
-      case 'update':
-        updatedScheduleData = updatedScheduleData.map(item => item.Id === data.Id ? formatEventForScheduler(data, commessaColors) : item);
-        break;
-      case 'delete':
-        updatedScheduleData = updatedScheduleData.filter(item => item.Id !== data.Id);
-        break;
-      default:
-        break;
-    }
-    const selectedCommessaNames = selectedCommesse.map(c => c.value);
-    const filteredScheduleData = updatedScheduleData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-    setScheduleData(filteredScheduleData);
-    setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
-    setGanttKey(prevKey => prevKey + 1); // Increment key to force re-render
-  };
-
-  const reloadSchedulerData = async () => {
-    try {
-      const eventiResponse = await axios.get('http://localhost:3001/api/eventi');
-      const staticSchedulerData = eventiResponse.data.map(event => formatEventForScheduler(event, commessaColors));
-
-      const selectedCommessaNames = selectedCommesse.map(c => c.value);
-      const filteredScheduleData = staticSchedulerData.filter(event => selectedCommessaNames.includes(event.CommessaName));
-      setScheduleData(filteredScheduleData);
-      setGanttData(filteredScheduleData.map(item => formatGanttData(item, commesse, commessaColors)));
-    } catch (error) {
-      console.error('Errore nel caricamento dei dati:', error);
-    }
-  };
-
-  const convertToStandardFormat = (event) => {
-    const startDate = event.StartTime || event.StartDate || new Date().toISOString();
-    const endDate = event.EndTime || event.EndDate || new Date().toISOString();
-
-    const incaricatoId = event.IncaricatoId && event.IncaricatoId !== '' 
-                         ? event.IncaricatoId 
-                         : (event.taskData ? event.taskData.IncaricatoId : '');
-
-    return {
-      ...event,
-      Inizio: startDate,
-      Fine: endDate,
-      Descrizione: event.Subject || event.TaskName,
-      CommessaName: event.CommessaName,
-      IncaricatoId: Array.isArray(incaricatoId) ? incaricatoId.join(',') : incaricatoId || '',
-      Dipendenza: event.Predecessor || '',
-      Colore: event.Color || commessaColors[event.CommessaName] || '#000000'
-    };
-  };
-
-  const formatEventForScheduler = (event, colors) => {
-    return {
-      Id: event.Id,
-      Subject: event.Descrizione,
-      StartTime: new Date(event.Inizio),
-      EndTime: new Date(event.Fine),
-      CommessaName: event.CommessaName,
-      IncaricatoId: event.IncaricatoId ? event.IncaricatoId.split(',').map(id => parseInt(id, 10)) : [],
-      Color: event.Colore || colors[event.CommessaName] || '#000000',
-      Progress: event.Progresso,
-      Dipendenza: event.Dipendenza
-    };
-  };
-
-  const formatGanttData = (task, commesse, colors) => {
-    return {
-      Id: task.Id,
-      TaskName: task.Descrizione || task.Subject,
-      StartDate: task.StartTime ? new Date(task.StartTime) : new Date(),
-      EndDate: task.EndTime ? new Date(task.EndTime) : new Date(),
-      Predecessor: task.Dipendenza || '',
-      Progress: task.Progresso || 0,
-      Color: task.Colore || colors[task.CommessaName] || '#000000',
-      CommessaName: task.CommessaName || '',
-      IncaricatoId: task.IncaricatoId || ''
-    };
-  };
+  console.log('Eventi passati al Scheduler:', events);
 
   return (
-    <div className="app-container">
-      <div className="menu-container">
-      <Select
-  isMulti
-  options={resources.map(resource => ({ value: resource.Id, label: resource.Nome }))}
-  onChange={handleCollaboratoreChange}  // Chiama la funzione di gestione collaboratori
-  placeholder="Seleziona Collaboratori"
-/>
-
-        <div className="commesse-container">
-          {selectedCommesse.map((commessa, index) => (
-            <div key={index} className="commessa-card">
-              <span>{commessa.label}</span>
-              <TwitterPicker
-                color={commessa.color || '#000000'}
-                onChangeComplete={(color) => handleColorChange(color, index)}
-              />
-              <button onClick={() => removeCommessa(index)}>Rimuovi</button>
-            </div>
-          ))}
-        </div>
-        <button onClick={saveSelectedCommesse}>Memorizza</button>
-      </div>
-      <Scheduler
-        data={scheduleData}
-        resources={resources}
-        onDataChange={handleSchedulerDataChange}
-        commessaColors={commessaColors}
-        commesse={commesse}
-      />
-      <Gantt
-        key={ganttKey}
-        data={ganttData}
-        onDataChange={handleGanttDataChange}
-        commessaColors={commessaColors}
-        commesse={commesse}
-        resources={resources}
-      />
+    <div className="App">
+      <ScheduleComponent
+        actionComplete={onActionComplete}
+        width="100%"
+        height="650px"
+        selectedDate={new Date(2023, 0, 4)}
+        views={['TimelineDay', 'TimelineWeek', 'TimelineWorkWeek', 'TimelineMonth', 'Agenda']}
+        currentView="TimelineWeek"
+        workDays={[0, 1, 2, 3, 4, 5]}
+        group={{ resources: ['Projects', 'Categories'] }}
+        resources={[
+          {
+            field: 'ProjectId', title: 'Choose Project', name: 'Projects',
+            dataSource: projectResources,
+            textField: 'text', idField: 'id', colorField: 'color'
+          },
+          {
+            field: 'TaskId', title: 'Category', name: 'Categories', allowMultiple: true,
+            dataSource: categoryResources,
+            textField: 'text', idField: 'id', groupIDField: 'groupId', colorField: 'color'
+          }
+        ]}
+        eventSettings={{ dataSource: events }}
+      >
+        <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
+      </ScheduleComponent>
     </div>
   );
+  
 };
 
 export default App;
