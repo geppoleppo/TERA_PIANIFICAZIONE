@@ -84,29 +84,30 @@ app.delete('/api/eventi/:id', (req, res) => {
 ;
   
   
-app.get('/api/eventi', (req, res) => {
-  const query = 'SELECT * FROM Eventi';
+app.get('/api/eventi', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM Eventi';
+    const eventi = await getRecords(query);
 
-  getRecords(query)
-    .then(eventi => {
-      console.log('Dati eventi dal database:', eventi); // Log per conferma dati
-      const mappedEvents = eventi.map(evento => ({
-        Id: evento.Id,
-        Subject: evento.Descrizione,          // Mappa `Descrizione` a `Subject`
-        Location: "Studio Collaboratori",     // Imposta un valore fisso per `Location`
-        StartTime: evento.Inizio,             // Mappa `Inizio` a `StartTime`
-        EndTime: evento.Fine,                 // Mappa `Fine` a `EndTime`
-        CategoryColor: evento.Colore || '#1aaa55', // Usa `Colore` o un colore predefinito
-      }));
+    const mappedEventi = eventi.map(evento => ({
+      Id: evento.Id,
+      Subject: evento.Descrizione,
+      StartTime: evento.Inizio,
+      EndTime: evento.Fine,
+      ProjectId: parseInt(evento.CommessaName, 10), // Converti ProjectId in numero
+      TaskId: evento.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Converti TaskId in array di numeri
+      CategoryColor: evento.Colore || "#000000"
+    }));
 
-      console.log('Eventi mappati per il frontend:', mappedEvents); // Log per conferma mappatura
-      res.json(mappedEvents);
-    })
-    .catch(err => {
-      console.error('Errore durante il caricamento degli eventi dal database:', err);
-      res.status(500).json({ error: 'Errore durante il caricamento degli eventi.' });
-    });
+    console.log('Dati eventi dal database (formattati):', mappedEventi); // Verifica i dati nel formato corretto
+    res.json(mappedEventi);
+  } catch (error) {
+    console.error('Errore durante il recupero degli eventi:', error);
+    res.status(500).json({ error: 'Errore durante il recupero degli eventi.' });
+  }
 });
+
+
 
 
   

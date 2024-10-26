@@ -4,8 +4,8 @@ import { ScheduleComponent, TimelineViews, TimelineMonth, Agenda, DragAndDrop, I
 import { extend } from '@syncfusion/ej2-base';
 
 const App = () => {
-  const [events, setEvents] = useState([]);
-  /**const [events, setEvents] = useState([
+  //const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState([
     {
       Id: 1,
       Subject: "Riunione Progetto",
@@ -38,11 +38,7 @@ const App = () => {
       
 
     }
-  ]);**/
-  
-
-
-
+  ]);
   // Funzione per caricare gli eventi dal database
   const fetchEvents = async () => {
     try {
@@ -53,7 +49,7 @@ const App = () => {
       const mappedEvents = data.map(event => ({
         ...event,
         ProjectId: event.ProjectId || 1, // Usa un valore predefinito o mappa da DB
-        TaskId: event.TaskId || [1],      // Usa un valore predefinito o mappa da DB
+        TaskId: event.TaskId || [1],      // Usa un valore predefinito o mappa da 
       }));
   
       setEvents(mappedEvents);
@@ -101,7 +97,7 @@ const App = () => {
     console.log('Eventi caricati:', events);
     console.log('Progetti:', projectResources);
     console.log('Categorie:', categoryResources);
-    fetchEvents();
+     fetchEvents();
   }, []);
 
   const projectResources = [
