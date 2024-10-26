@@ -5,6 +5,9 @@ import { extend } from '@syncfusion/ej2-base';
 
 const App = () => {
   const [events, setEvents] = useState([]);
+  const [projectResources, setProjectResources] = useState([]);
+  
+  
   /**const [events, setEvents] = useState([
     {
       Id: 1,
@@ -100,11 +103,11 @@ const App = () => {
      fetchEvents();
   }, []);
 
-  const projectResources = [
+/**const projectResources = [
     { text: 'PROJECT 1', id: 1, color: '#cb6bb2' },
     { text: 'PROJECT 2', id: 2, color: '#56ca85' },
     { text: 'PROJECT 3', id: 3, color: '#df5286' }
-  ];
+  ];**/
 
   const [categoryResources, setCategoryResources] = useState([]);
 
@@ -123,10 +126,30 @@ const App = () => {
       console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
     }
   };
+  const fetchProjectResources = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/commesse');
+      const data = await response.json();
+      console.log("Commesse (Projects) caricate:", data);
+      
+      //setProjectResources(data); // Imposta i dati caricati
+      
+    } catch (error) {
+      console.error("Errore durante il caricamento delle commesse:", error);
+    }
+  };
+  
+
 
   useEffect(() => {
-    fetchCategoryResources();
+    fetchProjectResources();
+    fetchCategoryResources(); // Caricamento collaboratori
+    fetchEvents(); // Caricamento eventi
   }, []);
+  
+  useEffect(() => {
+    console.log("Commesse (Projects) caricate:", projectResources);
+  }, [projectResources]);
 
   // Gestisce il completamento delle azioni di creazione e rimozione eventi
   function onActionComplete(args) {

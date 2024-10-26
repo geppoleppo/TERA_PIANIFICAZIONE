@@ -133,6 +133,19 @@ app.put('/api/eventi/:id', async (req, res) => {
   }
 });
   
+
+app.get('/api/commesse', async (req, res) => {
+  try {
+    const query = 'SELECT Id, CommessaName AS text, Colore AS color FROM Commesse';
+    const commesse = await getRecords(query);
+    res.json(commesse);
+    console.log("Commesse caricate dal database:", commesse);
+  } catch (error) {
+    console.error('Errore durante il caricamento delle commesse:', error);
+    res.status(500).json({ error: 'Errore durante il caricamento delle commesse.' });
+  }
+});
+  
   const port = 3001; // Assicurati che questa sia la porta corretta e non in conflitto
   app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
