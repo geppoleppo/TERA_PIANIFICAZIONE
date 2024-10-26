@@ -4,8 +4,8 @@ import { ScheduleComponent, TimelineViews, TimelineMonth, Agenda, DragAndDrop, I
 import { extend } from '@syncfusion/ej2-base';
 
 const App = () => {
-  //const [events, setEvents] = useState([]);
-  const [events, setEvents] = useState([
+  const [events, setEvents] = useState([]);
+  /**const [events, setEvents] = useState([
     {
       Id: 1,
       Subject: "Riunione Progetto",
@@ -38,7 +38,7 @@ const App = () => {
       
 
     }
-  ]);
+  ]);**/
   // Funzione per caricare gli eventi dal database
   const fetchEvents = async () => {
     try {
@@ -134,38 +134,69 @@ const App = () => {
       args.addedRecords.forEach(event => saveEvent(event));
     } else if (args.requestType === 'eventRemoved') {
       args.deletedRecords.forEach(event => deleteEvent(event.Id));
+    } else if (args.requestType === 'eventChanged') {
+      args.changedRecords.forEach(event => updateEvent(event)); // Aggiungi gestione aggiornamento
     }
   }
+  
+  // Funzione per aggiornare un evento
+  const updateEvent = async (eventData) => {
+    // Se CollaboratoreId è un array, lo convertiamo in una stringa separata da virgole
+    const collaboratorId = Array.isArray(eventData.TaskId) ? eventData.TaskId.join(',') : eventData.TaskId;
+  
+    try {
+      const response = await fetch(`http://localhost:3001/api/eventi/${eventData.Id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...eventData,
+          TaskId: collaboratorId,  // Passiamo il TaskId come stringa corretta
+        })
+      });
+      const data = await response.json();
+      console.log(data.message);
+      fetchEvents(); // Ricarica gli eventi
+    } catch (error) {
+      console.error("Errore durante l'aggiornamento dell'evento:", error);
+    }
+  };
+  
+  
 
   console.log('Eventi passati al Scheduler:', events);
 
   return (
     <div className="App">
-      <ScheduleComponent
-        actionComplete={onActionComplete}
-        width="100%"
-        height="650px"
-        selectedDate={new Date(2023, 0, 4)}
-        views={['TimelineDay', 'TimelineWeek', 'TimelineWorkWeek', 'TimelineMonth', 'Agenda']}
-        currentView="TimelineWeek"
-        workDays={[0, 1, 2, 3, 4, 5]}
-        group={{ resources: ['Projects', 'Categories'] }}
-        resources={[
-          {
-            field: 'ProjectId', title: 'Choose Project', name: 'Projects',
-            dataSource: projectResources,
-            textField: 'text', idField: 'id', colorField: 'color'
-          },
-          {
-            field: 'TaskId', title: 'Category', name: 'Categories', allowMultiple: true,
-            dataSource: categoryResources,
-            textField: 'text', idField: 'id', groupIDField: 'groupId', colorField: 'color'
-          }
-        ]}
-        eventSettings={{ dataSource: events }}
-      >
-        <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
-      </ScheduleComponent>
+<ScheduleComponent
+  actionComplete={onActionComplete}
+  width="100%"
+  height="650px"
+  //selectedDate={new Date(2023, 0, 4)}
+  views={['TimelineDay', 'TimelineWeek', 'TimelineWorkWeek', 'TimelineMonth', 'Agenda']}
+  currentView="TimelineWeek"
+  workDays={[0, 1, 2, 3, 4, 5]}
+  group={{ resources: ['Projects', 'Categories'] }}
+  resources={[
+    {
+      field: 'ProjectId', title: 'Choose Project', name: 'Projects',
+      dataSource: projectResources,
+      textField: 'text', idField: 'id', colorField: 'color'
+    },
+    {
+      field: 'TaskId', title: 'Category', name: 'Categories', allowMultiple: true,
+      dataSource: categoryResources,
+      textField: 'text', idField: 'id', groupIDField: 'groupId', colorField: 'color'
+    }
+  ]}
+  eventSettings={{
+    dataSource: events,
+    allowOverlap: true // Permette sovrapposizione degli eventi
+  }}
+  rowAutoHeight={true} // Adatta l'altezza della riga per gli eventi sovrapposti
+>
+  <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
+</ScheduleComponent>
+
     </div>
   );
   

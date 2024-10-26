@@ -6,7 +6,7 @@ const app = express();
 
 app.use(cors({
   origin: 'http://localhost:3000', // Imposta l'origine del frontend
-  methods: ['GET', 'POST', 'DELETE'], // Limita i metodi consentiti
+  methods: ['GET', 'POST', 'DELETE','PUT'], // Limita i metodi consentiti
   allowedHeaders: ['Content-Type']
 }));
 app.use(express.json()); // Middleware per leggere JSON dal body
@@ -104,6 +104,32 @@ app.get('/api/eventi', async (req, res) => {
   } catch (error) {
     console.error('Errore durante il recupero degli eventi:', error);
     res.status(500).json({ error: 'Errore durante il recupero degli eventi.' });
+  }
+});
+
+app.put('/api/eventi/:id', async (req, res) => {
+  const { id } = req.params;
+  const { Subject, StartTime, EndTime, ProjectId, TaskId, CategoryColor } = req.body;
+
+  try {
+    const query = `
+      UPDATE Eventi
+      SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?
+      WHERE Id = ?
+    `;
+    await runQuery(query, [
+      Subject,
+      StartTime,
+      EndTime,
+      ProjectId.toString(),
+      TaskId,  // Ora dovrebbe essere una stringa nel formato corretto
+      CategoryColor,
+      id
+    ]);
+    res.json({ message: 'Evento aggiornato con successo!' });
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento dell\'evento:', error);
+    res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
   }
 });
 
