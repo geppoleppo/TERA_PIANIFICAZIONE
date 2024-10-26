@@ -6,7 +6,11 @@ import { extend } from '@syncfusion/ej2-base';
 const App = () => {
   const [events, setEvents] = useState([]);
   const [projectResources, setProjectResources] = useState([]);
-  
+  /**const projectResources = [
+    { text: 'PROJECT 1', id: 1, color: '#cb6bb2' },
+    { text: 'PROJECT 2', id: 2, color: '#56ca85' },
+    { text: 'PROJECT 3', id: 3, color: '#df5286' }
+  ];**/
   
   /**const [events, setEvents] = useState([
     {
@@ -103,11 +107,7 @@ const App = () => {
      fetchEvents();
   }, []);
 
-/**const projectResources = [
-    { text: 'PROJECT 1', id: 1, color: '#cb6bb2' },
-    { text: 'PROJECT 2', id: 2, color: '#56ca85' },
-    { text: 'PROJECT 3', id: 3, color: '#df5286' }
-  ];**/
+
 
   const [categoryResources, setCategoryResources] = useState([]);
 
@@ -126,19 +126,45 @@ const App = () => {
       console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
     }
   };
-  const fetchProjectResources = async () => {
+/**const fetchProjectResources = async () => {
     try {
       const response = await fetch('http://localhost:3001/api/commesse');
       const data = await response.json();
       console.log("Commesse (Projects) caricate:", data);
       
-      //setProjectResources(data); // Imposta i dati caricati
+      setProjectResources(data); // Imposta i dati caricati
       
     } catch (error) {
       console.error("Errore durante il caricamento delle commesse:", error);
     }
-  };
+  };**/
   
+const fetchProjectResources = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/commesse');
+      const data = await response.json();
+      console.log('XXXXXXXXX',data)
+
+      // Mappa i dati ricevuti dal database nel formato richiesto
+      const formattedData = data.map(commessa => ({
+        text: commessa.text,  // Assegna il nome della commessa a "text"
+        id: commessa.Id,              // Assegna l'ID della commessa a "id"
+        color: commessa.color        // Assegna il colore della commessa a "color"
+      }));
+
+      //{ text: 'PROJECT 1', id: 1, color: '#cb6bb2' },
+
+      // Imposta lo stato con i dati formattati
+      setProjectResources(formattedData);
+      console.log("Project Resources caricati:", formattedData); // Stampa per verificare
+    } catch (error) {
+      console.error("Errore durante il caricamento delle commesse:", error);
+    }
+  };
+
+
+
+
 
 
   useEffect(() => {
