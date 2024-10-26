@@ -13,7 +13,7 @@ const App = () => {
       StartTime: "2023-01-04T10:00:00.000Z",
       EndTime: "2023-01-04T11:30:00.000Z",
       ProjectId: 1,           // Associa all'ID di un progetto in `projectResources`
-      TaskId: [1, 3],          // Associa agli ID di categorie in `categoryResources`
+      CollaboratoreId: [1, 3],          // Associa agli ID di categorie in `categoryResources`
       CategoryColor: "#1aaa55" // Colore della categoria
     },
     {
@@ -23,7 +23,7 @@ const App = () => {
       StartTime: "2023-01-04T13:00:00.000Z",
       EndTime: "2023-01-04T15:00:00.000Z",
       ProjectId: 2,
-      TaskId: [2, 4],
+      CollaboratoreId: [2, 4],
       CategoryColor: "#56ca85"
     },
     {
@@ -33,7 +33,7 @@ const App = () => {
       StartTime: "2023-01-05T09:00:00.000Z",
       EndTime: "2023-01-05T10:30:00.000Z",
       ProjectId: 3,
-      TaskId: [3, 5],
+      CollaboratoreId: [3, 5],
       CategoryColor: "#56ca85"
       
 
@@ -45,11 +45,11 @@ const App = () => {
       const response = await fetch('http://localhost:3001/api/eventi');
       const data = await response.json();
   
-      // Assumi che `ProjectId` e `TaskId` siano stati definiti per ogni evento
+      // Assumi che `ProjectId` e `CollaboratoreId` siano stati definiti per ogni evento
       const mappedEvents = data.map(event => ({
         ...event,
         ProjectId: event.ProjectId || 1, // Usa un valore predefinito o mappa da DB
-        TaskId: event.TaskId || [1],      // Usa un valore predefinito o mappa da 
+        CollaboratoreId: event.CollaboratoreId || [1],      // Usa un valore predefinito o mappa da 
       }));
   
       setEvents(mappedEvents);
@@ -142,7 +142,7 @@ const App = () => {
   // Funzione per aggiornare un evento
   const updateEvent = async (eventData) => {
     // Se CollaboratoreId è un array, lo convertiamo in una stringa separata da virgole
-    const collaboratorId = Array.isArray(eventData.TaskId) ? eventData.TaskId.join(',') : eventData.TaskId;
+    const collaboratorId = Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId.join(',') : eventData.CollaboratoreId;
   
     try {
       const response = await fetch(`http://localhost:3001/api/eventi/${eventData.Id}`, {
@@ -150,7 +150,7 @@ const App = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...eventData,
-          TaskId: collaboratorId,  // Passiamo il TaskId come stringa corretta
+          CollaboratoreId: collaboratorId,  // Passiamo il CollaboratoreId come stringa corretta
         })
       });
       const data = await response.json();
@@ -161,9 +161,7 @@ const App = () => {
     }
   };
   
-  
-
-  console.log('Eventi passati al Scheduler:', events);
+    console.log('Eventi passati al Scheduler:', events);
 
   return (
     <div className="App">
@@ -183,7 +181,7 @@ const App = () => {
       textField: 'text', idField: 'id', colorField: 'color'
     },
     {
-      field: 'TaskId', title: 'Category', name: 'Categories', allowMultiple: true,
+      field: 'CollaboratoreId', title: 'Category', name: 'Categories', allowMultiple: true,
       dataSource: categoryResources,
       textField: 'text', idField: 'id', groupIDField: 'groupId', colorField: 'color'
     }

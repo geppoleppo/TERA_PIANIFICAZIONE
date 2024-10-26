@@ -35,7 +35,7 @@ app.post('/api/eventi', (req, res) => {
     StartTime,     // `StartTime` sarà l’inizio dell’evento
     EndTime,       // `EndTime` sarà la fine dell’evento
     ProjectId,     // `ProjectId` mappa a `CommessaName`
-    TaskId         // `TaskId` mappa a `IncaricatoId`
+    CollaboratoreId         // `CollaboratoreId` mappa a `IncaricatoId`
   } = req.body;
 
   // Mappa i campi ai nomi usati nella query SQL
@@ -43,7 +43,7 @@ app.post('/api/eventi', (req, res) => {
   const Inizio = StartTime;
   const Fine = EndTime;
   const CommessaName = ProjectId;
-  const IncaricatoId = TaskId;
+  const IncaricatoId = CollaboratoreId;
   const Colore = '#000000'; // Imposta un colore di default o mappa come necessario
   const Progresso = 0; // Imposta un valore di default per il progresso
   const Dipendenza = ''; // Imposta un valore vuoto per la dipendenza
@@ -95,7 +95,7 @@ app.get('/api/eventi', async (req, res) => {
       StartTime: evento.Inizio,
       EndTime: evento.Fine,
       ProjectId: parseInt(evento.CommessaName, 10), // Converti ProjectId in numero
-      TaskId: evento.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Converti TaskId in array di numeri
+      CollaboratoreId: evento.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Converti CollaboratoreId in array di numeri
       CategoryColor: evento.Colore || "#000000"
     }));
 
@@ -109,7 +109,7 @@ app.get('/api/eventi', async (req, res) => {
 
 app.put('/api/eventi/:id', async (req, res) => {
   const { id } = req.params;
-  const { Subject, StartTime, EndTime, ProjectId, TaskId, CategoryColor } = req.body;
+  const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor } = req.body;
 
   try {
     const query = `
@@ -122,7 +122,7 @@ app.put('/api/eventi/:id', async (req, res) => {
       StartTime,
       EndTime,
       ProjectId.toString(),
-      TaskId,  // Ora dovrebbe essere una stringa nel formato corretto
+      CollaboratoreId,  // Ora dovrebbe essere una stringa nel formato corretto
       CategoryColor,
       id
     ]);
@@ -132,10 +132,6 @@ app.put('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
   }
 });
-
-
-
-
   
   const port = 3001; // Assicurati che questa sia la porta corretta e non in conflitto
   app.listen(port, () => {
