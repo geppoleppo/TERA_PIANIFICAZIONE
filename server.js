@@ -15,13 +15,22 @@ app.use(express.json()); // Middleware per leggere JSON dal body
 
 app.get('/api/collaboratori', async (req, res) => {
   try {
-    const query = 'SELECT * FROM Collaboratori';
-    const collaboratori = await getRecords(query);
-    res.json(collaboratori);
+      db.all('SELECT * FROM Collaboratori', [], (err, rows) => {
+          if (err) {
+              res.status(500).json({ error: err.message });
+          } else {
+              const formattedRows = rows.map(row => ({
+                  ...row,
+                  groupIds: row.groupIds.split(',').map(id => parseInt(id)) // converte in array di interi
+              }));
+              res.json(formattedRows);
+          }
+      });
   } catch (error) {
-    res.status(500).json({ error: 'Errore durante l\'acquisizione dei collaboratori.' });
+      res.status(500).json({ error: "Errore nel recupero dei collaboratori" });
   }
 });
+
 
 app.use(cors()); // Abilita CORS per tutte le richieste
 app.use(express.json());

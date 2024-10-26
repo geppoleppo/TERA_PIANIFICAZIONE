@@ -71,19 +71,23 @@ const App = () => {
   
   // Funzione per salvare un nuovo evento nel database
   const saveEvent = async (eventData) => {
+    const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
+        ? eventData.CollaboratoreId.join(',')
+        : eventData.CollaboratoreId;
     try {
-      const response = await fetch('http://localhost:3001/api/eventi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventData) 
-      });
-      const data = await response.json();
-      console.log(data.message);
-      fetchEvents(); // Ricarica gli eventi dopo il salvataggio
+        const response = await fetch('http://localhost:3001/api/eventi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...eventData, CollaboratoreId: collaboratorIds })
+        });
+        const data = await response.json();
+        console.log(data.message);
+        fetchEvents();
     } catch (error) {
-      console.error("Errore durante il salvataggio dell'evento:", error);
+        console.error("Errore durante il salvataggio dell'evento:", error);
     }
-  };
+};
+
   
   // Funzione per eliminare un evento dal database
   const deleteEvent = async (eventId) => {
@@ -114,18 +118,19 @@ const App = () => {
   // Funzione per caricare `categoryResources` da `Collaboratori`
   const fetchCategoryResources = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/collaboratori'); // Assicurati che questo endpoint sia corretto
-      const data = await response.json();
-      setCategoryResources(data.map(collaboratore => ({
-        text: collaboratore.Nome,
-        id: collaboratore.Id,
-        groupId: collaboratore.groupId || 1,
-        color: collaboratore.Colore || '#df5286'
-      })));
+        const response = await fetch('http://localhost:3001/api/collaboratori');
+        const data = await response.json();
+        setCategoryResources(data.map(collaboratore => ({
+            text: collaboratore.Nome,
+            id: collaboratore.Id,
+            groupIds: collaboratore.groupIds, // mantiene l’array di commesse
+            color: collaboratore.Colore || '#df5286'
+        })));
     } catch (error) {
-      console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
+        console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
     }
-  };
+};
+
 /**const fetchProjectResources = async () => {
     try {
       const response = await fetch('http://localhost:3001/api/commesse');
@@ -215,34 +220,35 @@ const fetchProjectResources = async () => {
   return (
     <div className="App">
 <ScheduleComponent
-  actionComplete={onActionComplete}
-  width="100%"
-  height="650px"
-  //selectedDate={new Date(2023, 0, 4)}
-  views={['TimelineDay', 'TimelineWeek', 'TimelineWorkWeek', 'TimelineMonth', 'Agenda']}
-  currentView="TimelineWeek"
-  workDays={[0, 1, 2, 3, 4, 5]}
-  group={{ resources: ['Projects', 'Categories'] }}
-  resources={[
-    {
-      field: 'ProjectId', title: 'Choose Project', name: 'Projects',
-      dataSource: projectResources,
-      textField: 'text', idField: 'id', colorField: 'color'
-    },
-    {
-      field: 'CollaboratoreId', title: 'Category', name: 'Categories', allowMultiple: true,
-      dataSource: categoryResources,
-      textField: 'text', idField: 'id', groupIDField: 'groupId', colorField: 'color'
-    }
-  ]}
-  eventSettings={{
-    dataSource: events,
-    allowOverlap: true // Permette sovrapposizione degli eventi
-  }}
-  rowAutoHeight={true} // Adatta l'altezza della riga per gli eventi sovrapposti
+    actionComplete={onActionComplete}
+    width="100%"
+    height="650px"
+    selectedDate={new Date()}
+    views={['TimelineDay', 'TimelineWeek', 'TimelineWorkWeek', 'TimelineMonth', 'Agenda']}
+    currentView="TimelineWeek"
+    workDays={[0, 1, 2, 3, 4, 5]}
+    group={{ resources: ['Projects', 'Categories'] }}
+    resources={[
+        {
+            field: 'ProjectId', title: 'Choose Project', name: 'Projects',
+            dataSource: projectResources,
+            textField: 'text', idField: 'id', colorField: 'color'
+        },
+        {
+            field: 'CollaboratoreId', title: 'Category', name: 'Categories', allowMultiple: true,
+            dataSource: categoryResources,
+            textField: 'text', idField: 'id', groupIDField: 'groupIds', colorField: 'color' // utilizza `groupIds`
+        }
+    ]}
+    eventSettings={{
+        dataSource: events,
+        allowOverlap: true
+    }}
+    rowAutoHeight={true}
 >
-  <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
+    <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
 </ScheduleComponent>
+
 
     </div>
   );
