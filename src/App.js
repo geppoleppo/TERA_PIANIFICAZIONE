@@ -86,7 +86,7 @@ const fetchEvents = async () => {
   useEffect(() => {
     //console.log('Eventi caricati:', events);
     //console.log('Progetti:', projectResources);
-    console.log('Categorie:', categoryResources);
+    //console.log('Categorie:', categoryResources);
      fetchEvents();
   }, []);
 
@@ -99,7 +99,7 @@ const fetchProjectResources = async () => {
     try {
       const response = await fetch('http://localhost:3001/api/commesse');
       const data = await response.json();
-      console.log('XXXXXXXXX',data)
+     
 
       // Mappa i dati ricevuti dal database nel formato richiesto
       const formattedData = data.map(commessa => ({
@@ -112,9 +112,9 @@ const fetchProjectResources = async () => {
 
       // Imposta lo stato con i dati formattati
       setProjectResources(formattedData);
-      console.log("Project Resources caricati:", formattedData); // Stampa per verificare
+      //console.log("Project Resources caricati:", formattedData); // Stampa per verificare
     } catch (error) {
-      console.error("Errore durante il caricamento delle commesse:", error);
+      ///console.error("Errore durante il caricamento delle commesse:", error);
     }
   };
 
@@ -122,7 +122,7 @@ const fetchProjectResources = async () => {
     try {
       const response = await fetch('http://localhost:3001/api/collaboratori');
       const data = await response.json();
-      console.log("Dati grezzi dei collaboratori:", data); // Log per verificare i dati ricevuti
+      //console.log("Dati grezzi dei collaboratori:", data); // Log per verificare i dati ricevuti
   
       // Creiamo un array duplicato per ogni valore in `groupIds`
       const formattedData = data.flatMap(collaboratore =>
@@ -135,7 +135,7 @@ const fetchProjectResources = async () => {
       );
   
       setCategoryResources(formattedData);
-      console.log("Category Resources formattati per Scheduler:", formattedData);
+      //console.log("Category Resources formattati per Scheduler:", formattedData);
     } catch (error) {
       console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
     }
@@ -151,9 +151,9 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  console.log("Project Resources passati al Scheduler:", projectResources);
-  console.log("Category Resources passati al Scheduler:", categoryResources);
-  console.log("Eventi passati al Scheduler:", events);
+  //console.log("Project Resources passati al Scheduler:", projectResources);
+  //console.log("Category Resources passati al Scheduler:", categoryResources);
+  //console.log("Eventi passati al Scheduler:", events);
 }, [projectResources, categoryResources, events]);
   
   useEffect(() => {
@@ -193,9 +193,9 @@ useEffect(() => {
     }
   };
   
-    console.log('Eventi passati al Scheduler:', events);
-    console.log("Project Resources passati al Scheduler:", projectResources);
-    console.log("Category Resources passati al Scheduler:", categoryResources);
+    //console.log('Eventi passati al Scheduler:', events);
+    //console.log("Project Resources passati al Scheduler:", projectResources);
+    //console.log("Category Resources passati al Scheduler:", categoryResources);
     
     
   return (
