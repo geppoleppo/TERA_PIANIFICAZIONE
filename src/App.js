@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import { ScheduleComponent, TimelineViews, TimelineMonth, Agenda, DragAndDrop, Inject, Resize } from '@syncfusion/ej2-react-schedule';
 import { extend } from '@syncfusion/ej2-base';
+import Select from 'react-select';
 
 const App = () => {
   const [events, setEvents] = useState([]);
@@ -12,16 +13,18 @@ const App = () => {
 
   
   // Funzione per gestire la selezione del collaboratore
-  const handleCollaboratoreChange = (event) => {
-    const selectedId = event.target.value;
-    setSelectedCollaboratore(selectedId);
+  const handleCollaboratoreChange = (selectedOption) => {
+    // Verifica se esiste un'opzione selezionata, altrimenti imposta a null
+    setSelectedCollaboratore(selectedOption ? selectedOption.value : null);
   };
 
   // Funzione per gestire la selezione delle commesse
-  const handleCommesseChange = (event) => {
-    const selectedOptions = Array.from(event.target.selectedOptions, option => parseInt(option.value));
-    setSelectedCommesse(selectedOptions);
+  const handleCommesseChange = (selectedOptions) => {
+    console.log('selectedOptions:',selectedOptions)
+    // Mappa le opzioni selezionate per ottenere solo gli ID
+    setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
   };
+  
 
 // Funzione per caricare gli eventi dal database
 const fetchEvents = async () => {
@@ -43,10 +46,6 @@ const fetchEvents = async () => {
   }
 };
 
-  
-  
-  
-  
   
   // Funzione per salvare un nuovo evento nel database
   const saveEvent = async (eventData) => {
@@ -82,14 +81,6 @@ const fetchEvents = async () => {
     }
   };
   
-  // Effettua il caricamento degli eventi quando il componente è montato
-  useEffect(() => {
-    //console.log('Eventi caricati:', events);
-    //console.log('Progetti:', projectResources);
-    //console.log('Categorie:', categoryResources);
-     fetchEvents();
-  }, []);
-
 
 
   const [categoryResources, setCategoryResources] = useState([]);
@@ -142,23 +133,13 @@ const fetchProjectResources = async () => {
   };
   
   
-
-
 useEffect(() => {
   fetchProjectResources();
   fetchCategoryResources();
   fetchEvents();
 }, []);
 
-useEffect(() => {
-  //console.log("Project Resources passati al Scheduler:", projectResources);
-  //console.log("Category Resources passati al Scheduler:", categoryResources);
-  //console.log("Eventi passati al Scheduler:", events);
-}, [projectResources, categoryResources, events]);
-  
-  useEffect(() => {
-    console.log("Commesse (Projects) caricate:", projectResources);
-  }, [projectResources]);
+
 
   // Gestisce il completamento delle azioni di creazione e rimozione eventi
   function onActionComplete(args) {
@@ -193,39 +174,39 @@ useEffect(() => {
     }
   };
   
-    //console.log('Eventi passati al Scheduler:', events);
-    //console.log("Project Resources passati al Scheduler:", projectResources);
-    //console.log("Category Resources passati al Scheduler:", categoryResources);
-    
+ 
     
   return (
 
 
     <div className="App">
 {/* Menu a discesa per selezionare i collaboratori */}
-<div>
+
+      <div>
         <label>Seleziona Collaboratore:</label>
-        <select onChange={handleCollaboratoreChange}>
-          <option value="">-- Seleziona --</option>
-          {categoryResources.map(collaboratore => (
-            <option key={collaboratore.id} value={collaboratore.id}>
-              {collaboratore.text}
-            </option>
-          ))}
-        </select>
+        <Select
+        isMulti
+          options={categoryResources.map(collaboratore => ({ value: collaboratore.id, label: collaboratore.text }))}
+          onChange={handleCollaboratoreChange}
+          isClearable
+          placeholder="Seleziona Collaboratore"
+        />
       </div>
 
-{/* Menu a discesa multi-selezione per selezionare le commesse */}
-<div>
-        <label>Seleziona Commesse:</label>
-        <select multiple onChange={handleCommesseChange}>
-          {projectResources.map(commessa => (
-            <option key={commessa.id} value={commessa.id}>
-              {commessa.text}
-            </option>
-          ))}
-        </select>
-      </div>
+
+
+      <div>
+  <label>Seleziona Commesse:</label>
+  <Select
+    options={projectResources.map(commessa => ({
+      label: commessa.text, // Questo sarà visualizzato nel menu a tendina
+      value: commessa.id    // Questo è l'ID usato internamente
+    }))}
+    isMulti
+    onChange={handleCommesseChange}
+    placeholder="Seleziona Commesse"
+  />
+</div>
 
 <ScheduleComponent
     actionComplete={onActionComplete}
