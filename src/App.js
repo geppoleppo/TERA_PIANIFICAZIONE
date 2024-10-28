@@ -148,21 +148,6 @@ const fetchEvents = async () => {
 };
 
   
-  
-
-/**const fetchProjectResources = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/commesse');
-      const data = await response.json();
-      console.log("Commesse (Projects) caricate:", data);
-      
-      setProjectResources(data); // Imposta i dati caricati
-      
-    } catch (error) {
-      console.error("Errore durante il caricamento delle commesse:", error);
-    }
-  };**/
-  
 const fetchProjectResources = async () => {
     try {
       const response = await fetch('http://localhost:3001/api/commesse');
