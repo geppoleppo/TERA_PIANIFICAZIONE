@@ -4,7 +4,7 @@ Road map
 1) sostituire i valori di project con le commesse==>ok
 2)TaskId: sostituire con CollaboratoreId====>>OK
 3) inserire menu commesse e container per selezione colore
-4) associare le commesse ai collaboratori... bel casino==>quasi... non funziona ancora il groupsid
+4) associare le commesse ai collaboratori... bel casino==>mi sembra che ci siamo
 5) memorizzare anche la descrizione degli eveenti
 
      Id: 2,
