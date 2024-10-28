@@ -7,12 +7,20 @@ const App = () => {
   const [events, setEvents] = useState([]);
   const [projectResources, setProjectResources] = useState([]);
   const [selectedCollaboratore, setSelectedCollaboratore] = useState(null); // Stato per il collaboratore selezionato
+  const [selectedCommesse, setSelectedCommesse] = useState([]); // Stato per le commesse selezionate
+
 
   
   // Funzione per gestire la selezione del collaboratore
   const handleCollaboratoreChange = (event) => {
     const selectedId = event.target.value;
     setSelectedCollaboratore(selectedId);
+  };
+
+  // Funzione per gestire la selezione delle commesse
+  const handleCommesseChange = (event) => {
+    const selectedOptions = Array.from(event.target.selectedOptions, option => parseInt(option.value));
+    setSelectedCommesse(selectedOptions);
   };
 
 // Funzione per caricare gli eventi dal database
@@ -207,6 +215,17 @@ useEffect(() => {
         </select>
       </div>
 
+{/* Menu a discesa multi-selezione per selezionare le commesse */}
+<div>
+        <label>Seleziona Commesse:</label>
+        <select multiple onChange={handleCommesseChange}>
+          {projectResources.map(commessa => (
+            <option key={commessa.id} value={commessa.id}>
+              {commessa.text}
+            </option>
+          ))}
+        </select>
+      </div>
 
 <ScheduleComponent
     actionComplete={onActionComplete}
