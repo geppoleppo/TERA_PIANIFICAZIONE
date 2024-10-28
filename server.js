@@ -13,23 +13,27 @@ app.use(express.json()); // Middleware per leggere JSON dal body
 
 
 
+// Funzione per recuperare i collaboratori dal database con il modello di getRecords
 app.get('/api/collaboratori', async (req, res) => {
   try {
-      db.all('SELECT * FROM Collaboratori', [], (err, rows) => {
-          if (err) {
-              res.status(500).json({ error: err.message });
-          } else {
-              const formattedRows = rows.map(row => ({
-                  ...row,
-                  groupIds: row.groupIds.split(',').map(id => parseInt(id)) // converte in array di interi
-              }));
-              res.json(formattedRows);
-          }
-      });
+    const query = 'SELECT * FROM Collaboratori';
+    const collaboratori = await getRecords(query);
+    
+    const formattedCollaboratori = collaboratori.map(collaboratore => ({
+      ...collaboratore,
+      groupIds: typeof collaboratore.groupIds === 'string' 
+        ? collaboratore.groupIds.split(',').map(id => parseInt(id, 10))
+        : [parseInt(collaboratore.groupIds, 10)] // Converte in array se è un singolo numero
+    }));
+    
+    console.log("MERDAAA",collaboratori,formattedCollaboratori)
+    res.json(collaboratori);
+
   } catch (error) {
-      res.status(500).json({ error: "Errore nel recupero dei collaboratori" });
+    res.status(500).json({ error: "Errore nel recupero dei collaboratori" });
   }
 });
+
 
 
 app.use(cors()); // Abilita CORS per tutte le richieste
@@ -108,7 +112,7 @@ app.get('/api/eventi', async (req, res) => {
       CategoryColor: evento.Colore || "#000000"
     }));
 
-    console.log('Dati eventi dal database (formattati):', mappedEventi); // Verifica i dati nel formato corretto
+    //console.log('Dati eventi dal database (formattati):', mappedEventi); // Verifica i dati nel formato corretto
     res.json(mappedEventi);
   } catch (error) {
     console.error('Errore durante il recupero degli eventi:', error);

@@ -47,23 +47,26 @@ const App = () => {
     }
   ]);**/
   // Funzione per caricare gli eventi dal database
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/eventi');
-      const data = await response.json();
-  
-      // Assumi che `ProjectId` e `CollaboratoreId` siano stati definiti per ogni evento
-      const mappedEvents = data.map(event => ({
-        ...event,
-        ProjectId: event.ProjectId || 1, // Usa un valore predefinito o mappa da DB
-        CollaboratoreId: event.CollaboratoreId || [1],      // Usa un valore predefinito o mappa da 
-      }));
-  
-      setEvents(mappedEvents);
-    } catch (error) {
-      console.error('Errore durante il caricamento degli eventi:', error);
-    }
-  };
+// Funzione per caricare gli eventi dal database
+const fetchEvents = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/eventi');
+    const data = await response.json();
+    const mappedEvents = data.map(event => ({
+      ...event,
+      ProjectId: parseInt(event.ProjectId),
+      CollaboratoreId: typeof event.CollaboratoreId === 'string' 
+        ? event.CollaboratoreId.split(',').map(id => parseInt(id))
+        : Array.isArray(event.CollaboratoreId)
+        ? event.CollaboratoreId
+        : [] // Imposta un array vuoto se non è né stringa né array
+    }));
+    setEvents(mappedEvents);
+  } catch (error) {
+    console.error('Errore durante il caricamento degli eventi:', error);
+  }
+};
+
   
   
   
@@ -118,18 +121,20 @@ const App = () => {
   // Funzione per caricare `categoryResources` da `Collaboratori`
   const fetchCategoryResources = async () => {
     try {
-        const response = await fetch('http://localhost:3001/api/collaboratori');
-        const data = await response.json();
-        setCategoryResources(data.map(collaboratore => ({
-            text: collaboratore.Nome,
-            id: collaboratore.Id,
-            groupIds: collaboratore.groupIds, // mantiene l’array di commesse
-            color: collaboratore.Colore || '#df5286'
-        })));
+      const response = await fetch('http://localhost:3001/api/collaboratori');
+      const data = await response.json();
+      const formattedData = data.map(collaboratore => ({
+        text: collaboratore.Nome,
+        id: parseInt(collaboratore.Id),
+        groupIds: Array.isArray(collaboratore.groupIds) ? collaboratore.groupIds.join(',') : collaboratore.groupIds,
+        color: collaboratore.Colore || '#df5286'
+      }));
+      setCategoryResources(formattedData);
     } catch (error) {
-        console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
+      console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
     }
-};
+  };
+  
 
 /**const fetchProjectResources = async () => {
     try {
