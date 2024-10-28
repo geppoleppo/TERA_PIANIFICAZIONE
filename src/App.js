@@ -108,8 +108,8 @@ const fetchEvents = async () => {
   
   // Effettua il caricamento degli eventi quando il componente è montato
   useEffect(() => {
-    console.log('Eventi caricati:', events);
-    console.log('Progetti:', projectResources);
+    //console.log('Eventi caricati:', events);
+    //console.log('Progetti:', projectResources);
     console.log('Categorie:', categoryResources);
      fetchEvents();
   }, []);
@@ -121,19 +121,33 @@ const fetchEvents = async () => {
   // Funzione per caricare `categoryResources` da `Collaboratori`
   const fetchCategoryResources = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/collaboratori');
-      const data = await response.json();
-      const formattedData = data.map(collaboratore => ({
-        text: collaboratore.Nome,
-        id: parseInt(collaboratore.Id),
-        groupIds: Array.isArray(collaboratore.groupIds) ? collaboratore.groupIds.join(',') : collaboratore.groupIds,
-        color: collaboratore.Colore || '#df5286'
-      }));
-      setCategoryResources(formattedData);
+        const response = await fetch('http://localhost:3001/api/collaboratori');
+        const data = await response.json();
+
+        const formattedData = [];
+        let uniqueId = 1; // Inizializza un contatore per l'id univoco
+        
+        data.forEach(collaboratore => {
+            collaboratore.groupIds.forEach(groupId => {
+                formattedData.push({
+                    text: collaboratore.Nome,
+                    id: uniqueId++,  // Assegna un id unico e incrementa
+                    groupId: groupId,
+                    color: collaboratore.Colore || '#df5286'
+                });
+            });
+        });
+        
+        setCategoryResources(formattedData);
+        console.log("Categorie (Categories) caricate con id univoci e groupId singoli:", formattedData);
+        
+      
     } catch (error) {
-      console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
+        console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
     }
-  };
+};
+
+  
   
 
 /**const fetchProjectResources = async () => {
@@ -221,7 +235,10 @@ const fetchProjectResources = async () => {
   };
   
     console.log('Eventi passati al Scheduler:', events);
-
+    console.log("Project Resources passati al Scheduler:", projectResources);
+    console.log("Category Resources passati al Scheduler:", categoryResources);
+    
+    
   return (
     <div className="App">
 <ScheduleComponent
@@ -242,9 +259,10 @@ const fetchProjectResources = async () => {
         {
             field: 'CollaboratoreId', title: 'Category', name: 'Categories', allowMultiple: true,
             dataSource: categoryResources,
-            textField: 'text', idField: 'id', groupIDField: 'groupIds', colorField: 'color' // utilizza `groupIds`
+            textField: 'text', idField: 'id', groupIDField: 'groupId', colorField: 'color' // Imposta a groupId
         }
     ]}
+    
     eventSettings={{
         dataSource: events,
         allowOverlap: true
@@ -253,6 +271,7 @@ const fetchProjectResources = async () => {
 >
     <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
 </ScheduleComponent>
+
 
 
     </div>

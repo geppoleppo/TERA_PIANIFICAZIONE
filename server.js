@@ -18,17 +18,17 @@ app.get('/api/collaboratori', async (req, res) => {
   try {
     const query = 'SELECT * FROM Collaboratori';
     const collaboratori = await getRecords(query);
-    
+
     const formattedCollaboratori = collaboratori.map(collaboratore => ({
       ...collaboratore,
       groupIds: typeof collaboratore.groupIds === 'string' 
-        ? collaboratore.groupIds.split(',').map(id => parseInt(id, 10))
-        : [parseInt(collaboratore.groupIds, 10)] // Converte in array se è un singolo numero
+        ? collaboratore.groupIds.split(',').map(id => parseInt(id, 10)) 
+        : Array.isArray(collaboratore.groupIds) 
+          ? collaboratore.groupIds 
+          : []  // Usa un array vuoto se `groupIds` è null
     }));
-    
-    console.log("MERDAAA",collaboratori,formattedCollaboratori)
-    res.json(collaboratori);
 
+    res.json(formattedCollaboratori);
   } catch (error) {
     res.status(500).json({ error: "Errore nel recupero dei collaboratori" });
   }
