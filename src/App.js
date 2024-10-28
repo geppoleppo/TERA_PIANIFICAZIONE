@@ -6,47 +6,15 @@ import { extend } from '@syncfusion/ej2-base';
 const App = () => {
   const [events, setEvents] = useState([]);
   const [projectResources, setProjectResources] = useState([]);
-  /**const projectResources = [
-    { text: 'PROJECT 1', id: 1, color: '#cb6bb2' },
-    { text: 'PROJECT 2', id: 2, color: '#56ca85' },
-    { text: 'PROJECT 3', id: 3, color: '#df5286' }
-  ];**/
-  
-  /**const [events, setEvents] = useState([
-    {
-      Id: 1,
-      Subject: "Riunione Progetto",
-      Location: "Sala Riunioni",
-      StartTime: "2023-01-04T10:00:00.000Z",
-      EndTime: "2023-01-04T11:30:00.000Z",
-      ProjectId: 1,           // Associa all'ID di un progetto in `projectResources`
-      CollaboratoreId: [1, 3],          // Associa agli ID di categorie in `categoryResources`
-      CategoryColor: "#1aaa55" // Colore della categoria
-    },
-    {
-      Id: 2,
-      Subject: "Sviluppo Codice",
-      Location: "Studio",
-      StartTime: "2023-01-04T13:00:00.000Z",
-      EndTime: "2023-01-04T15:00:00.000Z",
-      ProjectId: 2,
-      CollaboratoreId: [2, 4],
-      CategoryColor: "#56ca85"
-    },
-    {
-      Id: 3,
-      Subject: "Aggiornamento Cliente",
-      Location: "Sala Conferenze",
-      StartTime: "2023-01-05T09:00:00.000Z",
-      EndTime: "2023-01-05T10:30:00.000Z",
-      ProjectId: 3,
-      CollaboratoreId: [3, 5],
-      CategoryColor: "#56ca85"
-      
+  const [selectedCollaboratore, setSelectedCollaboratore] = useState(null); // Stato per il collaboratore selezionato
 
-    }
-  ]);**/
-  // Funzione per caricare gli eventi dal database
+  
+  // Funzione per gestire la selezione del collaboratore
+  const handleCollaboratoreChange = (event) => {
+    const selectedId = event.target.value;
+    setSelectedCollaboratore(selectedId);
+  };
+
 // Funzione per caricare gli eventi dal database
 const fetchEvents = async () => {
   try {
@@ -223,7 +191,23 @@ useEffect(() => {
     
     
   return (
+
+
     <div className="App">
+{/* Menu a discesa per selezionare i collaboratori */}
+<div>
+        <label>Seleziona Collaboratore:</label>
+        <select onChange={handleCollaboratoreChange}>
+          <option value="">-- Seleziona --</option>
+          {categoryResources.map(collaboratore => (
+            <option key={collaboratore.id} value={collaboratore.id}>
+              {collaboratore.text}
+            </option>
+          ))}
+        </select>
+      </div>
+
+
 <ScheduleComponent
     actionComplete={onActionComplete}
     width="100%"
