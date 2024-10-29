@@ -3,6 +3,7 @@ import './App.css';
 import { ScheduleComponent, TimelineViews, TimelineMonth, Agenda, DragAndDrop, Inject, Resize } from '@syncfusion/ej2-react-schedule';
 import { extend } from '@syncfusion/ej2-base';
 import Select from 'react-select';
+import { TwitterPicker } from 'react-color';
 
 const App = () => {
   const [events, setEvents] = useState([]);
@@ -27,6 +28,24 @@ const handleCollaboratoreChange = selectedOptions => {
     setSelectedCommesse(selectedOptions);
   };
   
+  // Funzione per cambiare il colore di una commessa selezionata
+  const handleColorChange = (color, index) => {
+    const updatedCommesse = [...selectedCommesse];
+    updatedCommesse[index] = { ...updatedCommesse[index], color: color.hex };
+    setSelectedCommesse(updatedCommesse);
+  };
+
+  // Funzione per rimuovere una commessa selezionata
+  const removeCommessa = (index) => {
+    const updatedCommesse = selectedCommesse.filter((_, i) => i !== index);
+    setSelectedCommesse(updatedCommesse);
+  };
+
+  // Funzione per salvare le commesse selezionate (simula il salvataggio)
+  const saveSelectedCommesse = () => {
+    console.log("Commesse salvate:", selectedCommesse);
+    // Aggiungere logica di salvataggio al backend o allo stato
+  };
 
 
 // Funzione per caricare gli eventi dal database
@@ -242,6 +261,22 @@ useEffect(() => {
           placeholder="Seleziona Commesse"
         />
       </div>
+
+{/* Contenitore delle commesse selezionate */}
+<div className="commesse-container">
+        {selectedCommesse.map((commessa, index) => (
+          <div key={index} className="commessa-card">
+            <span>{commessa.label}</span>
+            <TwitterPicker
+              color={commessa.color || '#000000'}
+              onChangeComplete={(color) => handleColorChange(color, index)}
+            />
+            <button onClick={() => removeCommessa(index)}>Rimuovi</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={saveSelectedCommesse}>Memorizza</button>
+
 
       {/* Scheduler component */}
       <ScheduleComponent
