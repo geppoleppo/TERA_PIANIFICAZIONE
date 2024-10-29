@@ -166,8 +166,6 @@ useEffect(() => {
 
 // Effetto per aggiornare le commesse in base ai collaboratori selezionati
 useEffect(() => {
-  console.log("Collaboratori selezionati:", selectedCollaboratori);
-  
   if (selectedCollaboratori && selectedCollaboratori.length > 0) {
     const commesseComuni = projectResources.filter(commessa =>
       selectedCollaboratori.every(collabId => {
@@ -176,18 +174,18 @@ useEffect(() => {
       })
     );
 
-    console.log("Commesse comuni trovate:", commesseComuni);
-    
     setSelectedCommesse(
       commesseComuni.map(commessa => ({
         value: commessa.id,
-        label: commessa.text
+        label: commessa.text,
+        color: commessa.color // Assicura che il colore sia passato qui
       }))
     );
   } else {
     setSelectedCommesse([]);
   }
-}, [selectedCollaboratori, categoryResources, projectResources]);
+}, [selectedCollaboratori, projectResources]);
+
 
 
 
@@ -304,17 +302,18 @@ const deleteSelectedCommesse = async () => {
 
 {/* Contenitore delle commesse selezionate */}
 <div className="commesse-container">
-        {selectedCommesse.map((commessa, index) => (
-          <div key={index} className="commessa-card">
-            <span>{commessa.label}</span>
-            <TwitterPicker
-              color={commessa.color || '#000000'}
-              onChangeComplete={(color) => handleColorChange(color, index)}
-            />
-            <button onClick={() => removeCommessa(index)}>Rimuovi</button>
-          </div>
-        ))}
-      </div>
+  {selectedCommesse.map((commessa, index) => (
+    <div key={index} className="commessa-card">
+      <span>{commessa.label}</span>
+      <TwitterPicker
+        color={commessa.color || '#000000'} // Carica il colore corretto o imposta un default
+        onChangeComplete={(color) => handleColorChange(color, index)}
+      />
+      <button onClick={() => removeCommessa(index)}>Rimuovi</button>
+    </div>
+  ))}
+</div>
+
       <button onClick={saveSelectedCommesse}>Memorizza</button>
       <button onClick={deleteSelectedCommesse}>Cancella</button>
 

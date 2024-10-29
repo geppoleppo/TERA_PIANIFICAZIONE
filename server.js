@@ -109,7 +109,7 @@ app.put('/api/collaboratori/:id/aggiungi-commesse', async (req, res) => {
 });
 
 
-// Endpoint per rimuovere commesse dai groupIds di un collaboratore e resettare i colori
+
 app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
   const { id } = req.params;
   const { commesseIds } = req.body;
@@ -118,27 +118,17 @@ app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
     const collaboratore = await getRecords('SELECT * FROM Collaboratori WHERE Id = ?', [id]);
     if (collaboratore.length === 0) return res.status(404).json({ error: 'Collaboratore non trovato' });
 
+    // Rimuovi le commesse dai groupIds senza modificare il colore
     const groupIds = collaboratore[0].groupIds ? collaboratore[0].groupIds.split(',').map(Number) : [];
     const updatedGroupIds = groupIds.filter(gId => !commesseIds.includes(gId));
     await runQuery('UPDATE Collaboratori SET groupIds = ? WHERE Id = ?', [updatedGroupIds.join(','), id]);
 
-    // Resetta il colore delle commesse rimosse nella tabella Commesse (puoi impostare un colore predefinito o nullo)
-    for (const commessaId of commesseIds) {
-      await runQuery('UPDATE Commesse SET Colore = NULL WHERE Id = ?', [commessaId]);
-    }
-
-    res.json({ message: 'Commesse e colori rimossi con successo.' });
+    res.json({ message: 'Commesse rimosse dal collaboratore con successo.' });
   } catch (error) {
-    console.error("Errore durante la rimozione delle commesse e dei colori:", error);
-    res.status(500).json({ error: "Errore durante la rimozione delle commesse e dei colori dal collaboratore." });
+    console.error("Errore durante la rimozione delle commesse:", error);
+    res.status(500).json({ error: "Errore durante la rimozione delle commesse dal collaboratore." });
   }
 });
-
-
-
-
-
-
 
 
 
