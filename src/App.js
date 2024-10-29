@@ -7,24 +7,24 @@ import Select from 'react-select';
 const App = () => {
   const [events, setEvents] = useState([]);
   const [projectResources, setProjectResources] = useState([]);
-  const [selectedCollaboratore, setSelectedCollaboratore] = useState(null); // Stato per il collaboratore selezionato
-  const [selectedCommesse, setSelectedCommesse] = useState([]); // Stato per le commesse selezionate
+  const [categoryResources, setCategoryResources] = useState([]);
+  const [uniqueCollaborators, setUniqueCollaborators] = useState([]); // Collaboratori unici per il menu
+  const [selectedCollaboratore, setSelectedCollaboratore] = useState(null);
+  const [selectedCommesse, setSelectedCommesse] = useState([]);
 
-
+ 
   
-  // Funzione per gestire la selezione del collaboratore
-  const handleCollaboratoreChange = (selectedOption) => {
-    // Verifica se esiste un'opzione selezionata, altrimenti imposta a null
+  // Funzione per gestire il cambio del collaboratore selezionato
+  const handleCollaboratoreChange = selectedOption => {
     setSelectedCollaboratore(selectedOption ? selectedOption.value : null);
   };
 
   // Funzione per gestire la selezione delle commesse
-  const handleCommesseChange = (selectedOptions) => {
-    console.log('selectedOptions:',selectedOptions)
-    // Mappa le opzioni selezionate per ottenere solo gli ID
-    setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
+  const handleCommesseChange = selectedOptions => {
+    setSelectedCommesse(selectedOptions);
   };
   
+
 
 // Funzione per caricare gli eventi dal database
 const fetchEvents = async () => {
@@ -82,62 +82,96 @@ const fetchEvents = async () => {
   };
   
 
-
-  const [categoryResources, setCategoryResources] = useState([]);
-
   
+// Funzione per caricare le commesse
 const fetchProjectResources = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/commesse');
-      const data = await response.json();
-     
+  try {
+    const response = await fetch('http://localhost:3001/api/commesse');
+    const data = await response.json();
 
-      // Mappa i dati ricevuti dal database nel formato richiesto
-      const formattedData = data.map(commessa => ({
-        text: commessa.text,  // Assegna il nome della commessa a "text"
-        id: commessa.Id,              // Assegna l'ID della commessa a "id"
-        color: commessa.color        // Assegna il colore della commessa a "color"
-      }));
+    const formattedData = data.map(commessa => ({
+      text: commessa.text,
+      id: commessa.Id,
+      color: commessa.color
+    }));
 
-      //{ text: 'PROJECT 1', id: 1, color: '#cb6bb2' },
+    setProjectResources(formattedData);
+  } catch (error) {
+    console.error('Errore durante il caricamento delle commesse:', error);
+  }
+};
 
-      // Imposta lo stato con i dati formattati
-      setProjectResources(formattedData);
-      //console.log("Project Resources caricati:", formattedData); // Stampa per verificare
-    } catch (error) {
-      ///console.error("Errore durante il caricamento delle commesse:", error);
-    }
-  };
+// Funzione per caricare i collaboratori e duplicarli per il `Scheduler`
+const fetchCategoryResources = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/collaboratori');
+    const data = await response.json();
 
-  const fetchCategoryResources = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/collaboratori');
-      const data = await response.json();
-      //console.log("Dati grezzi dei collaboratori:", data); // Log per verificare i dati ricevuti
-  
-      // Creiamo un array duplicato per ogni valore in `groupIds`
-      const formattedData = data.flatMap(collaboratore =>
-        collaboratore.groupIds.map(groupId => ({
-          text: collaboratore.Nome,
-          id: collaboratore.Id,
-          groupId: groupId,  // Usa ogni valore di `groupIds` come `groupId` singolo
-          color: collaboratore.Colore
-        }))
-      );
-  
-      setCategoryResources(formattedData);
-      //console.log("Category Resources formattati per Scheduler:", formattedData);
-    } catch (error) {
-      console.error('Errore durante il caricamento delle risorse dei collaboratori:', error);
-    }
-  };
+    // Creiamo una lista di collaboratori unici per il menu
+    const uniqueCollaborators = data.map(collaboratore => ({
+      text: collaboratore.Nome,
+      id: collaboratore.Id,
+      groupIds: collaboratore.groupIds, // Manteniamo `groupIds` come array per il caricamento commesse
+      color: collaboratore.Colore
+    }));
+
+    // Duplicare i collaboratori per ogni `groupId` solo per il Scheduler
+    const duplicatedData = data.flatMap(collaboratore =>
+      collaboratore.groupIds.map(groupId => ({
+        text: collaboratore.Nome,
+        id: collaboratore.Id,
+        groupId: groupId, // Singolo `groupId` per ogni duplicato
+        color: collaboratore.Colore
+      }))
+    );
+
+    setUniqueCollaborators(uniqueCollaborators); // Collaboratori unici per il menu
+    setCategoryResources(duplicatedData); // Collaboratori duplicati per il `Scheduler`
+  } catch (error) {
+    console.error('Errore durante il caricamento dei collaboratori:', error);
+  }
+};
+
+
   
   
 useEffect(() => {
   fetchProjectResources();
   fetchCategoryResources();
   fetchEvents();
+
 }, []);
+
+
+// Effetto per precaricare le commesse quando cambia il collaboratore selezionato
+useEffect(() => {
+  if (selectedCollaboratore) {
+    // Trova il collaboratore unico selezionato
+    const collaboratore = uniqueCollaborators.find(
+      collab => collab.id === selectedCollaboratore
+    );
+
+    // Se il collaboratore esiste e ha `groupIds`, trova le commesse associate
+    if (collaboratore && Array.isArray(collaboratore.groupIds)) {
+      const associatedCommesse = projectResources.filter(commessa =>
+        collaboratore.groupIds.includes(commessa.id)
+      );
+
+      // Aggiorna il menu delle commesse con quelle associate
+      setSelectedCommesse(
+        associatedCommesse.map(commessa => ({
+          value: commessa.id,
+          label: commessa.text
+        }))
+      );
+    }
+  } else {
+    // Se nessun collaboratore è selezionato, resetta il menu delle commesse
+    setSelectedCommesse([]);
+  }
+}, [selectedCollaboratore, uniqueCollaborators, projectResources]);
+
+
 
 
 
@@ -174,76 +208,72 @@ useEffect(() => {
     }
   };
   
- 
+  console.log('XXXXXXX',projectResources)
+  console.log('YYYYYU',categoryResources)
     
   return (
-
-
     <div className="App">
-{/* Menu a discesa per selezionare i collaboratori */}
-
+      {/* Menu a discesa per selezionare i collaboratori */}
       <div>
         <label>Seleziona Collaboratore:</label>
         <Select
-        isMulti
-          options={categoryResources.map(collaboratore => ({ value: collaboratore.id, label: collaboratore.text }))}
+          options={uniqueCollaborators.map(collaboratore => ({
+            value: collaboratore.id,
+            label: collaboratore.text
+          }))}
           onChange={handleCollaboratoreChange}
           isClearable
           placeholder="Seleziona Collaboratore"
         />
       </div>
 
-
-
+      {/* Menu a discesa multi-selezione per selezionare le commesse */}
       <div>
-  <label>Seleziona Commesse:</label>
-  <Select
-    options={projectResources.map(commessa => ({
-      label: commessa.text, // Questo sarà visualizzato nel menu a tendina
-      value: commessa.id    // Questo è l'ID usato internamente
-    }))}
-    isMulti
-    onChange={handleCommesseChange}
-    placeholder="Seleziona Commesse"
-  />
-</div>
+        <label>Seleziona Commesse:</label>
+        <Select
+          options={projectResources.map(commessa => ({
+            value: commessa.id,
+            label: commessa.text
+          }))}
+          value={selectedCommesse}
+          isMulti
+          onChange={handleCommesseChange}
+          placeholder="Seleziona Commesse"
+        />
+      </div>
 
-<ScheduleComponent
-    actionComplete={onActionComplete}
-    width="100%"
-    height="650px"
-    selectedDate={new Date()}
-    views={['TimelineDay', 'TimelineWeek', 'TimelineWorkWeek', 'TimelineMonth', 'Agenda']}
-    currentView="TimelineWeek"
-    workDays={[0, 1, 2, 3, 4, 5]}
-    group={{ resources: ['Projects', 'Categories'] }}
-    resources={[
-        {
+      {/* Scheduler component */}
+      <ScheduleComponent
+        actionComplete={onActionComplete}
+        width="100%"
+        height="650px"
+        selectedDate={new Date()}
+        views={['TimelineDay', 'TimelineWeek', 'TimelineWorkWeek', 'TimelineMonth', 'Agenda']}
+        currentView="TimelineWeek"
+        workDays={[0, 1, 2, 3, 4, 5]}
+        group={{ resources: ['Projects', 'Categories'] }}
+        resources={[
+          {
             field: 'ProjectId', title: 'Choose Project', name: 'Projects',
             dataSource: projectResources,
             textField: 'text', idField: 'id', colorField: 'color'
-        },
-        {
+          },
+          {
             field: 'CollaboratoreId', title: 'Category', name: 'Categories', allowMultiple: true,
             dataSource: categoryResources,
             textField: 'text', idField: 'id', groupIDField: 'groupId', colorField: 'color'
-        }
-    ]}
-    eventSettings={{
-        dataSource: events,
-        allowOverlap: true
-    }}
-    rowAutoHeight={true}
->
-    <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
-</ScheduleComponent>
-
-
-
-
+          }
+        ]}
+        eventSettings={{
+          dataSource: events,
+          allowOverlap: true
+        }}
+        rowAutoHeight={true}
+      >
+        <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
+      </ScheduleComponent>
     </div>
   );
-  
 };
 
 export default App;

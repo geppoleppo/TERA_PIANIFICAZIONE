@@ -155,7 +155,7 @@ app.get('/api/commesse', async (req, res) => {
     const query = 'SELECT Id, CommessaName AS text, Colore AS color FROM Commesse';
     const commesse = await getRecords(query);
     res.json(commesse);
-    console.log("Commesse caricate dal database:", commesse);
+    //console.log("Commesse caricate dal database:", commesse);
   } catch (error) {
     console.error('Errore durante il caricamento delle commesse:', error);
     res.status(500).json({ error: 'Errore durante il caricamento delle commesse.' });
