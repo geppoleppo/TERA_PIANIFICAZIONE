@@ -59,20 +59,28 @@ const fetchEvents = async () => {
   try {
     const response = await fetch('http://localhost:3001/api/eventi');
     const data = await response.json();
-    const mappedEvents = data.map(event => ({
-      ...event,
-      ProjectId: parseInt(event.ProjectId),
-      CollaboratoreId: typeof event.CollaboratoreId === 'string' 
-        ? event.CollaboratoreId.split(',').map(id => parseInt(id))
-        : Array.isArray(event.CollaboratoreId)
-        ? event.CollaboratoreId
-        : [] // Imposta un array vuoto se non è né stringa né array
-    }));
+
+    const mappedEvents = data.map(event => {
+      const commessa = projectResources.find(p => p.id === event.ProjectId);
+      return {
+        ...event,
+        ProjectId: parseInt(event.ProjectId),
+        CollaboratoreId: typeof event.CollaboratoreId === 'string' 
+          ? event.CollaboratoreId.split(',').map(id => parseInt(id))
+          : Array.isArray(event.CollaboratoreId)
+          ? event.CollaboratoreId
+          : [],
+        CategoryColor: commessa ? commessa.color : '#000000' // Usa il colore della commessa o un fallback
+      };
+    });
+
+    console.log("Eventi con colori assegnati:", mappedEvents); // Aggiungi questo log per verificare i colori
     setEvents(mappedEvents);
   } catch (error) {
     console.error('Errore durante il caricamento degli eventi:', error);
   }
 };
+
 
   
   // Funzione per salvare un nuovo evento nel database
@@ -356,6 +364,7 @@ const deleteSelectedCommesse = async () => {
         }}
         rowAutoHeight={true}
       >
+        {console.log("Dati eventi nello Scheduler:", events)} {/* Log per vedere i dati degli eventi */}
         <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
       </ScheduleComponent>
     </div>
