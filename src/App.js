@@ -41,11 +41,7 @@ const handleCollaboratoreChange = selectedOptions => {
     setSelectedCommesse(updatedCommesse);
   };
 
-  // Funzione per salvare le commesse selezionate (simula il salvataggio)
-  const saveSelectedCommesse = () => {
-    console.log("Commesse salvate:", selectedCommesse);
-    // Aggiungere logica di salvataggio al backend o allo stato
-  };
+
 
 
 // Funzione per caricare gli eventi dal database
@@ -191,6 +187,43 @@ useEffect(() => {
 }, [selectedCollaboratori, categoryResources, projectResources]);
 
 
+// Funzione per memorizzare le commesse selezionate per i collaboratori
+const saveSelectedCommesse = async () => {
+  try {
+    await Promise.all(
+      selectedCollaboratori.map(async collaboratoreId => {
+        const commesseIds = selectedCommesse.map(commessa => commessa.value);
+        await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/aggiungi-commesse`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ commesseIds })
+        });
+      })
+    );
+    console.log('Commesse aggiunte ai collaboratori selezionati');
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento delle commesse per i collaboratori:", error);
+  }
+};
+
+// Funzione per rimuovere le commesse selezionate dai collaboratori
+const deleteSelectedCommesse = async () => {
+  try {
+    await Promise.all(
+      selectedCollaboratori.map(async collaboratoreId => {
+        const commesseIds = selectedCommesse.map(commessa => commessa.value);
+        await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/rimuovi-commesse`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ commesseIds })
+        });
+      })
+    );
+    console.log('Commesse rimosse dai collaboratori selezionati');
+  } catch (error) {
+    console.error("Errore durante la rimozione delle commesse dai collaboratori:", error);
+  }
+};
 
 
 
@@ -276,6 +309,7 @@ useEffect(() => {
         ))}
       </div>
       <button onClick={saveSelectedCommesse}>Memorizza</button>
+      <button onClick={deleteSelectedCommesse}>Cancella</button>
 
 
       {/* Scheduler component */}

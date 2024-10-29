@@ -80,6 +80,43 @@ app.post('/api/eventi', (req, res) => {
     });
 });
 
+// Endpoint per aggiungere commesse ai groupIds di un collaboratore
+app.put('/api/collaboratori/:id/aggiungi-commesse', async (req, res) => {
+  const { id } = req.params;
+  const { commesseIds } = req.body;
+
+  try {
+    const collaboratore = await getRecords('SELECT * FROM Collaboratori WHERE Id = ?', [id]);
+    if (collaboratore.length === 0) return res.status(404).json({ error: 'Collaboratore non trovato' });
+
+    const groupIds = collaboratore[0].groupIds ? collaboratore[0].groupIds.split(',').map(Number) : [];
+    const updatedGroupIds = Array.from(new Set([...groupIds, ...commesseIds])); // Evita duplicati
+    await runQuery('UPDATE Collaboratori SET groupIds = ? WHERE Id = ?', [updatedGroupIds.join(','), id]);
+
+    res.json({ message: 'Commesse aggiunte con successo.' });
+  } catch (error) {
+    res.status(500).json({ error: "Errore durante l'aggiornamento delle commesse del collaboratore." });
+  }
+});
+
+// Endpoint per rimuovere commesse dai groupIds di un collaboratore
+app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
+  const { id } = req.params;
+  const { commesseIds } = req.body;
+
+  try {
+    const collaboratore = await getRecords('SELECT * FROM Collaboratori WHERE Id = ?', [id]);
+    if (collaboratore.length === 0) return res.status(404).json({ error: 'Collaboratore non trovato' });
+
+    const groupIds = collaboratore[0].groupIds ? collaboratore[0].groupIds.split(',').map(Number) : [];
+    const updatedGroupIds = groupIds.filter(id => !commesseIds.includes(id));
+    await runQuery('UPDATE Collaboratori SET groupIds = ? WHERE Id = ?', [updatedGroupIds.join(','), id]);
+
+    res.json({ message: 'Commesse rimosse con successo.' });
+  } catch (error) {
+    res.status(500).json({ error: "Errore durante la rimozione delle commesse dal collaboratore." });
+  }
+});
 
 
 
