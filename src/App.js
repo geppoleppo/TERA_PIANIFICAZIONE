@@ -101,7 +101,7 @@ const fetchEvents = async () => {
   
 
   
-// Funzione per caricare le commesse
+// Funzione per caricare le commesse dal database
 const fetchProjectResources = async () => {
   try {
     const response = await fetch('http://localhost:3001/api/commesse');
@@ -110,14 +110,17 @@ const fetchProjectResources = async () => {
     const formattedData = data.map(commessa => ({
       text: commessa.text,
       id: commessa.Id,
-      color: commessa.color
+      color: commessa.color // Assicura che il colore venga letto dal database
     }));
 
+    console.log("Commesse caricate con colore:", formattedData); // Controllo log
     setProjectResources(formattedData);
   } catch (error) {
     console.error('Errore durante il caricamento delle commesse:', error);
   }
 };
+
+
 
 // Funzione per caricare i collaboratori e duplicarli per il `Scheduler`
 const fetchCategoryResources = async () => {
@@ -187,26 +190,32 @@ useEffect(() => {
 }, [selectedCollaboratori, categoryResources, projectResources]);
 
 
-// Funzione per memorizzare le commesse selezionate per i collaboratori
+
+// Funzione per salvare le commesse e aggiornare i collaboratori selezionati
 const saveSelectedCommesse = async () => {
   try {
     await Promise.all(
       selectedCollaboratori.map(async collaboratoreId => {
-        const commesseIds = selectedCommesse.map(commessa => commessa.value);
+        const commesseIds = selectedCommesse.map(commessa => ({
+          id: commessa.value,
+          color: commessa.color // Aggiungi il colore della commessa
+        }));
         await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/aggiungi-commesse`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ commesseIds })
+          body: JSON.stringify({ commesseIds }) // Passa anche il colore aggiornato
         });
       })
     );
-    console.log('Commesse aggiunte ai collaboratori selezionati');
+    await fetchCategoryResources(); // Ricarica collaboratori per aggiornare le modifiche
+    console.log('Commesse con colori aggiornati memorizzate per i collaboratori selezionati');
   } catch (error) {
     console.error("Errore durante l'aggiornamento delle commesse per i collaboratori:", error);
   }
 };
 
-// Funzione per rimuovere le commesse selezionate dai collaboratori
+
+// Funzione per cancellare le commesse dai collaboratori selezionati
 const deleteSelectedCommesse = async () => {
   try {
     await Promise.all(
@@ -219,14 +228,12 @@ const deleteSelectedCommesse = async () => {
         });
       })
     );
+    await fetchCategoryResources(); // Ricarica collaboratori
     console.log('Commesse rimosse dai collaboratori selezionati');
   } catch (error) {
     console.error("Errore durante la rimozione delle commesse dai collaboratori:", error);
   }
 };
-
-
-
 
 
   // Gestisce il completamento delle azioni di creazione e rimozione eventi
