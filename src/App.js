@@ -9,15 +9,18 @@ const App = () => {
   const [projectResources, setProjectResources] = useState([]);
   const [categoryResources, setCategoryResources] = useState([]);
   const [uniqueCollaborators, setUniqueCollaborators] = useState([]); // Collaboratori unici per il menu
-  const [selectedCollaboratore, setSelectedCollaboratore] = useState(null);
+  const [selectedCollaboratori, setSelectedCollaboratori] = useState([]); // Inizializza come array vuoto
   const [selectedCommesse, setSelectedCommesse] = useState([]);
 
  
   
-  // Funzione per gestire il cambio del collaboratore selezionato
-  const handleCollaboratoreChange = selectedOption => {
-    setSelectedCollaboratore(selectedOption ? selectedOption.value : null);
-  };
+
+// Funzione per gestire il cambio dei collaboratori selezionati
+const handleCollaboratoreChange = selectedOptions => {
+  const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
+  setSelectedCollaboratori(selectedIds);
+};
+
 
   // Funzione per gestire la selezione delle commesse
   const handleCommesseChange = selectedOptions => {
@@ -143,33 +146,32 @@ useEffect(() => {
 }, []);
 
 
-// Effetto per precaricare le commesse quando cambia il collaboratore selezionato
+// Effetto per aggiornare le commesse in base ai collaboratori selezionati
 useEffect(() => {
-  if (selectedCollaboratore) {
-    // Trova il collaboratore unico selezionato
-    const collaboratore = uniqueCollaborators.find(
-      collab => collab.id === selectedCollaboratore
+  console.log("Collaboratori selezionati:", selectedCollaboratori);
+  
+  if (selectedCollaboratori && selectedCollaboratori.length > 0) {
+    const commesseComuni = projectResources.filter(commessa =>
+      selectedCollaboratori.every(collabId => {
+        const collaboratore = uniqueCollaborators.find(c => c.id === collabId);
+        return collaboratore?.groupIds.includes(commessa.id);
+      })
     );
 
-    // Se il collaboratore esiste e ha `groupIds`, trova le commesse associate
-    if (collaboratore && Array.isArray(collaboratore.groupIds)) {
-      const associatedCommesse = projectResources.filter(commessa =>
-        collaboratore.groupIds.includes(commessa.id)
-      );
-
-      // Aggiorna il menu delle commesse con quelle associate
-      setSelectedCommesse(
-        associatedCommesse.map(commessa => ({
-          value: commessa.id,
-          label: commessa.text
-        }))
-      );
-    }
+    console.log("Commesse comuni trovate:", commesseComuni);
+    
+    setSelectedCommesse(
+      commesseComuni.map(commessa => ({
+        value: commessa.id,
+        label: commessa.text
+      }))
+    );
   } else {
-    // Se nessun collaboratore è selezionato, resetta il menu delle commesse
     setSelectedCommesse([]);
   }
-}, [selectedCollaboratore, uniqueCollaborators, projectResources]);
+}, [selectedCollaboratori, categoryResources, projectResources]);
+
+
 
 
 
@@ -207,21 +209,20 @@ useEffect(() => {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
-  
-  console.log('XXXXXXX',projectResources)
-  console.log('YYYYYU',categoryResources)
-    
+
   return (
     <div className="App">
       {/* Menu a discesa per selezionare i collaboratori */}
       <div>
         <label>Seleziona Collaboratore:</label>
         <Select
+        
           options={uniqueCollaborators.map(collaboratore => ({
             value: collaboratore.id,
             label: collaboratore.text
           }))}
           onChange={handleCollaboratoreChange}
+          isMulti
           isClearable
           placeholder="Seleziona Collaboratore"
         />
