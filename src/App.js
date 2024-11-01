@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { ScheduleComponent, TimelineViews, TimelineMonth, Agenda, DragAndDrop, Inject, Resize } from '@syncfusion/ej2-react-schedule';
+import { Day, WorkWeek, Month, ScheduleComponent, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, ResourceDetails,Week,Agenda, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
 import { extend } from '@syncfusion/ej2-base';
 import Select from 'react-select';
 import { TwitterPicker } from 'react-color';
@@ -338,37 +338,62 @@ const deleteSelectedCommesse = async () => {
 
       {/* Scheduler component */}
       <ScheduleComponent
-        actionComplete={onActionComplete}
-        width="100%"
-        height="650px"
-        selectedDate={new Date()}
-        views={['TimelineDay', 'TimelineWeek', 'TimelineWorkWeek', 'TimelineMonth', 'Agenda']}
-        currentView="TimelineWeek"
-        workDays={[0, 1, 2, 3, 4, 5]}
-        group={{ resources: ['Projects', 'Categories'] }}
-        resources={[
-          {
-            field: 'ProjectId', title: 'Choose Project', name: 'Projects',
-            dataSource: projectResources,
-            textField: 'text', idField: 'id', colorField: 'color'
-          },
-          {
-            field: 'CollaboratoreId', title: 'Category', name: 'Categories', allowMultiple: true,
-            dataSource: categoryResources,
-            textField: 'text', idField: 'id', groupIDField: 'groupId', colorField: 'color'
-          }
-        ]}
-        eventSettings={{
-          dataSource: events,
-          allowOverlap: true
-        }}
-        rowAutoHeight={true}
-      >
-        {console.log("Dati eventi nello Scheduler:", events)} {/* Log per vedere i dati degli eventi */}
-        <Inject services={[TimelineViews, TimelineMonth, Agenda, DragAndDrop, Resize]} />
-      </ScheduleComponent>
+actionComplete={onActionComplete}
+width="100%"
+height="650px"
+selectedDate={new Date()}
+
+eventSettings={{
+  dataSource: events,
+  fields: {
+    subject: { title: 'Task', name: 'Subject' },
+    startTime: { title: 'Start Time', name: 'StartTime' },
+    endTime: { title: 'End Time', name: 'EndTime' },
+    description: { title: 'Summary', name: 'Description' }
+  },
+}}
+group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
+>
+{/* Resource Definitions */}
+<ResourcesDirective>
+  <ResourceDirective
+    field="ProjectId"
+    title="Projects"
+    name="Projects"
+    dataSource={projectResources}
+    textField="text"
+    idField="id"
+    colorField="CategoryColor"
+  />
+  <ResourceDirective
+    field="CollaboratoreId"
+    title="Collaboratori"
+    name="Categories"
+    allowMultiple={true}
+    dataSource={categoryResources}
+    textField="text"
+    idField="id"
+    groupIDField="groupId"
+    colorField="CategoryColor"
+  />
+</ResourcesDirective>
+
+{/* Views */}
+<ViewsDirective>
+<ViewDirective option="Day" />
+  
+  <ViewDirective option="WorkWeek" />
+  <ViewDirective option="Month" />
+  <ViewDirective option="TimelineWeek" />
+  <ViewDirective option="TimelineMonth" />
+</ViewsDirective>
+
+<Inject services={[Day, WorkWeek, Month, Week,TimelineViews, DragAndDrop, Resize, Agenda]} />
+</ScheduleComponent>
+
     </div>
   );
 };
 
 export default App;
+
