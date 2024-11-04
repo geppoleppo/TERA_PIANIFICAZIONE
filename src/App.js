@@ -65,14 +65,16 @@ const fetchEvents = async () => {
       return {
         ...event,
         ProjectId: parseInt(event.ProjectId),
-        CollaboratoreId: typeof event.CollaboratoreId === 'string' 
-          ? event.CollaboratoreId.split(',').map(id => parseInt(id))
-          : Array.isArray(event.CollaboratoreId)
+        CollaboratoreId: Array.isArray(event.CollaboratoreId)
           ? event.CollaboratoreId
-          : [],
-        CategoryColor: commessa ? commessa.color : '#000000' // Usa il colore della commessa o un fallback
+          : event.CollaboratoreId.split(',').map(id => parseInt(id)),
+        CategoryColor: commessa ? commessa.color : '#FF0000' // Fallback a rosso
       };
     });
+    
+    console.log("Eventi con colore assegnato:", mappedEvents);
+    setEvents(mappedEvents);
+    
 
     console.log("Eventi con colori assegnati:", mappedEvents); // Aggiungi questo log per verificare i colori
     setEvents(mappedEvents);
@@ -88,19 +90,25 @@ const fetchEvents = async () => {
     const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
         ? eventData.CollaboratoreId.join(',')
         : eventData.CollaboratoreId;
+  
     try {
         const response = await fetch('http://localhost:3001/api/eventi', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...eventData, CollaboratoreId: collaboratorIds })
+            body: JSON.stringify({
+              ...eventData,
+              CollaboratoreId: collaboratorIds,
+              CategoryColor: eventData.CategoryColor || '#FF0000' // Fallback a rosso
+            })
         });
         const data = await response.json();
-        console.log(data.message);
-        fetchEvents();
+        console.log("Risposta dal server dopo il salvataggio:", data);
+        fetchEvents(); // Ricarica gli eventi
     } catch (error) {
         console.error("Errore durante il salvataggio dell'evento:", error);
     }
-};
+  };
+  
 
   
   // Funzione per eliminare un evento dal database
@@ -255,13 +263,28 @@ const deleteSelectedCommesse = async () => {
   // Gestisce il completamento delle azioni di creazione e rimozione eventi
   function onActionComplete(args) {
     if (args.requestType === 'eventCreated') {
-      args.addedRecords.forEach(event => saveEvent(event));
+      args.addedRecords.forEach(event => {
+        // Trova il colore corrispondente per la risorsa associata
+        const commessa = projectResources.find(p => p.id === event.ProjectId);
+        event.CategoryColor = commessa ? commessa.color : '#FF0000'; // Fallback a rosso
+  
+        console.log("Evento creato con colore assegnato:", event);
+        saveEvent(event); // Salva l'evento con il colore
+      });
     } else if (args.requestType === 'eventRemoved') {
-      args.deletedRecords.forEach(event => deleteEvent(event.Id));
+      args.deletedRecords.forEach(event => {
+        console.log("Evento rimosso:", event);
+        deleteEvent(event.Id);
+      });
     } else if (args.requestType === 'eventChanged') {
-      args.changedRecords.forEach(event => updateEvent(event)); // Aggiungi gestione aggiornamento
+      args.changedRecords.forEach(event => {
+        console.log("Evento aggiornato:", event);
+        updateEvent(event);
+      });
     }
   }
+  
+  
   
   // Funzione per aggiornare un evento
   const updateEvent = async (eventData) => {
@@ -351,7 +374,10 @@ eventSettings={{
     endTime: { title: 'End Time', name: 'EndTime' },
     description: { title: 'Summary', name: 'Description' }
   },
+  // Imposta il colore dell'evento usando CategoryColor
+  cssClass: 'event-color'
 }}
+
 group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
 >
 {/* Resource Definitions */}
@@ -363,7 +389,7 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     dataSource={projectResources}
     textField="text"
     idField="id"
-    colorField="CategoryColor"
+    colorField="color"
   />
   <ResourceDirective
     field="CollaboratoreId"
@@ -374,7 +400,7 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     textField="text"
     idField="id"
     groupIDField="groupId"
-    colorField="CategoryColor"
+    colorField="color"
   />
 </ResourcesDirective>
 
