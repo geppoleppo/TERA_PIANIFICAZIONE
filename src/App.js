@@ -360,9 +360,12 @@ actionComplete={onActionComplete}
 width="100%"
 height="650px"
 selectedDate={new Date()}
+rowAutoHeight= 'true'
 
 eventSettings={{
   dataSource: events,
+  allowEventOverlap: true, // Consenti eventi sovrapposti
+  
   fields: {
     subject: { title: 'Task', name: 'Subject' },
     startTime: { title: 'Start Time', name: 'StartTime' },
@@ -370,6 +373,7 @@ eventSettings={{
     description: { title: 'Summary', name: 'Description' }
   },
 }}
+
 group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
         eventRendered={onEventRendered} // Aggiungi qui l'evento per gestire i colori
       >

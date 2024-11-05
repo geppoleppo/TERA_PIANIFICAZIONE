@@ -40,7 +40,6 @@ app.use(express.json());
 
 
 // Aggiungi un nuovo evento
-// Aggiungi un nuovo evento
 app.post('/api/eventi', (req, res) => {
   const {
     Subject,       // Titolo dell'evento
@@ -52,7 +51,7 @@ app.post('/api/eventi', (req, res) => {
   } = req.body;
 
   // Log per verificare i dati ricevuti dal client
-  console.log("Dati ricevuti per l'inserimento dell'evento:", req.body);
+  //console.log("Dati ricevuti per l'inserimento dell'evento:", req.body);
 
   // Mappa i campi ai nomi usati nella query SQL
   const Titolo = Subject;
@@ -65,13 +64,13 @@ app.post('/api/eventi', (req, res) => {
   const Dipendenza = ''; // Valore vuoto per la dipendenza
   const Descrizione = Description; // Mappa il summary nel campo Descrizione
 
-  console.log("Titolo:", Titolo);
-  console.log("Inizio:", Inizio);
-  console.log("Fine:", Fine);
-  console.log("CommessaName:", CommessaName);
-  console.log("IncaricatoId:", IncaricatoId);
-  console.log("Colore:", Colore);
-  console.log("Descrizione:", Descrizione);
+  //console.log("Titolo:", Titolo);
+  //console.log("Inizio:", Inizio);
+  //console.log("Fine:", Fine);
+  //console.log("CommessaName:", CommessaName);
+  //console.log("IncaricatoId:", IncaricatoId);
+  //console.log("Colore:", Colore);
+  //console.log("Descrizione:", Descrizione);
 
   const query = `
     INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione)
@@ -88,7 +87,6 @@ app.post('/api/eventi', (req, res) => {
       res.status(500).json({ error: 'Errore durante il salvataggio dell\'evento.' });
     });
 });
-
 
 
 
