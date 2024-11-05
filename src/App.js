@@ -268,22 +268,24 @@ useEffect(() => {
 // Funzione per salvare le commesse e aggiornare i collaboratori selezionati
 const saveSelectedCommesse = async () => {
   try {
-    // Per ogni collaboratore selezionato, calcola le commesse da aggiungere e da rimuovere
+    // Aggiorna `projectResources` con i colori delle commesse selezionate
+    const updatedProjectResources = projectResources.map(commessa => {
+      const selectedCommessa = selectedCommesse.find(selected => selected.value === commessa.id);
+      return selectedCommessa ? { ...commessa, color: selectedCommessa.color } : commessa;
+    });
+    setProjectResources(updatedProjectResources); // Aggiorna lo stato di `projectResources`
+
+    // Per ogni collaboratore selezionato, aggiorna le commesse nel backend
     await Promise.all(
       selectedCollaboratori.map(async collaboratoreId => {
-        // Ottieni le commesse attualmente assegnate al collaboratore
         const response = await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}`);
         const collaboratoreData = await response.json();
         const currentCommesseIds = collaboratoreData.groupIds || [];
-
-        // Ottieni gli ID delle commesse selezionate attualmente
         const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
 
-        // Calcola le commesse da aggiungere e da rimuovere
         const commesseToAdd = selectedCommesseIds.filter(id => !currentCommesseIds.includes(id));
         const commesseToRemove = currentCommesseIds.filter(id => !selectedCommesseIds.includes(id));
 
-        // Aggiungi le commesse mancanti
         await Promise.all(commesseToAdd.map(async id => {
           const commessa = selectedCommesse.find(c => c.value === id);
           await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/aggiungi-commesse`, {
@@ -293,7 +295,6 @@ const saveSelectedCommesse = async () => {
           });
         }));
 
-        // Rimuovi le commesse non più selezionate
         await Promise.all(commesseToRemove.map(async id => {
           await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/rimuovi-commesse`, {
             method: 'PUT',
@@ -305,11 +306,13 @@ const saveSelectedCommesse = async () => {
     );
 
     await fetchCategoryResources(); // Ricarica i collaboratori per aggiornare le modifiche
+    fetchEvents(); // Aggiorna lo Scheduler con le ultime modifiche di colore
     console.log('Le commesse selezionate sono state aggiornate per i collaboratori selezionati');
   } catch (error) {
     console.error("Errore durante l'aggiornamento delle commesse per i collaboratori:", error);
   }
 };
+
 
 
 // Funzione per cancellare le commesse dai collaboratori selezionati
