@@ -199,19 +199,24 @@ useEffect(() => {
 // Aggiorna projectResources filtrando in base alle commesse selezionate
 const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
 
+// Aggiorna le commesse filtrate non appena `selectedCommesse` cambia
 useEffect(() => {
-  if (selectedCommesse.length > 0) {
-    // Filtra projectResources in base a selectedCommesse
-    const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
-    const filteredResources = projectResources.filter(resource => 
-      selectedCommesseIds.includes(resource.id)
-    );
-    setFilteredProjectResources(filteredResources);
-  } else {
-    // Mostra tutte le commesse se nessuna è selezionata
-    setFilteredProjectResources(projectResources);
-  }
+  const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
+
+  // Filtra projectResources in base a selectedCommesse
+  const filteredResources = selectedCommesseIds.length
+    ? projectResources.filter(resource => selectedCommesseIds.includes(resource.id))
+    : projectResources; // Mostra tutte le commesse se nessuna è selezionata
+
+  setFilteredProjectResources(filteredResources);
 }, [selectedCommesse, projectResources]);
+
+// Sincronizza lo Scheduler con il cambiamento di `filteredProjectResources`
+useEffect(() => {
+  // Reimposta lo stato `events` ogni volta che `filteredProjectResources` cambia
+  fetchEvents();
+}, [filteredProjectResources]);
+
 
 
 // Effetto per aggiornare le commesse in base ai collaboratori selezionati
