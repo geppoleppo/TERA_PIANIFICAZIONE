@@ -241,6 +241,30 @@ useEffect(() => {
   }
 }, [selectedCollaboratori, projectResources]);
 
+// Stato per risorse dei collaboratori filtrati in base ai collaboratori selezionati
+const [filteredCategoryResources, setFilteredCategoryResources] = useState(categoryResources);
+
+// Filtra le risorse dei collaboratori in base ai collaboratori selezionati
+useEffect(() => {
+  if (selectedCollaboratori.length > 0) {
+    // Filtra `categoryResources` in base a `selectedCollaboratori`
+    const filteredResources = categoryResources.filter(resource =>
+      selectedCollaboratori.includes(resource.id)
+    );
+    setFilteredCategoryResources(filteredResources);
+  } else {
+    // Se nessun collaboratore è selezionato, mostra tutti i collaboratori
+    setFilteredCategoryResources(categoryResources);
+  }
+}, [selectedCollaboratori, categoryResources]);
+
+// Sincronizza `filteredCategoryResources` con lo Scheduler
+useEffect(() => {
+  fetchEvents();
+}, [filteredCategoryResources]);
+
+
+
 // Funzione per salvare le commesse e aggiornare i collaboratori selezionati
 const saveSelectedCommesse = async () => {
   try {
@@ -433,7 +457,7 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     title="Collaboratori"
     name="Categories"
     allowMultiple={true}
-    dataSource={categoryResources}
+    dataSource={filteredCategoryResources}
     textField="text"
     idField="id"
     groupIDField="groupId"
