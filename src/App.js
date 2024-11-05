@@ -51,9 +51,6 @@ const handleCollaboratoreChange = selectedOptions => {
     setSelectedCommesse(updatedCommesse);
   };
 
-
-
-
 // Funzione per caricare gli eventi dal database
 const fetchEvents = async () => {
   try {
@@ -65,16 +62,13 @@ const fetchEvents = async () => {
       return {
         ...event,
         ProjectId: parseInt(event.ProjectId),
-        CollaboratoreId: typeof event.CollaboratoreId === 'string'
-          ? event.CollaboratoreId.split(',').map(id => parseInt(id))
-          : Array.isArray(event.CollaboratoreId)
-          ? event.CollaboratoreId
+        CollaboratoreId: Array.isArray(event.CollaboratoreId)
+          ? event.CollaboratoreId.map(id => parseInt(id))
           : [],
-        color: commessa ? commessa.color : '#FF0000' // Usa colore della commessa o rosso di default
+        Color: commessa ? commessa.color : '#FF0000', // Associa il colore della commessa
       };
     });
 
-    console.log("Eventi con colori assegnati:", mappedEvents);
     setEvents(mappedEvents);
   } catch (error) {
     console.error('Errore durante il caricamento degli eventi:', error);
@@ -82,25 +76,40 @@ const fetchEvents = async () => {
 };
 
 
+
+
+
   
   // Funzione per salvare un nuovo evento nel database
   const saveEvent = async (eventData) => {
     const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
-        ? eventData.CollaboratoreId.join(',')
-        : eventData.CollaboratoreId;
+      ? eventData.CollaboratoreId.join(',')
+      : eventData.CollaboratoreId;
+  
+    // Ottieni il colore della commessa associata
+    const commessa = projectResources.find(p => p.id === eventData.ProjectId);
+    const eventColor = commessa ? commessa.color : '#FF0000'; // Colore della commessa o default
+  
     try {
-        const response = await fetch('http://localhost:3001/api/eventi', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...eventData, CollaboratoreId: collaboratorIds })
-        });
-        const data = await response.json();
-        console.log(data.message);
-        fetchEvents();
+      const response = await fetch('http://localhost:3001/api/eventi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...eventData,
+          CollaboratoreId: collaboratorIds,
+          Color: eventColor, // Salva il colore della commessa
+        }),
+      });
+      const data = await response.json();
+      console.log(data.message);
+      fetchEvents(); // Ricarica gli eventi con il colore aggiornato
     } catch (error) {
-        console.error("Errore durante il salvataggio dell'evento:", error);
+      console.error("Errore durante il salvataggio dell'evento:", error);
     }
-};
+  };
+  
+  
+  
 
   
   // Funzione per eliminare un evento dal database
@@ -157,7 +166,7 @@ const fetchCategoryResources = async () => {
         text: collaboratore.Nome,
         id: collaboratore.Id,
         groupId: groupId,
-        color: collaboratore.Colore || '#FF0000'
+        color: collaboratore.Colore || '#00D084'
       }))
     );
 
@@ -169,7 +178,13 @@ const fetchCategoryResources = async () => {
   }
 };
 
-
+const onEventRendered = (args) => {
+  const event = args.data;
+  const commessa = projectResources.find(p => p.id === event.ProjectId);
+  if (commessa && commessa.color) {
+    args.element.style.backgroundColor = commessa.color;
+  }
+};
 
 useEffect(() => {
   fetchProjectResources();
@@ -205,9 +220,6 @@ useEffect(() => {
     setSelectedCommesse([]);
   }
 }, [selectedCollaboratori, projectResources]);
-
-
-
 
 // Funzione per salvare le commesse e aggiornare i collaboratori selezionati
 const saveSelectedCommesse = async () => {
@@ -355,7 +367,8 @@ eventSettings={{
   },
 }}
 group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
->
+        eventRendered={onEventRendered} // Aggiungi qui l'evento per gestire i colori
+      >
 {/* Resource Definitions */}
 <ResourcesDirective>
   <ResourceDirective
@@ -365,7 +378,7 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     dataSource={projectResources}
     textField="text"
     idField="id"
-    colorField="color" // Assicurati che sia `color`
+    colorField="color" // Utilizza solo qui `colorField`
   />
   <ResourceDirective
     field="CollaboratoreId"
@@ -376,7 +389,6 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     textField="text"
     idField="id"
     groupIDField="groupId"
-    colorField="color" // Usa `color` qui invece di `CategoryColor`
   />
 </ResourcesDirective>
 
