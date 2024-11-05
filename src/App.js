@@ -169,7 +169,8 @@ const fetchCategoryResources = async () => {
         text: collaboratore.Nome,
         id: collaboratore.Id,
         groupId: groupId,
-        color: collaboratore.Colore || '#00D084'
+        color: collaboratore.Colore || '#00D084',
+        Immagine: collaboratore.Immagine  // Aggiungi il campo immagine qui
       }))
     );
 
@@ -180,6 +181,43 @@ const fetchCategoryResources = async () => {
     console.error('Errore durante il caricamento dei collaboratori:', error);
   }
 };
+// Funzione per visualizzare l’immagine e il nome del collaboratore
+const resourceHeaderTemplate = (props) => {
+  console.log("props.resourceData:", props.resourceData);
+
+  // Verifica se l'elemento è una commessa o un collaboratore
+  const isCommessa = props.resourceData && !props.resourceData.groupId; // Supponiamo che le commesse non abbiano `groupId`
+  
+  if (isCommessa) {
+    // Se `props.resourceData` è una commessa, mostriamo solo il nome della commessa
+    return (
+      <div className="template-wrap">
+        <div className="commessa-name">{props.resourceData.text}</div>
+      </div>
+    );
+  } else {
+    // Altrimenti, trattiamo `props.resourceData` come un collaboratore e cerchiamo l'immagine
+    const collaborator = categoryResources.find(
+      resource => resource.id === props.resourceData.id && resource.groupId === props.resourceData.groupId
+    );
+
+    console.log("collaborator trovato:", collaborator);
+    return (
+      <div className="template-wrap">
+        {collaborator && collaborator.Immagine && (
+          <img src={collaborator.Immagine} alt={collaborator.text} className="resource-image" />
+        )}
+        <div className="resource-details">
+          <div className="resource-name">{collaborator ? collaborator.text : ''}</div>
+        </div>
+      </div>
+    );
+  }
+};
+
+
+
+
 
 const onEventRendered = (args) => {
   const event = args.data;
@@ -430,6 +468,7 @@ width="100%"
 height="650px"
 selectedDate={new Date()}
 rowAutoHeight= 'true'
+resourceHeaderTemplate={resourceHeaderTemplate}  // Aggiungi il template qui
 
 eventSettings={{
   dataSource: events,
