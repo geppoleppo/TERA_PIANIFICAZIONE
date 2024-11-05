@@ -473,13 +473,13 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
 
 {/* Views */}
 <ViewsDirective>
-<ViewDirective option="Day" />
-  
-  <ViewDirective option="WorkWeek" />
-  <ViewDirective option="Month" />
-  <ViewDirective option="TimelineWeek" />
-  <ViewDirective option="TimelineMonth" />
-</ViewsDirective>
+    <ViewDirective displayName="3 Days" option="Day" interval={3} />
+    <ViewDirective displayName="2 Weeks" option="Week" interval={2} isSelected={true} />
+    <ViewDirective displayName="4 Months" option="Month" interval={4} />
+    <ViewDirective option="TimelineWeek" />
+    <ViewDirective option="TimelineMonth" />
+    <ViewDirective option="Agenda" />
+  </ViewsDirective>>
 
 <Inject services={[Day, WorkWeek, Month, Week,TimelineViews, DragAndDrop, Resize, Agenda]} />
 </ScheduleComponent>
