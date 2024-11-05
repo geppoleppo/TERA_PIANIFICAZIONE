@@ -65,18 +65,16 @@ const fetchEvents = async () => {
       return {
         ...event,
         ProjectId: parseInt(event.ProjectId),
-        CollaboratoreId: typeof event.CollaboratoreId === 'string' 
+        CollaboratoreId: typeof event.CollaboratoreId === 'string'
           ? event.CollaboratoreId.split(',').map(id => parseInt(id))
           : Array.isArray(event.CollaboratoreId)
           ? event.CollaboratoreId
           : [],
-        CategoryColor: commessa ? commessa.color : '#FF0000' // Default a rosso se nessun colore è associato
+        color: commessa ? commessa.color : '#FF0000' // Usa colore della commessa o rosso di default
       };
     });
-    ;
-    
 
-    console.log("Eventi con colori assegnati:", mappedEvents); // Aggiungi questo log per verificare i colori
+    console.log("Eventi con colori assegnati:", mappedEvents);
     setEvents(mappedEvents);
   } catch (error) {
     console.error('Errore durante il caricamento degli eventi:', error);
@@ -121,6 +119,7 @@ const fetchEvents = async () => {
   
 
   
+
 // Funzione per caricare le commesse dal database
 const fetchProjectResources = async () => {
   try {
@@ -130,17 +129,15 @@ const fetchProjectResources = async () => {
     const formattedData = data.map(commessa => ({
       text: commessa.text,
       id: commessa.Id,
-      color: commessa.color // Assicura che il colore venga letto dal database
+      color: commessa.color || '#FF0000' // Imposta colore rosso se non definito
     }));
 
-    console.log("Commesse caricate con colore:", formattedData); // Controllo log
+    console.log("Commesse caricate con colore:", formattedData);
     setProjectResources(formattedData);
   } catch (error) {
     console.error('Errore durante il caricamento delle commesse:', error);
   }
 };
-
-
 
 // Funzione per caricare i collaboratori e duplicarli per il `Scheduler`
 const fetchCategoryResources = async () => {
@@ -148,31 +145,30 @@ const fetchCategoryResources = async () => {
     const response = await fetch('http://localhost:3001/api/collaboratori');
     const data = await response.json();
 
-    // Creiamo una lista di collaboratori unici per il menu
     const uniqueCollaborators = data.map(collaboratore => ({
       text: collaboratore.Nome,
       id: collaboratore.Id,
       groupIds: collaboratore.groupIds,
-      color: collaboratore.Colore || '#FF0000' // Colore di default rosso se non definito
+      color: collaboratore.Colore || '#FF0000' // Colore rosso di default se non specificato
     }));
 
-    // Duplicare i collaboratori per ogni `groupId` solo per il Scheduler
     const duplicatedData = data.flatMap(collaboratore =>
       collaboratore.groupIds.map(groupId => ({
         text: collaboratore.Nome,
         id: collaboratore.Id,
         groupId: groupId,
-        color: collaboratore.Colore || '#FF0000' // Colore di default rosso se non definito
+        color: collaboratore.Colore || '#FF0000'
       }))
     );
 
     setUniqueCollaborators(uniqueCollaborators);
     setCategoryResources(duplicatedData);
-    console.log("Duplicated Category Resources:", duplicatedData); // Controllo log
+    console.log("Duplicated Category Resources:", duplicatedData);
   } catch (error) {
     console.error('Errore durante il caricamento dei collaboratori:', error);
   }
 };
+
 
 
 useEffect(() => {
@@ -369,7 +365,7 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     dataSource={projectResources}
     textField="text"
     idField="id"
-    colorField="color"
+    colorField="color" // Assicurati che sia `color`
   />
   <ResourceDirective
     field="CollaboratoreId"
@@ -380,9 +376,10 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     textField="text"
     idField="id"
     groupIDField="groupId"
-    colorField="CategoryColor"
+    colorField="color" // Usa `color` qui invece di `CategoryColor`
   />
 </ResourcesDirective>
+
 
 {/* Views */}
 <ViewsDirective>
