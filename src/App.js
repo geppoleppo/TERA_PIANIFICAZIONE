@@ -200,16 +200,18 @@ useEffect(() => {
 const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
 
 // Aggiorna le commesse filtrate non appena `selectedCommesse` cambia
+// Aggiorna le commesse filtrate non appena `selectedCommesse` cambia
 useEffect(() => {
   const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
 
-  // Filtra projectResources in base a selectedCommesse
+  // Se non ci sono commesse selezionate, imposta filteredProjectResources su un array vuoto
   const filteredResources = selectedCommesseIds.length
     ? projectResources.filter(resource => selectedCommesseIds.includes(resource.id))
-    : projectResources; // Mostra tutte le commesse se nessuna è selezionata
+    : []; // Seleziona nessuna commessa se selectedCommesse è vuoto
 
   setFilteredProjectResources(filteredResources);
 }, [selectedCommesse, projectResources]);
+
 
 // Sincronizza lo Scheduler con il cambiamento di `filteredProjectResources`
 useEffect(() => {
