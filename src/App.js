@@ -81,32 +81,35 @@ const fetchEvents = async () => {
 
   
   // Funzione per salvare un nuovo evento nel database
-  const saveEvent = async (eventData) => {
-    const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
-      ? eventData.CollaboratoreId.join(',')
-      : eventData.CollaboratoreId;
-  
-    // Ottieni il colore della commessa associata
-    const commessa = projectResources.find(p => p.id === eventData.ProjectId);
-    const eventColor = commessa ? commessa.color : '#FF0000'; // Colore della commessa o default
-  
-    try {
-      const response = await fetch('http://localhost:3001/api/eventi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...eventData,
-          CollaboratoreId: collaboratorIds,
-          Color: eventColor, // Salva il colore della commessa
-        }),
-      });
-      const data = await response.json();
-      console.log(data.message);
-      fetchEvents(); // Ricarica gli eventi con il colore aggiornato
-    } catch (error) {
-      console.error("Errore durante il salvataggio dell'evento:", error);
-    }
-  };
+// Funzione per salvare un nuovo evento nel database
+const saveEvent = async (eventData) => {
+  const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
+    ? eventData.CollaboratoreId.join(',')
+    : eventData.CollaboratoreId;
+
+  // Ottieni il colore della commessa associata
+  const commessa = projectResources.find(p => p.id === eventData.ProjectId);
+  const eventColor = commessa ? commessa.color : '#FF0000'; // Colore della commessa o default
+
+  try {
+    const response = await fetch('http://localhost:3001/api/eventi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...eventData,
+        CollaboratoreId: collaboratorIds,
+        Color: eventColor, // Salva il colore della commessa
+        Description: eventData.Description, // Invia il summary come Descrizione
+      }),
+    });
+    const data = await response.json();
+    console.log(data.message);
+    fetchEvents(); // Ricarica gli eventi con il colore aggiornato
+  } catch (error) {
+    console.error("Errore durante il salvataggio dell'evento:", error);
+  }
+};
+
   
   
   
@@ -279,7 +282,6 @@ const deleteSelectedCommesse = async () => {
   
   // Funzione per aggiornare un evento
   const updateEvent = async (eventData) => {
-    // Se CollaboratoreId è un array, lo convertiamo in una stringa separata da virgole
     const collaboratorId = Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId.join(',') : eventData.CollaboratoreId;
   
     try {
@@ -289,6 +291,7 @@ const deleteSelectedCommesse = async () => {
         body: JSON.stringify({
           ...eventData,
           CollaboratoreId: collaboratorId,  // Passiamo il CollaboratoreId come stringa corretta
+          Description: eventData.Description // Invia la descrizione per l'aggiornamento
         })
       });
       const data = await response.json();
@@ -298,6 +301,7 @@ const deleteSelectedCommesse = async () => {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
 
   return (
     <div className="App">

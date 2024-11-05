@@ -35,24 +35,24 @@ app.get('/api/collaboratori', async (req, res) => {
 });
 
 
-
-
-
-
 app.use(cors()); // Abilita CORS per tutte le richieste
 app.use(express.json());
 
+
+// Aggiungi un nuovo evento
 // Aggiungi un nuovo evento
 app.post('/api/eventi', (req, res) => {
-  //console.log('Corpo della richiesta:', req.body);
-  
   const {
-    Subject,       // `Subject` sarà la Titolo
-    StartTime,     // `StartTime` sarà l’inizio dell’evento
-    EndTime,       // `EndTime` sarà la fine dell’evento
-    ProjectId,     // `ProjectId` mappa a `CommessaName`
-    CollaboratoreId         // `CollaboratoreId` mappa a `IncaricatoId`
+    Subject,       // Titolo dell'evento
+    StartTime,     // Inizio dell'evento
+    EndTime,       // Fine dell'evento
+    ProjectId,     // ID della commessa
+    CollaboratoreId, // ID del collaboratore
+    Description    // Aggiungi Descrizione per il summary
   } = req.body;
+
+  // Log per verificare i dati ricevuti dal client
+  console.log("Dati ricevuti per l'inserimento dell'evento:", req.body);
 
   // Mappa i campi ai nomi usati nella query SQL
   const Titolo = Subject;
@@ -60,16 +60,25 @@ app.post('/api/eventi', (req, res) => {
   const Fine = EndTime;
   const CommessaName = ProjectId;
   const IncaricatoId = CollaboratoreId;
-  const Colore = '#000000'; // Imposta un colore di default o mappa come necessario
-  const Progresso = 0; // Imposta un valore di default per il progresso
-  const Dipendenza = ''; // Imposta un valore vuoto per la dipendenza
+  const Colore = '#000000'; // Colore di default o mappa come necessario
+  const Progresso = 0; // Valore di default per il progresso
+  const Dipendenza = ''; // Valore vuoto per la dipendenza
+  const Descrizione = Description; // Mappa il summary nel campo Descrizione
+
+  console.log("Titolo:", Titolo);
+  console.log("Inizio:", Inizio);
+  console.log("Fine:", Fine);
+  console.log("CommessaName:", CommessaName);
+  console.log("IncaricatoId:", IncaricatoId);
+  console.log("Colore:", Colore);
+  console.log("Descrizione:", Descrizione);
 
   const query = `
-    INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  runQuery(query, [Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza])
+  runQuery(query, [Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione])
     .then(result => {
       console.log('Evento salvato con successo:', result);
       res.status(201).json({ message: 'Evento aggiunto con successo.', id: result.id });
@@ -79,6 +88,8 @@ app.post('/api/eventi', (req, res) => {
       res.status(500).json({ error: 'Errore durante il salvataggio dell\'evento.' });
     });
 });
+
+
 
 
 // Aggiorna commesse e colori nel database quando vengono aggiunti ai collaboratori
@@ -110,25 +121,33 @@ app.put('/api/collaboratori/:id/aggiungi-commesse', async (req, res) => {
 
 
 
-app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
+app.put('/api/eventi/:id', async (req, res) => {
   const { id } = req.params;
-  const { commesseIds } = req.body;
+  const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor, Description } = req.body;
 
   try {
-    const collaboratore = await getRecords('SELECT * FROM Collaboratori WHERE Id = ?', [id]);
-    if (collaboratore.length === 0) return res.status(404).json({ error: 'Collaboratore non trovato' });
-
-    // Rimuovi le commesse dai groupIds senza modificare il colore
-    const groupIds = collaboratore[0].groupIds ? collaboratore[0].groupIds.split(',').map(Number) : [];
-    const updatedGroupIds = groupIds.filter(gId => !commesseIds.includes(gId));
-    await runQuery('UPDATE Collaboratori SET groupIds = ? WHERE Id = ?', [updatedGroupIds.join(','), id]);
-
-    res.json({ message: 'Commesse rimosse dal collaboratore con successo.' });
+    const query = `
+      UPDATE Eventi
+      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?, Descrizione = ?
+      WHERE Id = ?
+    `;
+    await runQuery(query, [
+      Subject,
+      StartTime,
+      EndTime,
+      ProjectId.toString(),
+      CollaboratoreId,  // Passiamo il CollaboratoreId come stringa corretta
+      CategoryColor,
+      Description,  // Aggiungi il campo Descrizione
+      id
+    ]);
+    res.json({ message: 'Evento aggiornato con successo!' });
   } catch (error) {
-    console.error("Errore durante la rimozione delle commesse:", error);
-    res.status(500).json({ error: "Errore durante la rimozione delle commesse dal collaboratore." });
+    console.error('Errore durante l\'aggiornamento dell\'evento:', error);
+    res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
   }
 });
+
 
 
 
