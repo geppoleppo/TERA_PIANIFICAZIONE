@@ -18,12 +18,3 @@
   .menu-container {
     margin-bottom: 20px;
   }
-
-  .e-resource-cells {
-    border: 2px solid currentColor !important;
-  }
-  .e-appointment.event-color {
-    background-color: var(--CategoryColor, #FF0000) !important; /* fallback a rosso */
-  }
-  
-  
