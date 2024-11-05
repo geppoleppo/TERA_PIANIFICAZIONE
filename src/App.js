@@ -196,11 +196,23 @@ useEffect(() => {
 
 }, []);
 
-// useEffect per loggare i dati delle risorse ogni volta che vengono aggiornati
+// Aggiorna projectResources filtrando in base alle commesse selezionate
+const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
+
 useEffect(() => {
-  console.log("Project Resources:", projectResources);
-  console.log("Category Resources:", categoryResources);
-}, [projectResources, categoryResources]);
+  if (selectedCommesse.length > 0) {
+    // Filtra projectResources in base a selectedCommesse
+    const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
+    const filteredResources = projectResources.filter(resource => 
+      selectedCommesseIds.includes(resource.id)
+    );
+    setFilteredProjectResources(filteredResources);
+  } else {
+    // Mostra tutte le commesse se nessuna è selezionata
+    setFilteredProjectResources(projectResources);
+  }
+}, [selectedCommesse, projectResources]);
+
 
 // Effetto per aggiornare le commesse in base ai collaboratori selezionati
 useEffect(() => {
@@ -383,10 +395,10 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     field="ProjectId"
     title="Projects"
     name="Projects"
-    dataSource={projectResources}
+    dataSource={filteredProjectResources} // Usa le risorse filtrate
     textField="text"
     idField="id"
-    colorField="color" // Utilizza solo qui `colorField`
+    colorField="color"
   />
   <ResourceDirective
     field="CollaboratoreId"
@@ -399,6 +411,7 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     groupIDField="groupId"
   />
 </ResourcesDirective>
+
 
 
 {/* Views */}
