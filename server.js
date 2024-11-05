@@ -228,6 +228,60 @@ app.get('/api/commesse', async (req, res) => {
     res.status(500).json({ error: 'Errore durante il caricamento delle commesse.' });
   }
 });
+
+// Endpoint per ottenere i dettagli di un singolo collaboratore
+app.get('/api/collaboratori/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = 'SELECT * FROM Collaboratori WHERE Id = ?';
+    const result = await getRecords(query, [id]);
+    
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'Collaboratore non trovato' });
+    }
+
+    // Formatta il risultato come il resto dei collaboratori
+    const collaboratore = result[0];
+    const formattedCollaboratore = {
+      Id: collaboratore.Id,
+      Nome: collaboratore.Nome,
+      Colore: collaboratore.Colore,
+      Immagine: collaboratore.Immagine,
+      groupIds: collaboratore.groupIds ? collaboratore.groupIds.split(',').map(id => parseInt(id, 10)) : []
+    };
+
+    res.json(formattedCollaboratore);
+  } catch (error) {
+    console.error("Errore nel recupero del collaboratore:", error);
+    res.status(500).json({ error: "Errore nel recupero del collaboratore." });
+  }
+});
+
+
+// Endpoint per rimuovere commesse da un collaboratore
+app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
+  const { id } = req.params;
+  const { commesseIds } = req.body;
+
+  try {
+    const collaboratore = await getRecords('SELECT * FROM Collaboratori WHERE Id = ?', [id]);
+    if (collaboratore.length === 0) return res.status(404).json({ error: 'Collaboratore non trovato' });
+
+    // Recupera gli attuali groupIds e rimuove quelli specificati
+    const groupIds = collaboratore[0].groupIds ? collaboratore[0].groupIds.split(',').map(Number) : [];
+    const updatedGroupIds = groupIds.filter(gId => !commesseIds.includes(gId));
+
+    // Aggiorna il campo groupIds del collaboratore con i nuovi valori
+    await runQuery('UPDATE Collaboratori SET groupIds = ? WHERE Id = ?', [updatedGroupIds.join(','), id]);
+
+    res.json({ message: 'Commesse rimosse dal collaboratore con successo.' });
+  } catch (error) {
+    console.error("Errore durante la rimozione delle commesse:", error);
+    res.status(500).json({ error: "Errore durante la rimozione delle commesse dal collaboratore." });
+  }
+});
+
+
   
   const port = 3001; // Assicurati che questa sia la porta corretta e non in conflitto
   app.listen(port, () => {

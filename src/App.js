@@ -239,21 +239,44 @@ useEffect(() => {
 // Funzione per salvare le commesse e aggiornare i collaboratori selezionati
 const saveSelectedCommesse = async () => {
   try {
+    // Per ogni collaboratore selezionato, calcola le commesse da aggiungere e da rimuovere
     await Promise.all(
       selectedCollaboratori.map(async collaboratoreId => {
-        const commesseIds = selectedCommesse.map(commessa => ({
-          id: commessa.value,
-          color: commessa.color // Aggiungi il colore della commessa
+        // Ottieni le commesse attualmente assegnate al collaboratore
+        const response = await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}`);
+        const collaboratoreData = await response.json();
+        const currentCommesseIds = collaboratoreData.groupIds || [];
+
+        // Ottieni gli ID delle commesse selezionate attualmente
+        const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
+
+        // Calcola le commesse da aggiungere e da rimuovere
+        const commesseToAdd = selectedCommesseIds.filter(id => !currentCommesseIds.includes(id));
+        const commesseToRemove = currentCommesseIds.filter(id => !selectedCommesseIds.includes(id));
+
+        // Aggiungi le commesse mancanti
+        await Promise.all(commesseToAdd.map(async id => {
+          const commessa = selectedCommesse.find(c => c.value === id);
+          await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/aggiungi-commesse`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ commesseIds: [{ id: commessa.value, color: commessa.color }] })
+          });
         }));
-        await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/aggiungi-commesse`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ commesseIds }) // Passa anche il colore aggiornato
-        });
+
+        // Rimuovi le commesse non più selezionate
+        await Promise.all(commesseToRemove.map(async id => {
+          await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/rimuovi-commesse`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ commesseIds: [id] })
+          });
+        }));
       })
     );
-    await fetchCategoryResources(); // Ricarica collaboratori per aggiornare le modifiche
-    console.log('Commesse con colori aggiornati memorizzate per i collaboratori selezionati');
+
+    await fetchCategoryResources(); // Ricarica i collaboratori per aggiornare le modifiche
+    console.log('Le commesse selezionate sono state aggiornate per i collaboratori selezionati');
   } catch (error) {
     console.error("Errore durante l'aggiornamento delle commesse per i collaboratori:", error);
   }
@@ -363,7 +386,7 @@ const deleteSelectedCommesse = async () => {
 </div>
 
       <button onClick={saveSelectedCommesse}>Memorizza</button>
-      <button onClick={deleteSelectedCommesse}>Cancella</button>
+    
 
 
       {/* Scheduler component */}
