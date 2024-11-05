@@ -70,9 +70,11 @@ const fetchEvents = async () => {
           : Array.isArray(event.CollaboratoreId)
           ? event.CollaboratoreId
           : [],
-        CategoryColor: commessa ? commessa.color : '#000000' // Usa il colore della commessa o un fallback
+        CategoryColor: commessa ? commessa.color : '#FF0000' // Default a rosso se nessun colore è associato
       };
     });
+    ;
+    
 
     console.log("Eventi con colori assegnati:", mappedEvents); // Aggiungi questo log per verificare i colori
     setEvents(mappedEvents);
@@ -150,8 +152,8 @@ const fetchCategoryResources = async () => {
     const uniqueCollaborators = data.map(collaboratore => ({
       text: collaboratore.Nome,
       id: collaboratore.Id,
-      groupIds: collaboratore.groupIds, // Manteniamo `groupIds` come array per il caricamento commesse
-      color: collaboratore.Colore
+      groupIds: collaboratore.groupIds,
+      color: collaboratore.Colore || '#FF0000' // Colore di default rosso se non definito
     }));
 
     // Duplicare i collaboratori per ogni `groupId` solo per il Scheduler
@@ -159,21 +161,20 @@ const fetchCategoryResources = async () => {
       collaboratore.groupIds.map(groupId => ({
         text: collaboratore.Nome,
         id: collaboratore.Id,
-        groupId: groupId, // Singolo `groupId` per ogni duplicato
-        color: collaboratore.Colore
+        groupId: groupId,
+        color: collaboratore.Colore || '#FF0000' // Colore di default rosso se non definito
       }))
     );
 
-    setUniqueCollaborators(uniqueCollaborators); // Collaboratori unici per il menu
-    setCategoryResources(duplicatedData); // Collaboratori duplicati per il `Scheduler`
+    setUniqueCollaborators(uniqueCollaborators);
+    setCategoryResources(duplicatedData);
+    console.log("Duplicated Category Resources:", duplicatedData); // Controllo log
   } catch (error) {
     console.error('Errore durante il caricamento dei collaboratori:', error);
   }
 };
 
 
-  
-  
 useEffect(() => {
   fetchProjectResources();
   fetchCategoryResources();
@@ -181,6 +182,11 @@ useEffect(() => {
 
 }, []);
 
+// useEffect per loggare i dati delle risorse ogni volta che vengono aggiornati
+useEffect(() => {
+  console.log("Project Resources:", projectResources);
+  console.log("Category Resources:", categoryResources);
+}, [projectResources, categoryResources]);
 
 // Effetto per aggiornare le commesse in base ai collaboratori selezionati
 useEffect(() => {
@@ -363,7 +369,7 @@ group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
     dataSource={projectResources}
     textField="text"
     idField="id"
-    colorField="CategoryColor"
+    colorField="color"
   />
   <ResourceDirective
     field="CollaboratoreId"
