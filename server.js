@@ -47,7 +47,7 @@ app.post('/api/eventi', (req, res) => {
   //console.log('Corpo della richiesta:', req.body);
   
   const {
-    Subject,       // `Subject` sarà la descrizione
+    Subject,       // `Subject` sarà la Titolo
     StartTime,     // `StartTime` sarà l’inizio dell’evento
     EndTime,       // `EndTime` sarà la fine dell’evento
     ProjectId,     // `ProjectId` mappa a `CommessaName`
@@ -55,7 +55,7 @@ app.post('/api/eventi', (req, res) => {
   } = req.body;
 
   // Mappa i campi ai nomi usati nella query SQL
-  const Descrizione = Subject;
+  const Titolo = Subject;
   const Inizio = StartTime;
   const Fine = EndTime;
   const CommessaName = ProjectId;
@@ -65,11 +65,11 @@ app.post('/api/eventi', (req, res) => {
   const Dipendenza = ''; // Imposta un valore vuoto per la dipendenza
 
   const query = `
-    INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
+    INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  runQuery(query, [Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza])
+  runQuery(query, [Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza])
     .then(result => {
       console.log('Evento salvato con successo:', result);
       res.status(201).json({ message: 'Evento aggiunto con successo.', id: result.id });
@@ -157,7 +157,7 @@ app.get('/api/eventi', async (req, res) => {
 
     const mappedEventi = eventi.map(evento => ({
       Id: evento.Id,
-      Subject: evento.Descrizione,
+      Subject: evento.Titolo,
       StartTime: evento.Inizio,
       EndTime: evento.Fine,
       ProjectId: parseInt(evento.CommessaName, 10), // Converti ProjectId in numero
@@ -180,7 +180,7 @@ app.put('/api/eventi/:id', async (req, res) => {
   try {
     const query = `
       UPDATE Eventi
-      SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?
+      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?
       WHERE Id = ?
     `;
     await runQuery(query, [
