@@ -31,3 +31,35 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
     setSelectedCommesse(updatedCommesse);
   };
   
+
+    // Funzione per salvare un nuovo evento nel database
+
+
+export const saveEvent = async (eventData, projectResources, fetchEvents) => {
+    const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
+      ? eventData.CollaboratoreId.join(',')
+      : eventData.CollaboratoreId;
+  
+    // Ottieni il colore della commessa associata
+    const commessa = projectResources.find(p => p.id === eventData.ProjectId);
+    const eventColor = commessa ? commessa.color : '#FF0000'; // Colore della commessa o default
+  
+    try {
+      const response = await fetch('http://localhost:3001/api/eventi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...eventData,
+          CollaboratoreId: collaboratorIds,
+          Color: eventColor, // Salva il colore della commessa
+          Description: eventData.Description, // Invia il summary come Descrizione
+        }),
+      });
+      const data = await response.json();
+      console.log(data.message);
+      fetchEvents(); // Ricarica gli eventi con il colore aggiornato
+    } catch (error) {
+      console.error("Errore durante il salvataggio dell'evento:", error);
+    }
+  };
+  
