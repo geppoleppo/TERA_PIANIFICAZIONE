@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   GanttComponent,
   Inject,
@@ -9,20 +9,31 @@ import {
   Filter,
   Sort
 } from '@syncfusion/ej2-react-gantt';
-import '@syncfusion/ej2-base/styles/material.css';
 
-const Gantt = ({ ganttData, reloadEvents }) => {
-  useEffect(() => {
-    // Carica dati ogni volta che ganttData cambia
-    console.log("Dati aggiornati per il Gantt:", ganttData);
-  }, [ganttData]);
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent }) => {
+  const ganttRef = useRef(null);
+
+  const onActionComplete = (args) => {
+    if (args.requestType === 'save') {
+      // Se l'evento esiste già, aggiorniamo. Altrimenti, aggiungiamo un nuovo evento
+      if (args.action === 'edit') {
+        onUpdateEvent(args.data);
+      } else if (args.action === 'add') {
+        onSaveEvent(args.data);
+      }
+    } else if (args.requestType === 'delete') {
+      onDeleteEvent(args.data[0].Id);
+    }
+  };
 
   return (
     <div>
       <GanttComponent
+        ref={ganttRef}
         dataSource={ganttData}
         allowSelection={true}
         allowSorting={true}
+        actionComplete={onActionComplete}
         taskFields={{
           id: 'Id',
           name: 'Subject',
