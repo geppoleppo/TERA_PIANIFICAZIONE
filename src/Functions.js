@@ -18,4 +18,16 @@ export const handleCommesseChange = (selectedOptions, projectResources, setSelec
     });
     setSelectedCommesse(updatedCommesse);
   };
+  // Functions.js
+
+export const handleColorChange = (color, index, selectedCommesse, setSelectedCommesse) => {
+    const updatedCommesse = [...selectedCommesse];
+    updatedCommesse[index] = { ...updatedCommesse[index], color: color.hex };
+    setSelectedCommesse(updatedCommesse);
+  };
+  
+export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => {
+    const updatedCommesse = selectedCommesse.filter((_, i) => i !== index);
+    setSelectedCommesse(updatedCommesse);
+  };
   

@@ -27,19 +27,6 @@ const App = () => {
   const [selectedCommesse, setSelectedCommesse] = useState([]);
 
  
-  // Funzione per cambiare il colore di una commessa selezionata
-  const handleColorChange = (color, index) => {
-    const updatedCommesse = [...selectedCommesse];
-    updatedCommesse[index] = { ...updatedCommesse[index], color: color.hex };
-    setSelectedCommesse(updatedCommesse);
-  };
-
-  // Funzione per rimuovere una commessa selezionata
-  const removeCommessa = (index) => {
-    const updatedCommesse = selectedCommesse.filter((_, i) => i !== index);
-    setSelectedCommesse(updatedCommesse);
-  };
-
 // Funzione per caricare gli eventi dal database
 const fetchEvents = async () => {
   try {
@@ -442,8 +429,8 @@ const deleteSelectedCommesse = async () => {
       <span>{commessa.label}</span>
       <TwitterPicker
         color={commessa.color || '#000000'} // Carica il colore corretto o imposta un default
-        onChangeComplete={(color) => handleColorChange(color, index)}
-      />
+        onChangeComplete={(color) => handleColorChange(color, index, selectedCommesse, setSelectedCommesse)}
+            />
       <button onClick={() => removeCommessa(index)}>Rimuovi</button>
     </div>
   ))}
