@@ -63,3 +63,17 @@ export const saveEvent = async (eventData, projectResources, fetchEvents) => {
     }
   };
   
+
+    // Funzione per eliminare un evento dal database
+    export const deleteEvent = async (eventId,fetchEvents) => {
+        try {
+          const response = await fetch(`http://localhost:3001/api/eventi/${eventId}`, {
+            method: 'DELETE'
+          });
+          const data = await response.json();
+          console.log(data.message);
+          fetchEvents(); // Ricarica gli eventi dopo l'eliminazione
+        } catch (error) {
+          console.error("Errore durante l'eliminazione dell'evento:", error);
+        }
+      };

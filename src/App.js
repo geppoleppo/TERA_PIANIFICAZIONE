@@ -15,7 +15,8 @@ import {
   fetchEvents,
   saveSelectedCommesse,
   deleteSelectedCommesse,
-  saveEvent
+  saveEvent,
+  deleteEvent
 } from './Functions';
 
 const App = () => {
@@ -25,7 +26,7 @@ const App = () => {
   const [uniqueCollaborators, setUniqueCollaborators] = useState([]); // Collaboratori unici per il menu
   const [selectedCollaboratori, setSelectedCollaboratori] = useState([]); // Inizializza come array vuoto
   const [selectedCommesse, setSelectedCommesse] = useState([]);
-
+  const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
 
  // Funzione per caricare gli eventi dal database
  const fetchEvents = async () => {
@@ -55,22 +56,6 @@ const App = () => {
 const handleSaveEvent = (eventData) => {
   saveEvent(eventData, projectResources, fetchEvents);
 };
-
-  // Funzione per eliminare un evento dal database
-  const deleteEvent = async (eventId) => {
-    try {
-      const response = await fetch(`http://localhost:3001/api/eventi/${eventId}`, {
-        method: 'DELETE'
-      });
-      const data = await response.json();
-      console.log(data.message);
-      fetchEvents(); // Ricarica gli eventi dopo l'eliminazione
-    } catch (error) {
-      console.error("Errore durante l'eliminazione dell'evento:", error);
-    }
-  };
-
-
 
 
   // Funzione per caricare le commesse dal database
@@ -156,7 +141,6 @@ const handleSaveEvent = (eventData) => {
     }
   };
 
-
   const onEventRendered = (args) => {
     const event = args.data;
     const commessa = projectResources.find(p => p.id === event.ProjectId);
@@ -172,10 +156,6 @@ const handleSaveEvent = (eventData) => {
 
   }, []);
 
-  // Aggiorna projectResources filtrando in base alle commesse selezionate
-  const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
-
-  // Aggiorna le commesse filtrate non appena `selectedCommesse` cambia
   // Aggiorna le commesse filtrate non appena `selectedCommesse` cambia
   useEffect(() => {
     const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
@@ -241,8 +221,6 @@ const handleSaveEvent = (eventData) => {
     fetchEvents();
   }, [filteredCategoryResources]);
 
-
-
   // Funzione per salvare le commesse e aggiornare i collaboratori selezionati
   const saveSelectedCommesse = async () => {
     try {
@@ -291,8 +269,6 @@ const handleSaveEvent = (eventData) => {
     }
   };
 
-
-
   // Funzione per cancellare le commesse dai collaboratori selezionati
   const deleteSelectedCommesse = async () => {
     try {
@@ -319,7 +295,7 @@ const handleSaveEvent = (eventData) => {
     if (args.requestType === 'eventCreated') {
       args.addedRecords.forEach(event => handleSaveEvent (event));
     } else if (args.requestType === 'eventRemoved') {
-      args.deletedRecords.forEach(event => deleteEvent(event.Id));
+      args.deletedRecords.forEach(event => deleteEvent(event.Id,fetchEvents));
     } else if (args.requestType === 'eventChanged') {
       args.changedRecords.forEach(event => updateEvent(event)); // Aggiungi gestione aggiornamento
     }
