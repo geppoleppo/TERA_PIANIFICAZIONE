@@ -163,14 +163,21 @@ const handleSaveEvent = (eventData) => {
     }
   };
 
-
+    // Carica eventi, commesse e collaboratori una volta al montaggio del componente
+    useEffect(() => {
+      loadAllData();
+    }, [])
   
-  useEffect(() => {
-    fetchProjectResources();
-    fetchCategoryResources();
-    fetchEvents();
+  // Funzione per caricare tutti i dati
+  const loadAllData = async () => {
+    const eventsData = await fetchEvents();
+    const projectData = await fetchProjectResources();
+    const categoryData = await fetchCategoryResources();
 
-  }, []);
+    //setEvents(eventsData);
+    //setProjectResources(projectData);
+    //setCategoryResources(categoryData);
+  };
 
   // Aggiorna le commesse filtrate non appena `selectedCommesse` cambia
   useEffect(() => {
@@ -276,9 +283,8 @@ const handleSaveEvent = (eventData) => {
   handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
 />
 <Gantt
-        //ganttData={ganttData}
-       // schedulerData={schedulerData}
-        //updateScheduler={setSchedulerData} // Per sincronizzare con il Scheduler
+        ganttData={events} // Passa gli stessi dati del Scheduler
+        //reloadEvents={loadAllData} // Funzione di ricarica per aggiornamenti
       />
     </div>
   );
