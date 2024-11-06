@@ -27,21 +27,6 @@ const App = () => {
   const [selectedCommesse, setSelectedCommesse] = useState([]);
 
  
-  // Funzione per gestire la selezione delle commesse
-  const handleCommesseChange = selectedOptions => {
-    const updatedCommesse = selectedOptions.map(option => {
-      // Trova la commessa corrispondente nel projectResources per ottenere il colore corretto
-      const commessa = projectResources.find(p => p.id === option.value);
-      return {
-        value: option.value,
-        label: option.label,
-        color: commessa ? commessa.color : '#000000' // Usa il colore corretto o #000000 come fallback
-      };
-    });
-    setSelectedCommesse(updatedCommesse);
-  };
-  
-  
   // Funzione per cambiare il colore di una commessa selezionata
   const handleColorChange = (color, index) => {
     const updatedCommesse = [...selectedCommesse];
@@ -187,7 +172,7 @@ const fetchCategoryResources = async () => {
 };
 // Funzione per visualizzare l’immagine e il nome del collaboratore
 const resourceHeaderTemplate = (props) => {
-  console.log("props.resourceData:", props.resourceData);
+  //console.log("props.resourceData:", props.resourceData);
 
   // Verifica se l'elemento è una commessa o un collaboratore
   const isCommessa = props.resourceData && !props.resourceData.groupId; // Supponiamo che le commesse non abbiano `groupId`
@@ -439,15 +424,15 @@ const deleteSelectedCommesse = async () => {
       <div>
         <label>Seleziona Commesse:</label>
         <Select
-          options={projectResources.map(commessa => ({
-            value: commessa.id,
-            label: commessa.text
-          }))}
-          value={selectedCommesse}
-          isMulti
-          onChange={handleCommesseChange}
-          placeholder="Seleziona Commesse"
-        />
+        options={projectResources.map(commessa => ({
+          value: commessa.id,
+          label: commessa.text
+        }))}
+        value={selectedCommesse}
+        isMulti
+        onChange={selectedOptions => handleCommesseChange(selectedOptions, projectResources, setSelectedCommesse)}
+        placeholder="Seleziona Commesse"
+      />
       </div>
 
 {/* Contenitore delle commesse selezionate */}
