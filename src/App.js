@@ -5,6 +5,19 @@ import { extend } from '@syncfusion/ej2-base';
 import Select from 'react-select';
 import { TwitterPicker } from 'react-color';
 
+import {
+  handleCollaboratoreChange,
+  handleCommesseChange,
+  handleColorChange,
+  removeCommessa,
+  fetchProjectResources,
+  fetchCategoryResources,
+  fetchEvents,
+  saveSelectedCommesse,
+  deleteSelectedCommesse,
+  saveEvent
+} from './Functions';
+
 const App = () => {
   const [events, setEvents] = useState([]);
   const [projectResources, setProjectResources] = useState([]);
@@ -14,15 +27,6 @@ const App = () => {
   const [selectedCommesse, setSelectedCommesse] = useState([]);
 
  
-  
-
-// Funzione per gestire il cambio dei collaboratori selezionati
-const handleCollaboratoreChange = selectedOptions => {
-  const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
-  setSelectedCollaboratori(selectedIds);
-};
-
-
   // Funzione per gestire la selezione delle commesse
   const handleCommesseChange = selectedOptions => {
     const updatedCommesse = selectedOptions.map(option => {
@@ -415,18 +419,21 @@ const deleteSelectedCommesse = async () => {
       {/* Menu a discesa per selezionare i collaboratori */}
       <div>
         <label>Seleziona Collaboratore:</label>
+
         <Select
-        
-          options={uniqueCollaborators.map(collaboratore => ({
-            value: collaboratore.id,
-            label: collaboratore.text
-          }))}
-          onChange={handleCollaboratoreChange}
-          isMulti
-          isClearable
-          placeholder="Seleziona Collaboratore"
-        />
+  options={uniqueCollaborators.map(collaboratore => ({
+    value: collaboratore.id,
+    label: collaboratore.text
+  }))}
+  onChange={selectedOptions => handleCollaboratoreChange(selectedOptions, setSelectedCollaboratori)} // Pass setSelectedCollaboratori here
+  isMulti
+  isClearable
+  placeholder="Seleziona Collaboratore"
+/>
       </div>
+
+
+
 
       {/* Menu a discesa multi-selezione per selezionare le commesse */}
       <div>
