@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { Day, WorkWeek, Month, ScheduleComponent, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, ResourceDetails, Week, Agenda, Inject, TimelineViews, Resize, DragAndDrop } from '@syncfusion/ej2-react-schedule';
-import { extend } from '@syncfusion/ej2-base';
-import Select from 'react-select';
-
 import Scheduler from './Scheduler';  // Importa Scheduler da Scheduler.js
-
+import Gantt from './Gantt';  // Importa Scheduler da Scheduler.js
 import {
   handleCollaboratoreChange,
   handleCommesseChange,
@@ -167,6 +163,8 @@ const handleSaveEvent = (eventData) => {
     }
   };
 
+
+  
   useEffect(() => {
     fetchProjectResources();
     fetchCategoryResources();
@@ -277,6 +275,11 @@ const handleSaveEvent = (eventData) => {
   removeCommessa={removeCommessa} // Funzione gestione rimozione commessa
   handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
 />
+<Gantt
+        //ganttData={ganttData}
+       // schedulerData={schedulerData}
+        //updateScheduler={setSchedulerData} // Per sincronizzare con il Scheduler
+      />
     </div>
   );
 };
