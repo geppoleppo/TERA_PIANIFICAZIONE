@@ -77,3 +77,86 @@ export const saveEvent = async (eventData, projectResources, fetchEvents) => {
           console.error("Errore durante l'eliminazione dell'evento:", error);
         }
       };
+
+   // Funzione per salvare le commesse e aggiornare i collaboratori selezionati
+export const saveSelectedCommesse = async (
+    projectResources,
+    setProjectResources,
+    selectedCollaboratori,
+    selectedCommesse,
+    fetchCategoryResources,
+    fetchEvents
+  ) => {
+    try {
+      // Aggiorna `projectResources` con i colori delle commesse selezionate
+      const updatedProjectResources = projectResources.map(commessa => {
+        const selectedCommessa = selectedCommesse.find(selected => selected.value === commessa.id);
+        return selectedCommessa ? { ...commessa, color: selectedCommessa.color } : commessa;
+      });
+      setProjectResources(updatedProjectResources); // Aggiorna lo stato di `projectResources`
+  
+      // Per ogni collaboratore selezionato, aggiorna le commesse nel backend
+      await Promise.all(
+        selectedCollaboratori.map(async collaboratoreId => {
+          const response = await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}`);
+          const collaboratoreData = await response.json();
+          const currentCommesseIds = collaboratoreData.groupIds || [];
+          const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
+  
+          const commesseToAdd = selectedCommesseIds.filter(id => !currentCommesseIds.includes(id));
+          const commesseToRemove = currentCommesseIds.filter(id => !selectedCommesseIds.includes(id));
+  
+          await Promise.all(commesseToAdd.map(async id => {
+            const commessa = selectedCommesse.find(c => c.value === id);
+            await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/aggiungi-commesse`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ commesseIds: [{ id: commessa.value, color: commessa.color }] })
+            });
+          }));
+  
+          await Promise.all(commesseToRemove.map(async id => {
+            await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}/rimuovi-commesse`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ commesseIds: [id] })
+            });
+          }));
+        })
+      );
+  
+      await fetchCategoryResources(); // Ricarica i collaboratori per aggiornare le modifiche
+      fetchEvents(); // Aggiorna lo Scheduler con le ultime modifiche di colore
+      console.log('Le commesse selezionate sono state aggiornate per i collaboratori selezionati');
+    } catch (error) {
+      console.error("Errore durante l'aggiornamento delle commesse per i collaboratori:", error);
+    }
+  };
+  
+
+  
+  // Funzione per aggiornare un evento
+
+export const updateEvent = async (eventData, fetchEvents) => {
+    const collaboratorId = Array.isArray(eventData.CollaboratoreId)
+      ? eventData.CollaboratoreId.join(',')
+      : eventData.CollaboratoreId;
+  
+    try {
+      const response = await fetch(`http://localhost:3001/api/eventi/${eventData.Id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...eventData,
+          CollaboratoreId: collaboratorId, // Passiamo il CollaboratoreId come stringa corretta
+          Description: eventData.Description // Invia la descrizione per l'aggiornamento
+        })
+      });
+      const data = await response.json();
+      console.log(data.message);
+      fetchEvents(); // Ricarica gli eventi
+    } catch (error) {
+      console.error("Errore durante l'aggiornamento dell'evento:", error);
+    }
+  };
+  
