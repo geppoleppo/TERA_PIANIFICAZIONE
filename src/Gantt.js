@@ -14,14 +14,17 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent }) => {
   const ganttRef = useRef(null);
 
   const onActionComplete = (args) => {
-    if (args.requestType === 'save') {
-      // Se l'evento esiste già, aggiorniamo. Altrimenti, aggiungiamo un nuovo evento
+    console.log("Azione completata nel Gantt:", args);
+  
       if (args.action === 'edit') {
+        console.log("Modifica evento:", args.data);
         onUpdateEvent(args.data);
       } else if (args.action === 'add') {
+        console.log("Aggiunta evento:", args.data);
         onSaveEvent(args.data);
       }
-    } else if (args.requestType === 'delete') {
+    else if (args.requestType === 'delete') {
+      console.log("Eliminazione evento:", args.data[0].Id);
       onDeleteEvent(args.data[0].Id);
     }
   };
