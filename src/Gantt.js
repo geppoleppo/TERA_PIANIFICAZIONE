@@ -12,7 +12,7 @@ import {
   ColumnDirective
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent }) => {
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryResources }) => {
   //console.log("Dati Gantt con CommessaName e IncaricatoId:", ganttData);
 
   const ganttRef = useRef(null);
@@ -44,6 +44,16 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent }) => {
     );
   };
 
+  const getCollaboratorNames = (incaricatoIds, categoryResources) => {
+    console.log('GGGGGG',categoryResources)
+    if (!Array.isArray(incaricatoIds)) return "Incaricato sconosciuto";
+    const names = incaricatoIds.map(id => {
+      const collaborator = categoryResources.find(c => c.id === id);
+      return collaborator ? collaborator.text : "Incaricato sconosciuto";
+    });
+    return names.join(", ");
+  };
+  
 
 return (
   <div>
@@ -76,7 +86,12 @@ return (
       <ColumnDirective field="Id" headerText="ID" isPrimaryKey={true} width="150" />
         <ColumnDirective field="Subject" headerText="Titolo" width="150" />
         <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
-        <ColumnDirective field="IncaricatoId" headerText="Incaricato ID" width="150" />
+        <ColumnDirective
+  field="IncaricatoId"
+  headerText="Incaricato"
+  width="150"
+  template={(props) => getCollaboratorNames(props.IncaricatoId, categoryResources)}
+/>
         <ColumnDirective field="StartTime" headerText="Data Inizio" width="150" format="dd/MM/yyyy hh:mm" />
         <ColumnDirective field="EndTime" headerText="Data Fine" width="150" format="dd/MM/yyyy hh:mm" />
       </ColumnsDirective>

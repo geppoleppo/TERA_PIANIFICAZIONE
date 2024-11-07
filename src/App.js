@@ -376,7 +376,9 @@ const handleDeleteEvent = (eventId) => {
         ganttData={events} // Passa gli stessi dati del Scheduler
         onSaveEvent={handleSaveEvent}         // Aggiungi questa linea
   onUpdateEvent={handleUpdateEvent}     // Aggiungi questa linea
-  onDeleteEvent={handleDeleteEvent}     // Aggiungi questa linea
+  onDeleteEvent={handleDeleteEvent} 
+  categoryResources={categoryResources}    // Aggiungi questa linea
+  
       />
     </div>
   );
