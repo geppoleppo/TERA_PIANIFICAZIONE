@@ -308,3 +308,35 @@ app.put('/api/commesse/:id', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento della commessa." });
   }
 });
+// Endpoint per ottenere un singolo evento tramite il suo ID
+app.get('/api/eventi/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Esegui la query per ottenere l'evento con l'ID specificato
+    const query = 'SELECT * FROM Eventi WHERE Id = ?';
+    const evento = await getRecords(query, [id]);
+
+    // Controlla se l'evento è stato trovato
+    if (evento.length === 0) {
+      return res.status(404).json({ error: 'Evento non trovato' });
+    }
+
+    // Mappa l'evento in un formato coerente con la tua risposta
+    const formattedEvent = {
+      Id: evento[0].Id,
+      Subject: evento[0].Titolo,
+      StartTime: evento[0].Inizio,
+      EndTime: evento[0].Fine,
+      ProjectId: parseInt(evento[0].CommessaName, 10),
+      CollaboratoreId: evento[0].IncaricatoId.split(',').map(id => parseInt(id, 10)),
+      CategoryColor: evento[0].Colore || "#000000",
+      Description: evento[0].Descrizione // Includi altri campi necessari
+    };
+
+    res.json(formattedEvent); // Rispondi con l'evento formattato
+  } catch (error) {
+    console.error("Errore nel recupero dell'evento:", error);
+    res.status(500).json({ error: "Errore nel recupero dell'evento." });
+  }
+});

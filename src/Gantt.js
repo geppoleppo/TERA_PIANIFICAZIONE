@@ -18,9 +18,9 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent }) => {
   const ganttRef = useRef(null);
 
   const onActionComplete = (args) => {
-    //console.log("Azione completata nel Gantt:", args);
+    console.log("Azione completata nel Gantt:", args);
   
-    if (args.action === 'edit') {
+    if (args.action === 'TaskbarEditing') {
       console.log("Modifica evento:", args.data);
       onUpdateEvent(args.data);
     } else if (args.action === 'add') {

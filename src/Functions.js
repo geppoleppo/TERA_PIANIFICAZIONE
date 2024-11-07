@@ -38,33 +38,48 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
     // Funzione per salvare un nuovo evento nel database
 
 
-export const saveEvent = async (eventData, projectResources, fetchEvents) => {
-    const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
-      ? eventData.CollaboratoreId.join(',')
-      : eventData.CollaboratoreId;
+    export const saveEvent = async (eventData, projectResources, fetchEvents) => {
+      console.log('Dati evento in saveEvent:', eventData);
   
-    // Ottieni il colore della commessa associata
-    const commessa = projectResources.find(p => p.id === eventData.ProjectId);
-    const eventColor = commessa ? commessa.color : '#FF0000'; // Colore della commessa o default
+      // Normalizza `CollaboratoreId` per essere una stringa di ID separati da virgole
+      const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
+          ? eventData.CollaboratoreId.join(',')
+          : eventData.CollaboratoreId;
   
-    try {
-      const response = await fetch('http://localhost:3001/api/eventi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...eventData,
+      // Gestisce i dati differenti tra Scheduler e Gantt
+      const normalizedEvent = {
+          Subject: eventData.Subject || eventData.taskData?.Subject || "Titolo non specificato",
+          StartTime: eventData.StartTime || eventData.taskData?.StartTime || null,
+          EndTime: eventData.EndTime || eventData.taskData?.EndTime || null,
+          ProjectId: eventData.ProjectId || eventData.taskData?.ProjectId || null,
           CollaboratoreId: collaboratorIds,
-          Color: eventColor, // Salva il colore della commessa
-          Description: eventData.Description, // Invia il summary come Descrizione
-        }),
-      });
-      const data = await response.json();
-      console.log(data.message);
-      fetchEvents(); // Ricarica gli eventi con il colore aggiornato
-    } catch (error) {
-      console.error("Errore durante il salvataggio dell'evento:", error);
-    }
+          Color: eventData.Color || '#FF0000',
+          Description: eventData.Description || "",
+          // Aggiungi altri campi con la logica corretta, se necessario
+      };
+  
+      console.log('Dati evento normalizzati per il salvataggio:', normalizedEvent);
+  
+      try {
+          const response = await fetch('http://localhost:3001/api/eventi', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(normalizedEvent),
+          });
+  
+          if (!response.ok) {
+              throw new Error('Errore nella risposta del server');
+          }
+  
+          const data = await response.json();
+          console.log('Risposta del server dopo salvataggio:', data);
+          fetchEvents(); // Ricarica gli eventi
+      } catch (error) {
+          console.error("Errore durante il salvataggio dell'evento:", error);
+      }
   };
+  
+  
   
 
     // Funzione per eliminare un evento dal database
@@ -151,7 +166,6 @@ export const saveSelectedCommesse = async (
   }
 };
 
-  
 
   
   // Funzione per aggiornare un evento
@@ -172,7 +186,7 @@ export const updateEvent = async (eventData, fetchEvents) => {
         })
       });
       const data = await response.json();
-      console.log(data.message);
+      console.log(data);
       fetchEvents(); // Ricarica gli eventi
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);

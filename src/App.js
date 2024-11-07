@@ -39,28 +39,63 @@ const App = () => {
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro
 const handleUpdateEvent = (eventData) => {
+console.log('eventi spediti dal gantt:',eventData)
+
   updateEvent(eventData, fetchEvents);
 };
 
 
 // Passa `projectResources` e `fetchEvents` come argomenti a `saveEvent`
 const handleSaveEvent = (eventData) => {
-  // Cerca il valore di CommessaName
-  const commessa = projectResources.find(p => p.id === eventData.ProjectId);
-  const incaricato = categoryResources.find(c => c.id === eventData.CollaboratoreId);
+  console.log("eventDataEEEEE", eventData); // Log per verifica
 
-  // Aggiungi CommessaName e IncaricatoId a eventData
-  const completeEventData = {
-    ...eventData,
-    CommessaName: commessa ? commessa.text : '', // Assegna il testo della commessa se esiste
-    IncaricatoId: incaricato ? incaricato.id : '' // Assegna l'ID dell'incaricato se esiste
-  };
+  let completeEventData;
+
+  if (eventData.ganttProperties) {
+    // Logica per eventi dal Gantt
+    const commessaName = eventData.CommessaName || eventData.taskData?.CommessaName;
+
+    // Confronto case-insensitive tra `CommessaName` e `projectResources`
+    const commessa = projectResources.find(p => p.text.toLowerCase() === commessaName.toLowerCase());
+    const projectId = commessa ? commessa.id : null;
+    const collaboratoreId = eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
+
+    console.log("ooooo", projectResources); // Log per verifica
+    console.log("ooooo", commessa); // Log per verifica
+    console.log("ooooo", projectId); // Log per verifica
+
+    // Trova il collaboratore associato
+    const incaricato = categoryResources.find(c => c.id === collaboratoreId);
+
+    completeEventData = {
+      ...eventData,
+      ProjectId: projectId, // Deriva ProjectId da CommessaName
+      CommessaName: commessaName || '', // Usa il nome della commessa
+      IncaricatoId: incaricato ? incaricato.id : collaboratoreId || '', // ID dell'incaricato
+      CollaboratoreId: Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId : [collaboratoreId], // Array di collaboratori
+    };
+  } else {
+    // Logica per eventi dallo Scheduler
+    const commessa = projectResources.find(p => p.id === eventData.ProjectId);
+    const incaricato = categoryResources.find(c => c.id === eventData.CollaboratoreId);
+
+    completeEventData = {
+      ...eventData,
+      ProjectId: eventData.ProjectId,
+      CommessaName: commessa ? commessa.text : eventData.CommessaName || '', // Nome della commessa
+      IncaricatoId: incaricato ? incaricato.id : eventData.CollaboratoreId || '', // ID dell'incaricato
+    };
+  }
 
   console.log("Salvataggio di un nuovo evento con dati completi:", completeEventData); // Log per verifica
 
   // Salva l'evento nel database
   saveEvent(completeEventData, projectResources, fetchEvents);
 };
+
+
+
+
 
 
 const handleDeleteEvent = (eventId) => {
