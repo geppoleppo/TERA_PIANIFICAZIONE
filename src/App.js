@@ -45,7 +45,21 @@ const handleUpdateEvent = (eventData) => {
 
 // Passa `projectResources` e `fetchEvents` come argomenti a `saveEvent`
 const handleSaveEvent = (eventData) => {
-  saveEvent(eventData, projectResources, fetchEvents);
+  // Cerca il valore di CommessaName
+  const commessa = projectResources.find(p => p.id === eventData.ProjectId);
+  const incaricato = categoryResources.find(c => c.id === eventData.CollaboratoreId);
+
+  // Aggiungi CommessaName e IncaricatoId a eventData
+  const completeEventData = {
+    ...eventData,
+    CommessaName: commessa ? commessa.text : '', // Assegna il testo della commessa se esiste
+    IncaricatoId: incaricato ? incaricato.id : '' // Assegna l'ID dell'incaricato se esiste
+  };
+
+  console.log("Salvataggio di un nuovo evento con dati completi:", completeEventData); // Log per verifica
+
+  // Salva l'evento nel database
+  saveEvent(completeEventData, projectResources, fetchEvents);
 };
 
 
@@ -62,13 +76,20 @@ const handleDeleteEvent = (eventId) => {
 
     const mappedEvents = data.map(event => {
       const commessa = projectResources.find(p => p.id === event.ProjectId);
+      const incaricatoId = Array.isArray(event.CollaboratoreId) && event.CollaboratoreId.length > 0
+        ? event.CollaboratoreId[0]  // Prendi il primo ID
+        : null;
+      const incaricato = categoryResources.find(c => c.id === incaricatoId);
+    
       return {
         ...event,
         ProjectId: parseInt(event.ProjectId),
         CollaboratoreId: Array.isArray(event.CollaboratoreId)
           ? event.CollaboratoreId.map(id => parseInt(id))
           : [],
-        Color: commessa ? commessa.color : '#FF0000', // Associa il colore della commessa
+        Color: commessa ? commessa.color : '#FF0000',
+        CommessaName: commessa ? commessa.text : '',  // Nome della commessa
+        IncaricatoId: incaricato ? incaricato.id : '' // ID dell'incaricato
       };
     });
 
@@ -77,8 +98,6 @@ const handleDeleteEvent = (eventId) => {
     console.error('Errore durante il caricamento degli eventi:', error);
   }
 };
-
-
 
 
   // Funzione per caricare le commesse dal database
