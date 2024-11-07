@@ -42,6 +42,18 @@ const handleUpdateEvent = (eventData) => {
   updateEvent(eventData, fetchEvents);
 };
 
+
+// Passa `projectResources` e `fetchEvents` come argomenti a `saveEvent`
+const handleSaveEvent = (eventData) => {
+  saveEvent(eventData, projectResources, fetchEvents);
+};
+
+
+const handleDeleteEvent = (eventId) => {
+  console.log("Eliminazione evento con ID:", eventId); // Log per verifica
+  deleteEvent(eventId, loadAllData);
+};
+
  // Funzione per caricare gli eventi dal database
  const fetchEvents = async () => {
   try {
@@ -66,10 +78,7 @@ const handleUpdateEvent = (eventData) => {
   }
 };
 
-// Passa `projectResources` e `fetchEvents` come argomenti a `saveEvent`
-const handleSaveEvent = (eventData) => {
-  saveEvent(eventData, projectResources, fetchEvents);
-};
+
 
 
   // Funzione per caricare le commesse dal database
@@ -284,7 +293,9 @@ const handleSaveEvent = (eventData) => {
 />
 <Gantt
         ganttData={events} // Passa gli stessi dati del Scheduler
-        //reloadEvents={loadAllData} // Funzione di ricarica per aggiornamenti
+        onSaveEvent={handleSaveEvent}         // Aggiungi questa linea
+  onUpdateEvent={handleUpdateEvent}     // Aggiungi questa linea
+  onDeleteEvent={handleDeleteEvent}     // Aggiungi questa linea
       />
     </div>
   );
