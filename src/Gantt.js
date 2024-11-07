@@ -35,7 +35,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent }) => {
 
   // Template per il colore della barra del task
   const taskbarTemplate = (taskData) => {
-    console.log('ffffff',taskData)
+
     const color = taskData.taskData.Color || '#000000';  // Imposta un colore di default
     return (
       <div style={{ backgroundColor: color, height: '100%', width: '100%' }}>

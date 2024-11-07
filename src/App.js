@@ -93,7 +93,7 @@ const handleDeleteEvent = (eventId) => {
       };
     });
 
-    console.log("MAPPED EVENTS:", mappedEvents); // Verifica che Color sia presente in ogni evento
+    //console.log("MAPPED EVENTS:", mappedEvents); // Verifica che Color sia presente in ogni evento
     setEvents(mappedEvents);
   } catch (error) {
     console.error('Errore durante il caricamento degli eventi:', error);
