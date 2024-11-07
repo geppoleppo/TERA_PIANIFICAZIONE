@@ -41,8 +41,17 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent }) => {
           endDate: 'EndTime',
           progress: 'Progress'
         }}
+        editSettings={{
+          allowAdding: 'true',
+          allowEditing: 'true',
+          allowDeleting: 'true',
+          allowTaskbarEditing: 'true',
+          showDeleteConfirmDialog: 'true'
+      }}
+      toolbar={ ['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
+            
         height="500px"
-        toolbar={['ExpandAll', 'CollapseAll']}
+      
       >
         <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
       </GanttComponent>
