@@ -80,19 +80,20 @@ const handleDeleteEvent = (eventId) => {
         ? event.CollaboratoreId[0]  // Prendi il primo ID
         : null;
       const incaricato = categoryResources.find(c => c.id === incaricatoId);
-    
+
       return {
         ...event,
         ProjectId: parseInt(event.ProjectId),
         CollaboratoreId: Array.isArray(event.CollaboratoreId)
           ? event.CollaboratoreId.map(id => parseInt(id))
           : [],
-        Color: commessa ? commessa.color : '#FF0000',
+        Color: commessa ? commessa.color : '#FF0000',  // Assegna il colore della commessa
         CommessaName: commessa ? commessa.text : '',  // Nome della commessa
         IncaricatoId: incaricato ? incaricato.id : '' // ID dell'incaricato
       };
     });
 
+    console.log("MAPPED EVENTS:", mappedEvents); // Verifica che Color sia presente in ogni evento
     setEvents(mappedEvents);
   } catch (error) {
     console.error('Errore durante il caricamento degli eventi:', error);
@@ -112,7 +113,7 @@ const handleDeleteEvent = (eventId) => {
         color: commessa.color || '#FF0000' // Imposta colore rosso se non definito
       }));
 
-      console.log("Commesse caricate con colore:", formattedData);
+      //console.log("Commesse caricate con colore:", formattedData);
       setProjectResources(formattedData);
     } catch (error) {
       console.error('Errore durante il caricamento delle commesse:', error);
@@ -144,7 +145,7 @@ const handleDeleteEvent = (eventId) => {
 
       setUniqueCollaborators(uniqueCollaborators);
       setCategoryResources(duplicatedData);
-      console.log("Duplicated Category Resources:", duplicatedData);
+      //console.log("Duplicated Category Resources:", duplicatedData);
     } catch (error) {
       console.error('Errore durante il caricamento dei collaboratori:', error);
     }
