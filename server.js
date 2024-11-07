@@ -287,4 +287,24 @@ app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
   app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
   });
-  
+
+  // Aggiorna il colore di una commessa
+app.put('/api/commesse/:id', async (req, res) => {
+  const { id } = req.params;
+  const { color } = req.body;
+
+  try {
+    // Assicurati che la commessa esista nel database
+    const commessa = await getRecords('SELECT * FROM Commesse WHERE Id = ?', [id]);
+    if (commessa.length === 0) {
+      return res.status(404).json({ error: 'Commessa non trovata' });
+    }
+
+    // Aggiorna il colore della commessa
+    await runQuery('UPDATE Commesse SET Colore = ? WHERE Id = ?', [color, id]);
+    res.json({ message: 'Commessa aggiornata con successo!' });
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento della commessa:", error);
+    res.status(500).json({ error: "Errore durante l'aggiornamento della commessa." });
+  }
+});
