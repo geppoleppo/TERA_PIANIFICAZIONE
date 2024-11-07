@@ -18,7 +18,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent }) => {
   const ganttRef = useRef(null);
 
   const onActionComplete = (args) => {
-    console.log("Azione completata nel Gantt:", args);
+    //console.log("Azione completata nel Gantt:", args);
   
     if (args.action === 'TaskbarEditing') {
       console.log("Modifica evento:", args.data);
@@ -73,11 +73,12 @@ return (
       height="500px"
     >
       <ColumnsDirective>
-
-        <ColumnDirective field="Subject" headerText="Titolo" width="100" />
-        <ColumnDirective field="CommessaName" headerText="Commessa" width="200" />
-        <ColumnDirective field="IncaricatoId" headerText="Incaricati" width="200" />
-
+      <ColumnDirective field="Id" headerText="ID" isPrimaryKey={true} width="150" />
+        <ColumnDirective field="Subject" headerText="Titolo" width="150" />
+        <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
+        <ColumnDirective field="IncaricatoId" headerText="Incaricato ID" width="150" />
+        <ColumnDirective field="StartTime" headerText="Data Inizio" width="150" format="dd/MM/yyyy hh:mm" />
+        <ColumnDirective field="EndTime" headerText="Data Fine" width="150" format="dd/MM/yyyy hh:mm" />
       </ColumnsDirective>
       <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
     </GanttComponent>

@@ -139,23 +139,20 @@ const handleDeleteEvent = (eventId) => {
     const mappedEvents = data.map(event => {
       const commessa = projectResources.find(p => p.id === event.ProjectId);
 
-      // Map CollaboratoreId as an array and assign it to IncaricatoId
-      const incaricatoIds = Array.isArray(event.CollaboratoreId)
-        ? event.CollaboratoreId.map(id => parseInt(id))
-        : [];
-
       return {
         ...event,
         ProjectId: parseInt(event.ProjectId),
-        CollaboratoreId: incaricatoIds,  // Map as array for consistency
-        Color: commessa ? commessa.color : '#FF0000',  // Assign commessa color
-        CommessaName: commessa ? commessa.text : '',  // Commessa name
-        IncaricatoId: incaricatoIds  // Use full array of collaborator IDs
+        // Assicurati che `CollaboratoreId` sia sempre un array di numeri
+        CollaboratoreId: Array.isArray(event.CollaboratoreId)
+          ? event.CollaboratoreId.map(id => parseInt(id))
+          : [],
+        Color: commessa ? commessa.color : '#FF0000',  // Assegna il colore della commessa
+        CommessaName: commessa ? commessa.text : '',    // Nome della commessa
+        IncaricatoId: Array.isArray(event.CollaboratoreId)
+          ? event.CollaboratoreId.map(id => parseInt(id)) // Usa tutto l'array di ID collaboratori
+          : []
       };
     });
-
-    // Log for verification if needed
-    console.log("MAPPED EVENTS:", mappedEvents);
 
     setEvents(mappedEvents);
   } catch (error) {
