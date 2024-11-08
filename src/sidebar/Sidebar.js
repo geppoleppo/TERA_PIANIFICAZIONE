@@ -27,7 +27,7 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
                     <button onClick={onSyncCommesse}>Sincronizza Commesse</button>
                 </div>
                 <div className="commesse-color-section">
-    <h3>Assegna Colori Commesse</h3>
+    <h4>Assegna Colori Alle Commesse</h4>
     {filteredProjectResources && filteredProjectResources.length > 0 ? (
         filteredProjectResources.map((commessa, index) => (
             <div key={index}>
