@@ -409,3 +409,24 @@ app.get('/api/sincronizza-commesse', (req, res) => {
       });
   });
 });
+
+// Endpoint per aggiornare direttamente il campo groupIds di un collaboratore
+app.put('/api/collaboratori/:id', async (req, res) => {
+  const { id } = req.params;
+  const { groupIds } = req.body;
+
+  try {
+    // Verifica che il collaboratore esista
+    const collaboratore = await getRecords('SELECT * FROM Collaboratori WHERE Id = ?', [id]);
+    if (collaboratore.length === 0) {
+      return res.status(404).json({ error: 'Collaboratore non trovato' });
+    }
+
+    // Aggiorna il campo groupIds
+    await runQuery('UPDATE Collaboratori SET groupIds = ? WHERE Id = ?', [groupIds.join(','), id]);
+    res.json({ message: 'groupIds aggiornati con successo.' });
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento dei groupIds del collaboratore:", error);
+    res.status(500).json({ error: "Errore durante l'aggiornamento dei groupIds del collaboratore." });
+  }
+});

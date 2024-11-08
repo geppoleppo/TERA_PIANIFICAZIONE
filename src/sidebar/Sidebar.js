@@ -10,11 +10,31 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
     };
 
     const handleColorChange = (color, commessaId) => {
+        // Aggiorna localmente `filteredProjectResources`
         const updatedProjectResources = filteredProjectResources.map(commessa =>
             commessa.id === commessaId ? { ...commessa, color: color.hex } : commessa
         );
         setProjectResources(updatedProjectResources);
+    
+        // Invia una richiesta PUT al backend per aggiornare il colore della commessa nel database
+        fetch(`http://localhost:3001/api/commesse/${commessaId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ color: color.hex }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Errore durante l'aggiornamento del colore per la commessa con ID ${commessaId}: ${response.statusText}`);
+            }
+            console.log('Colore aggiornato con successo nel database per la commessa con ID', commessaId);
+        })
+        .catch(error => {
+            console.error("Errore durante l'aggiornamento del colore nel database:", error);
+        });
     };
+    
 
     return (
         <>

@@ -29,14 +29,9 @@ const App = () => {
   
   
   const handleSaveSelectedCommesse = () => {
-    saveSelectedCommesse(
-      projectResources,
-      setProjectResources,
-      selectedCollaboratori,
-      selectedCommesse,
-      fetchCategoryResources,
-      fetchEvents
-    );
+    console.log("Collaboratori selezionati:", selectedCollaboratori);
+    console.log("Commesse selezionate:", selectedCommesse);
+    saveSelectedCommesse(selectedCollaboratori, selectedCommesse);
   };
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro

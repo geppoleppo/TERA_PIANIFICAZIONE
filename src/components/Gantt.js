@@ -18,7 +18,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryRe
   const ganttRef = useRef(null);
 
   let attemptCount = 0;
-  const maxAttempts = 3;
+  const maxAttempts = 5;
   
   const onActionComplete = (args) => {
       if (args?.data?.ganttProperties) {
