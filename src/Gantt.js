@@ -85,21 +85,23 @@ return (
         allowTaskbarEditing: true,
         showDeleteConfirmDialog: true
       }}
+      filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
+      labelSettings={{
+        rightLabel: (props) => {
+         
+          return getCollaboratorNames(props.IncaricatoId, categoryResources);
+        }
+      }}
+
       toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
       height="500px"
     >
       <ColumnsDirective>
-      <ColumnDirective field="Id" headerText="ID" isPrimaryKey={true} width="150" />
-        <ColumnDirective field="Subject" headerText="Titolo" width="150" />
-        <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
-        <ColumnDirective
-  field="IncaricatoId"
-  headerText="Incaricato"
-  width="150"
-  template={(props) => getCollaboratorNames(props.IncaricatoId, categoryResources)}
-/>
-        <ColumnDirective field="StartTime" headerText="Data Inizio" width="150" format="dd/MM/yyyy hh:mm" />
-        <ColumnDirective field="EndTime" headerText="Data Fine" width="150" format="dd/MM/yyyy hh:mm" />
+
+        <ColumnDirective field="Subject" headerText="Titolo"  isPrimaryKey={true} width="150" />
+        <ColumnDirective field="CommessaName" headerText="Commessa" isPrimaryKey={true} width="150" />
+        <ColumnDirective field="Id" headerText="ID" isPrimaryKey={true} width="150" />
+
       </ColumnsDirective>
       <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
     </GanttComponent>
