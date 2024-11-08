@@ -39,7 +39,7 @@ const App = () => {
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro
   const handleUpdateEvent = (eventData) => {
-    console.log('eventi spediti dal gantt:', eventData);
+   // console.log('eventi spediti dal gantt:', eventData);
   
     let completeEventData;
   
@@ -64,7 +64,7 @@ const App = () => {
       };
     }
   
-    console.log("Dati evento completi per l'aggiornamento:", completeEventData);
+    //console.log("Dati evento completi per l'aggiornamento:", completeEventData);
   
     // Aggiorna l'evento nel database
     updateEvent(completeEventData, fetchEvents);
@@ -74,7 +74,7 @@ const App = () => {
 
 // Passa `projectResources` e `fetchEvents` come argomenti a `saveEvent`
 const handleSaveEvent = (eventData) => {
-  console.log("eventDataEEEEE", eventData); // Log per verifica
+  //console.log("eventDataEEEEE", eventData); // Log per verifica
 
   let completeEventData;
 
@@ -87,10 +87,7 @@ const handleSaveEvent = (eventData) => {
     const projectId = commessa ? commessa.id : null;
     const collaboratoreId = eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
 
-    console.log("ooooo", categoryResources); // Log per verifica
-  
-
-    // Trova il collaboratore associato
+      // Trova il collaboratore associato
     const incaricato = categoryResources.find(c => c.id === collaboratoreId);
 
     completeEventData = {
@@ -346,7 +343,7 @@ console.log("MENTOLO",categoryResources)
       args.changedRecords.forEach(event => handleUpdateEvent (event)); // Aggiungi gestione aggiornamento
     }
   }
-  console.log("categoryResources nel render di App:", categoryResources);
+  //console.log("categoryResources nel render di App:", categoryResources);
 
   return (
     <div className="App">

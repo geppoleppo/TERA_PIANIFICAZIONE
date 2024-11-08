@@ -12,8 +12,8 @@ import {
   ColumnDirective
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryResources }) => {
-  console.log("categoryResources in Gantt component:", categoryResources);
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryResources, }) => {
+  //console.log("categoryResources in Gantt component:", categoryResources);
 
   const ganttRef = useRef(null);
 
@@ -21,13 +21,13 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryRe
     //console.log("Azione completata nel Gantt:", args);
   
     if (args.action === 'TaskbarEditing') {
-      console.log("Modifica evento:", args.data);
+      //console.log("Modifica evento:", args.data);
       onUpdateEvent(args.data);
     } else if (args.action === 'add') {
-      console.log("Aggiunta evento:", args.data);
+      //console.log("Aggiunta evento:", args.data);
       onSaveEvent(args.data);
     } else if (args.requestType === 'delete') {
-      console.log("Eliminazione evento:", args.data[0].Id);
+      //console.log("Eliminazione evento:", args.data[0].Id);
       onDeleteEvent(args.data[0].Id);
     }
   }
@@ -45,8 +45,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryRe
   };
 
   const getCollaboratorNames = (incaricatoIds, categoryResources) => {
-    console.log('MMMM',categoryResources)
-    if (!Array.isArray(incaricatoIds) || categoryResources.length === 0) {
+    if (!Array.isArray(incaricatoIds) || incaricatoIds.length === 0) {
         return "Incaricato sconosciuto";
     }
 
@@ -59,8 +58,6 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryRe
 };
 
 
-  
-console.log('PRIMA DEL GANTTTTTT', categoryResources)
 return (
   <div>
     <GanttComponent
@@ -88,11 +85,11 @@ return (
       filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
       labelSettings={{
         rightLabel: (props) => {
-         
-          return getCollaboratorNames(props.IncaricatoId, categoryResources);
+            const incaricatoIds = props.taskData?.IncaricatoId;
+            //console.log("Props nel labelSettings - incaricatoIds:", incaricatoIds);
+            return getCollaboratorNames(incaricatoIds, categoryResources);
         }
-      }}
-
+    }}
       toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
       height="500px"
     >

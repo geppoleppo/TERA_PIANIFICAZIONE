@@ -39,7 +39,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
 
 
     export const saveEvent = async (eventData, projectResources, fetchEvents) => {
-      console.log('Dati evento in saveEvent:', eventData);
+      //console.log('Dati evento in saveEvent:', eventData);
   
       // Normalizza `CollaboratoreId` per essere una stringa di ID separati da virgole
       const collaboratorIds = Array.isArray(eventData.CollaboratoreId)
@@ -58,7 +58,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
           // Aggiungi altri campi con la logica corretta, se necessario
       };
   
-      console.log('Dati evento normalizzati per il salvataggio:', normalizedEvent);
+      //console.log('Dati evento normalizzati per il salvataggio:', normalizedEvent);
   
       try {
           const response = await fetch('http://localhost:3001/api/eventi', {
@@ -72,7 +72,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
           }
   
           const data = await response.json();
-          console.log('Risposta del server dopo salvataggio:', data);
+          //console.log('Risposta del server dopo salvataggio:', data);
           fetchEvents(); // Ricarica gli eventi
       } catch (error) {
           console.error("Errore durante il salvataggio dell'evento:", error);
@@ -89,7 +89,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
             method: 'DELETE'
           });
           const data = await response.json();
-          console.log(data.message);
+          //console.log(data.message);
           fetchEvents(); // Ricarica gli eventi dopo l'eliminazione
         } catch (error) {
           console.error("Errore durante l'eliminazione dell'evento:", error);
@@ -186,7 +186,7 @@ export const updateEvent = async (eventData, fetchEvents) => {
         })
       });
       const data = await response.json();
-      console.log(data);
+      //console.log(data);
       fetchEvents(); // Ricarica gli eventi
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
