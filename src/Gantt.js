@@ -13,7 +13,7 @@ import {
 } from '@syncfusion/ej2-react-gantt';
 
 const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryResources }) => {
-  //console.log("Dati Gantt con CommessaName e IncaricatoId:", ganttData);
+  console.log("categoryResources in Gantt component:", categoryResources);
 
   const ganttRef = useRef(null);
 
@@ -45,16 +45,22 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryRe
   };
 
   const getCollaboratorNames = (incaricatoIds, categoryResources) => {
-    console.log('GGGGGG',categoryResources)
-    if (!Array.isArray(incaricatoIds)) return "Incaricato sconosciuto";
-    const names = incaricatoIds.map(id => {
-      const collaborator = categoryResources.find(c => c.id === id);
-      return collaborator ? collaborator.text : "Incaricato sconosciuto";
-    });
-    return names.join(", ");
-  };
-  
+    console.log('MMMM',categoryResources)
+    if (!Array.isArray(incaricatoIds) || categoryResources.length === 0) {
+        return "Incaricato sconosciuto";
+    }
 
+    const names = incaricatoIds.map(id => {
+        const collaborator = categoryResources.find(c => c.id === id);
+        return collaborator ? collaborator.text : "Incaricato sconosciuto";
+    });
+
+    return names.join(", ");
+};
+
+
+  
+console.log('PRIMA DEL GANTTTTTT', categoryResources)
 return (
   <div>
     <GanttComponent

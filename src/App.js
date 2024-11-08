@@ -87,9 +87,8 @@ const handleSaveEvent = (eventData) => {
     const projectId = commessa ? commessa.id : null;
     const collaboratoreId = eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
 
-    console.log("ooooo", projectResources); // Log per verifica
-    console.log("ooooo", commessa); // Log per verifica
-    console.log("ooooo", projectId); // Log per verifica
+    console.log("ooooo", categoryResources); // Log per verifica
+  
 
     // Trova il collaboratore associato
     const incaricato = categoryResources.find(c => c.id === collaboratoreId);
@@ -263,6 +262,7 @@ const handleDeleteEvent = (eventId) => {
     const eventsData = await fetchEvents();
     const projectData = await fetchProjectResources();
     const categoryData = await fetchCategoryResources();
+console.log("MENTOLO",categoryResources)
 
     //setEvents(eventsData);
     //setProjectResources(projectData);
@@ -346,7 +346,7 @@ const handleDeleteEvent = (eventId) => {
       args.changedRecords.forEach(event => handleUpdateEvent (event)); // Aggiungi gestione aggiornamento
     }
   }
-
+  console.log("categoryResources nel render di App:", categoryResources);
 
   return (
     <div className="App">
@@ -372,14 +372,17 @@ const handleDeleteEvent = (eventId) => {
   removeCommessa={removeCommessa} // Funzione gestione rimozione commessa
   handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
 />
+{categoryResources.length > 0 && (
 <Gantt
-        ganttData={events} // Passa gli stessi dati del Scheduler
-        onSaveEvent={handleSaveEvent}         // Aggiungi questa linea
+    ganttData={events} // Passa gli stessi dati del Scheduler
+    onSaveEvent={handleSaveEvent}         // Aggiungi questa linea
   onUpdateEvent={handleUpdateEvent}     // Aggiungi questa linea
   onDeleteEvent={handleDeleteEvent} 
-  categoryResources={categoryResources}    // Aggiungi questa linea
+  categoryResources={categoryResources.length > 0 ? categoryResources : []} // Assicurati che non sia vuoto
+
   
       />
+    )}
     </div>
   );
 };
