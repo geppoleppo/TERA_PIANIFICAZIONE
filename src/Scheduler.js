@@ -43,7 +43,7 @@ const Scheduler = ({
         <div className="App">
           {/* Menu a discesa per selezionare i collaboratori */}
           <div>
-            <label>Seleziona Collaboratore:</label>
+            <label> SELEZIONA COLLABORATORE:</label>
     
             <Select
               options={uniqueCollaborators.map(collaboratore => ({
@@ -62,7 +62,7 @@ const Scheduler = ({
     
           {/* Menu a discesa multi-selezione per selezionare le commesse */}
           <div>
-            <label>Seleziona Commesse:</label>
+            <label>SLEZIONA COMMESSE:</label>
             <Select
               options={projectResources.map(commessa => ({
                 value: commessa.id,

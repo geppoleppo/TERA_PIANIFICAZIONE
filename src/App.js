@@ -259,12 +259,32 @@ const handleDeleteEvent = (eventId) => {
     const eventsData = await fetchEvents();
     const projectData = await fetchProjectResources();
     const categoryData = await fetchCategoryResources();
-console.log("MENTOLO",categoryResources)
+
 
     //setEvents(eventsData);
     //setProjectResources(projectData);
     //setCategoryResources(categoryData);
   };
+
+// Aggiorna le commesse e i collaboratori filtrati ogni volta che cambia `selectedCommesse` o `selectedCollaboratori`
+useEffect(() => {
+  const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
+  const filteredResources = selectedCommesseIds.length
+      ? projectResources.filter(resource => selectedCommesseIds.includes(resource.id))
+      : [];
+
+  setFilteredProjectResources(filteredResources);
+
+  if (selectedCollaboratori.length > 0) {
+      const filteredCollaborators = categoryResources.filter(resource =>
+          selectedCollaboratori.includes(resource.id)
+      );
+      setFilteredCategoryResources(filteredCollaborators);
+  } else {
+      setFilteredCategoryResources(categoryResources);
+  }
+}, [selectedCommesse, selectedCollaboratori, projectResources, categoryResources]);
+
 
   // Aggiorna le commesse filtrate non appena `selectedCommesse` cambia
   useEffect(() => {

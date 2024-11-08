@@ -17,20 +17,34 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryRe
 
   const ganttRef = useRef(null);
 
-  const onActionComplete = (args) => {
-    //console.log("Azione completata nel Gantt:", args);
+  let attemptCount = 0;
+  const maxAttempts = 3;
   
-    if (args.action === 'TaskbarEditing') {
-      //console.log("Modifica evento:", args.data);
-      onUpdateEvent(args.data);
-    } else if (args.action === 'add') {
-      //console.log("Aggiunta evento:", args.data);
-      onSaveEvent(args.data);
-    } else if (args.requestType === 'delete') {
-      //console.log("Eliminazione evento:", args.data[0].Id);
-      onDeleteEvent(args.data[0].Id);
-    }
-  }
+  const onActionComplete = (args) => {
+      if (args?.data?.ganttProperties) {
+          // Reset del contatore dopo un'azione completa
+          attemptCount = 0;
+  
+          if (args.action === 'TaskbarEditing') {
+              onUpdateEvent(args.data);
+          } else if (args.action === 'add') {
+              onSaveEvent(args.data);
+          } else if (args.requestType === 'delete') {
+              onDeleteEvent(args.data[0].Id);
+          }
+      } else {
+          console.warn("Dati incompleti per l'azione Gantt:", args);
+          
+          if (attemptCount < maxAttempts) {
+              attemptCount++;
+              // Riprova l'azione dopo 100 ms
+              setTimeout(() => onActionComplete(args), 100);
+          } else {
+              console.error("Non è stato possibile completare l'azione a causa di dati incompleti dopo vari tentativi.");
+          }
+      }
+  };
+  
 
 
   // Template per il colore della barra del task
