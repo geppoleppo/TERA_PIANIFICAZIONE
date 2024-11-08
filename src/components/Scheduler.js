@@ -89,7 +89,12 @@ const Scheduler = ({
             ))}
           </div>
     
-          <button onClick={handleSaveSelectedCommesse}>Memorizza</button>
+          <button 
+    onClick={handleSaveSelectedCommesse}
+    disabled={selectedCollaboratori.length !== 1}
+>
+    Memorizza
+</button>
     
           {/* Scheduler component */}
           <ScheduleComponent

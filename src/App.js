@@ -385,7 +385,10 @@ useEffect(() => {
   return (
     <div className="App">
       {/* Altri componenti e menu come Select */}
-      <Sidebar  onSyncCommesse={sincronizzaCommesse} />
+      <Sidebar 
+      onSyncCommesse={sincronizzaCommesse}
+      filteredProjectResources={filteredProjectResources}
+      setProjectResources={setProjectResources} />
       {/* Passa le props necessarie a Scheduler */}
       <Scheduler
   events={events}

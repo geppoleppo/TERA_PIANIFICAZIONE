@@ -7,6 +7,13 @@ export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaborat
     setSelectedCollaboratori(selectedIds);
   };
 
+  export const handleColorChangeInSidebar = (color, commessaId, projectResources, setProjectResources) => {
+    const updatedProjectResources = projectResources.map(commessa =>
+        commessa.id === commessaId ? { ...commessa, color: color.hex } : commessa
+    );
+    setProjectResources(updatedProjectResources);
+};
+
     // Funzione per gestire la selezione delle commesse
 
 export const handleCommesseChange = (selectedOptions, projectResources, setSelectedCommesse) => {
