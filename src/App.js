@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import Scheduler from './components/Scheduler';  // Importa Scheduler da Scheduler.js
-import Gantt from './components/Gantt';  // Importa Scheduler da Scheduler.js
+import Gantt from './components/Gantt';  // Importa Gantt da Gantt.js
+import Sidebar from './sidebar/Sidebar';
 import {
   handleCollaboratoreChange,
   handleCommesseChange,
@@ -368,7 +369,7 @@ useEffect(() => {
   return (
     <div className="App">
       {/* Altri componenti e menu come Select */}
-
+      <Sidebar />
       {/* Passa le props necessarie a Scheduler */}
       <Scheduler
   events={events}
