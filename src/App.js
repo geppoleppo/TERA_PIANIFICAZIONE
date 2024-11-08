@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import Scheduler from './Scheduler';  // Importa Scheduler da Scheduler.js
-import Gantt from './Gantt';  // Importa Scheduler da Scheduler.js
+import Scheduler from './components/Scheduler';  // Importa Scheduler da Scheduler.js
+import Gantt from './components/Gantt';  // Importa Scheduler da Scheduler.js
 import {
   handleCollaboratoreChange,
   handleCommesseChange,
@@ -14,7 +14,7 @@ import {
   saveEvent,
   deleteEvent,
   updateEvent
-} from './Functions';
+} from './functions/Functions';
 
 const App = () => {
   const [events, setEvents] = useState([]);
