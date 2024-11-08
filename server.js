@@ -2,6 +2,9 @@ const express = require('express');
 const { getRecords, runQuery } = require('./database');
 const cors = require('cors'); // Importa il pacchetto cors
 const app = express();
+const mysql = require('mysql2');
+
+
 
 
 app.use(cors({
@@ -339,4 +342,70 @@ app.get('/api/eventi/:id', async (req, res) => {
     console.error("Errore nel recupero dell'evento:", error);
     res.status(500).json({ error: "Errore nel recupero dell'evento." });
   }
+});
+
+
+// Configurazione connessione MySQL
+const db = mysql.createConnection({
+  host: '93.49.98.201',
+  port: 8085,
+  user: 'geppolo',
+  password: 'geppolo',
+  database: 'gestionale'
+});
+db.connect(err => {
+  if (err) {
+      console.error('Errore di connessione al database MySQL:', err);
+      return;
+  }
+  console.log('Connesso a MySQL!');
+});
+
+// Endpoint per ottenere le commesse dal database MySQL
+app.get('/api/commesse-mysql', (req, res) => {
+  const query = 'SELECT * FROM COMMESSE'; // Modifica il nome della tabella se necessario
+  db.query(query, (err, results) => {
+      if (err) {
+          console.error('Errore durante la query:', err);
+          res.status(500).json({ error: 'Errore nella query al database' });
+          return;
+      }
+      res.json(results); // Ritorna i dati delle commesse come JSON
+  });
+});
+
+
+// Endpoint per sincronizzare le commesse da MySQL a SQLite
+app.get('/api/sincronizza-commesse', (req, res) => {
+  const queryMySQL = 'SELECT NOME AS CommessaName, Descrizione, "#FFFFFF" AS Colore FROM COMMESSE';
+
+  db.query(queryMySQL, (err, results) => {
+    if (err) {
+      console.error('Errore durante la query su MySQL:', err);
+      res.status(500).json({ error: 'Errore nella query al database MySQL' });
+      return;
+    }
+
+    // Usa INSERT OR REPLACE basato su CommessaName come chiave unica
+    const insertOrUpdateQuery = `
+      INSERT INTO Commesse (CommessaName, Descrizione, Colore)
+      VALUES (?, ?, ?)
+      ON CONFLICT(CommessaName) DO UPDATE SET
+        Descrizione = excluded.Descrizione,
+        Colore = excluded.Colore
+    `;
+
+    const promises = results.map(row => {
+      return runQuery(insertOrUpdateQuery, [row.CommessaName, row.Descrizione, row.Colore]);
+    });
+
+    Promise.all(promises)
+      .then(() => {
+        res.json({ message: 'Sincronizzazione completata con successo!' });
+      })
+      .catch((err) => {
+        console.error('Errore durante l\'inserimento in SQLite:', err);
+        res.status(500).json({ error: 'Errore durante l\'inserimento in SQLite' });
+      });
+  });
 });

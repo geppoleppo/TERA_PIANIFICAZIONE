@@ -25,6 +25,7 @@ const App = () => {
   const [selectedCollaboratori, setSelectedCollaboratori] = useState([]); // Inizializza come array vuoto
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
+  const [commesse, setCommesse] = useState([]);
   
   
   const handleSaveSelectedCommesse = () => {
@@ -250,6 +251,21 @@ const handleDeleteEvent = (eventId) => {
     }
   };
 
+
+// Funzione per sincronizzare le commesse con il database MySQL
+
+const sincronizzaCommesse = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/sincronizza-commesse');
+    const data = await response.json();
+    console.log(data.message);
+    // Aggiorna la tabella delle commesse nel frontend, se necessario
+  } catch (error) {
+    console.error('Errore durante la sincronizzazione delle commesse:', error);
+  }
+};
+
+
     // Carica eventi, commesse e collaboratori una volta al montaggio del componente
     useEffect(() => {
       loadAllData();
@@ -369,7 +385,7 @@ useEffect(() => {
   return (
     <div className="App">
       {/* Altri componenti e menu come Select */}
-      <Sidebar />
+      <Sidebar  onSyncCommesse={sincronizzaCommesse} />
       {/* Passa le props necessarie a Scheduler */}
       <Scheduler
   events={events}

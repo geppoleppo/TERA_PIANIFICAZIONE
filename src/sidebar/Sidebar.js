@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ onSyncCommesse }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const toggleSidebar = () => {
@@ -16,9 +16,8 @@ const Sidebar = () => {
             <div className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <button className="close-btn" onClick={toggleSidebar}>✕</button>
                 <div className="sidebar-buttons">
-                    <button>Button 1</button>
-                    <button>Button 2</button>
-                    <button>Button 3</button>
+                <button onClick={onSyncCommesse}>Sincronizza Commesse</button>
+
                 </div>
             </div>
         </>
