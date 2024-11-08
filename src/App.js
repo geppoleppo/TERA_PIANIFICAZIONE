@@ -370,15 +370,16 @@ console.log("MENTOLO",categoryResources)
   handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
 />
 {categoryResources.length > 0 && (
-<Gantt
-    ganttData={events} // Passa gli stessi dati del Scheduler
-    onSaveEvent={handleSaveEvent}         // Aggiungi questa linea
-  onUpdateEvent={handleUpdateEvent}     // Aggiungi questa linea
-  onDeleteEvent={handleDeleteEvent} 
-  categoryResources={categoryResources.length > 0 ? categoryResources : []} // Assicurati che non sia vuoto
-
-  
-      />
+  <Gantt
+  ganttData={events.filter(event =>
+    filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
+    event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
+  )}
+  onSaveEvent={handleSaveEvent}
+  onUpdateEvent={handleUpdateEvent}
+  onDeleteEvent={handleDeleteEvent}
+  categoryResources={categoryResources}
+/>
     )}
     </div>
   );
