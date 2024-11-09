@@ -75,20 +75,7 @@ const Scheduler = ({
             />
           </div>
     
-          {/* Contenitore delle commesse selezionate */}
-          <div className="commesse-container">
-            {selectedCommesse.map((commessa, index) => (
-              <div key={index} className="commessa-card">
-                <span>{commessa.label}</span>
-                <TwitterPicker
-                  color={commessa.color || '#000000'} // Carica il colore corretto o imposta un default
-                  onChangeComplete={(color) => handleColorChange(color, index, selectedCommesse, setSelectedCommesse)}
-                />
-                <button onClick={() => removeCommessa(index, selectedCommesse, setSelectedCommesse)}>Rimuovi</button>
-              </div>
-            ))}
-          </div>
-    
+ 
           <button 
     onClick={handleSaveSelectedCommesse}
     disabled={selectedCollaboratori.length !== 1}

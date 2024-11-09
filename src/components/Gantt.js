@@ -21,42 +21,45 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent,categoryRe
   const maxAttempts = 5;
   
   const onActionComplete = (args) => {
-      if (args?.data?.ganttProperties) {
-          // Reset del contatore dopo un'azione completa
-          attemptCount = 0;
-  
-          if (args.action === 'TaskbarEditing') {
-              onUpdateEvent(args.data);
-          } else if (args.action === 'add') {
-              onSaveEvent(args.data);
-          } else if (args.requestType === 'delete') {
-              onDeleteEvent(args.data[0].Id);
-          }
+    if (!args || !args.data || !args.data.ganttProperties) {
+      console.warn("Dati incompleti per l'azione Gantt:", args);
+      if (attemptCount < maxAttempts) {
+        attemptCount++;
+        setTimeout(() => onActionComplete(args), 200); // Maggiore tempo di attesa per assicurarsi che i dati siano caricati
       } else {
-          console.warn("Dati incompleti per l'azione Gantt:", args);
-          
-          if (attemptCount < maxAttempts) {
-              attemptCount++;
-              // Riprova l'azione dopo 100 ms
-              setTimeout(() => onActionComplete(args), 100);
-          } else {
-              console.error("Non è stato possibile completare l'azione a causa di dati incompleti dopo vari tentativi.");
-          }
+        console.error("Non è stato possibile completare l'azione dopo vari tentativi.");
       }
+      return;
+    }
+  
+    // Gestione completa dell'azione se i dati sono completi
+    attemptCount = 0; // Reset del contatore dei tentativi
+  
+    if (args.action === 'TaskbarEditing') {
+      onUpdateEvent(args.data);
+    } else if (args.action === 'add') {
+      onSaveEvent(args.data);
+    } else if (args.requestType === 'delete') {
+      onDeleteEvent(args.data[0].Id);
+    }
   };
+  
+  
+  
+  
   
 
 
   // Template per il colore della barra del task
   const taskbarTemplate = (taskData) => {
-
-    const color = taskData.taskData.Color || '#000000';  // Imposta un colore di default
+    const color = taskData?.taskData?.Color || '#000000';  // Imposta un colore di default
     return (
       <div style={{ backgroundColor: color, height: '100%', width: '100%' }}>
-        {taskData.Subject}  {/* Mostra il titolo del task */}
+        {taskData?.Subject || 'Task senza titolo'}  {/* Mostra il titolo del task */}
       </div>
     );
   };
+  
 
   const getCollaboratorNames = (incaricatoIds, categoryResources) => {
     if (!Array.isArray(incaricatoIds) || incaricatoIds.length === 0) {
