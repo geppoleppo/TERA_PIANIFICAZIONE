@@ -45,16 +45,34 @@ const Scheduler = ({
           <div>
             <label> SELEZIONA COLLABORATORE:</label>
     
-            <Select
-              options={uniqueCollaborators.map(collaboratore => ({
-                value: collaboratore.id,
-                label: collaboratore.text
-              }))}
-              onChange={selectedOptions => handleCollaboratoreChange(selectedOptions, setSelectedCollaboratori)} // Pass setSelectedCollaboratori here
-              isMulti
-              isClearable
-              placeholder="Seleziona Collaboratore"
-            />
+<Select
+  options={[
+    
+    ...uniqueCollaborators.map(collaboratore => ({
+      value: collaboratore.id,
+      label: collaboratore.text
+    })),
+    { value: 'all', label: 'Select All' }
+  ]}
+  onChange={(selectedOptions) => {
+    if (selectedOptions.some(option => option.value === 'all')) {
+      // Select all collaborators
+      handleCollaboratoreChange(
+        uniqueCollaborators.map(collaboratore => ({
+          value: collaboratore.id,
+          label: collaboratore.text
+        })),
+        setSelectedCollaboratori
+      );
+    } else {
+      handleCollaboratoreChange(selectedOptions, setSelectedCollaboratori);
+    }
+  }}
+  isMulti
+  isClearable
+  placeholder="Seleziona Collaboratore"
+/>
+
           </div>
     
     

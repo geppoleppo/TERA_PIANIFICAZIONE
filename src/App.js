@@ -321,25 +321,26 @@ useEffect(() => {
 
   // Effetto per aggiornare le commesse in base ai collaboratori selezionati
   useEffect(() => {
-    if (selectedCollaboratori && selectedCollaboratori.length > 0) {
-      const commesseComuni = projectResources.filter(commessa =>
-        selectedCollaboratori.every(collabId => {
+    if (selectedCollaboratori.length > 0) {
+      const commesseUnion = projectResources.filter(commessa =>
+        selectedCollaboratori.some(collabId => {
           const collaboratore = uniqueCollaborators.find(c => c.id === collabId);
           return collaboratore?.groupIds.includes(commessa.id);
         })
       );
-
+  
       setSelectedCommesse(
-        commesseComuni.map(commessa => ({
+        commesseUnion.map(commessa => ({
           value: commessa.id,
           label: commessa.text,
-          color: commessa.color // Assicura che il colore sia passato qui
+          color: commessa.color // Keep the color property
         }))
       );
     } else {
       setSelectedCommesse([]);
     }
   }, [selectedCollaboratori, projectResources]);
+  
 
   // Stato per risorse dei collaboratori filtrati in base ai collaboratori selezionati
   const [filteredCategoryResources, setFilteredCategoryResources] = useState(categoryResources);
