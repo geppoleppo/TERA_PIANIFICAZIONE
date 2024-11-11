@@ -42,6 +42,7 @@ app.use(cors()); // Abilita CORS per tutte le richieste
 app.use(express.json());
 
 
+
 // Aggiungi un nuovo evento
 app.post('/api/eventi', (req, res) => {
   const {
@@ -50,11 +51,9 @@ app.post('/api/eventi', (req, res) => {
     EndTime,       // Fine dell'evento
     ProjectId,     // ID della commessa
     CollaboratoreId, // ID del collaboratore
-    Description    // Aggiungi Descrizione per il summary
+    Description,   // Aggiungi Descrizione per il summary
+    parentID       // ID del task genitore
   } = req.body;
-
-  // Log per verificare i dati ricevuti dal client
-  //console.log("Dati ricevuti per l'inserimento dell'evento:", req.body);
 
   // Mappa i campi ai nomi usati nella query SQL
   const Titolo = Subject;
@@ -67,29 +66,22 @@ app.post('/api/eventi', (req, res) => {
   const Dipendenza = ''; // Valore vuoto per la dipendenza
   const Descrizione = Description; // Mappa il summary nel campo Descrizione
 
-  //console.log("Titolo:", Titolo);
-  //console.log("Inizio:", Inizio);
-  //console.log("Fine:", Fine);
-  //console.log("CommessaName:", CommessaName);
-  //console.log("IncaricatoId:", IncaricatoId);
-  //console.log("Colore:", Colore);
-  //console.log("Descrizione:", Descrizione);
-
   const query = `
-    INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione, parentID)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  runQuery(query, [Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione])
+  runQuery(query, [Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione, parentID])
     .then(result => {
       console.log('Evento salvato con successo:', result);
       res.status(201).json({ message: 'Evento aggiunto con successo.', id: result.id });
     })
     .catch(err => {
-      console.error('Errore durante il salvataggio dell\'evento:', err);
-      res.status(500).json({ error: 'Errore durante il salvataggio dell\'evento.' });
+      console.error("Errore durante il salvataggio dell'evento:", err);
+      res.status(500).json({ error: "Errore durante il salvataggio dell'evento." });
     });
 });
+
 
 
 
@@ -182,7 +174,8 @@ app.get('/api/eventi', async (req, res) => {
       EndTime: evento.Fine,
       ProjectId: parseInt(evento.CommessaName, 10), // Converti ProjectId in numero
       CollaboratoreId: evento.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Converti CollaboratoreId in array di numeri
-      CategoryColor: evento.Colore || "#000000"
+      CategoryColor: evento.Colore || "#000000",
+      parentID: evento.parentID ? parseInt(evento.parentID, 10) : null // Aggiungi e converti parentID in numero, se presente
     }));
 
     //console.log('Dati eventi dal database (formattati):', mappedEventi); // Verifica i dati nel formato corretto
@@ -193,14 +186,15 @@ app.get('/api/eventi', async (req, res) => {
   }
 });
 
+
 app.put('/api/eventi/:id', async (req, res) => {
   const { id } = req.params;
-  const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor } = req.body;
+  const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor, parentID } = req.body;
 
   try {
     const query = `
       UPDATE Eventi
-      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?
+      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?, parentID = ?
       WHERE Id = ?
     `;
     await runQuery(query, [
@@ -208,17 +202,18 @@ app.put('/api/eventi/:id', async (req, res) => {
       StartTime,
       EndTime,
       ProjectId.toString(),
-      CollaboratoreId,  // Ora dovrebbe essere una stringa nel formato corretto
+      CollaboratoreId, // Ora dovrebbe essere una stringa nel formato corretto
       CategoryColor,
+      parentID || null, // Imposta parentID o null se non presente
       id
     ]);
     res.json({ message: 'Evento aggiornato con successo!' });
   } catch (error) {
-    console.error('Errore durante l\'aggiornamento dell\'evento:', error);
-    res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
+    console.error("Errore durante l'aggiornamento dell'evento:", error);
+    res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
-  
+
 
 app.get('/api/commesse', async (req, res) => {
   try {
@@ -312,6 +307,7 @@ app.put('/api/commesse/:id', async (req, res) => {
   }
 });
 // Endpoint per ottenere un singolo evento tramite il suo ID
+// Endpoint per ottenere un singolo evento tramite il suo ID
 app.get('/api/eventi/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -334,7 +330,8 @@ app.get('/api/eventi/:id', async (req, res) => {
       ProjectId: parseInt(evento[0].CommessaName, 10),
       CollaboratoreId: evento[0].IncaricatoId.split(',').map(id => parseInt(id, 10)),
       CategoryColor: evento[0].Colore || "#000000",
-      Description: evento[0].Descrizione // Includi altri campi necessari
+      Description: evento[0].Descrizione, // Includi altri campi necessari
+      parentID: evento[0].parentID ? parseInt(evento[0].parentID, 10) : null // Includi e converti parentID
     };
 
     res.json(formattedEvent); // Rispondi con l'evento formattato
@@ -343,6 +340,7 @@ app.get('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: "Errore nel recupero dell'evento." });
   }
 });
+
 
 
 // Configurazione connessione MySQL

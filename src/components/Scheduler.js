@@ -20,6 +20,41 @@ import {
   DragAndDrop
 } from '@syncfusion/ej2-react-schedule';
 
+const onPopupOpen = (args, events) => {
+  if (args.type === 'Editor') {
+    const formElement = args.element.querySelector('.e-schedule-form');
+
+    if (formElement && !formElement.querySelector('.e-parent-field')) {
+      const container = document.createElement('div');
+      container.classList.add('e-parent-field');
+      container.style.marginTop = '10px';
+
+      const label = document.createElement('label');
+      label.innerHTML = 'Seleziona Commessa Parent:';
+      container.appendChild(label);
+
+      const select = document.createElement('select');
+      select.name = 'parentID';
+
+      events.forEach((event) => {
+        const option = document.createElement('option');
+        option.value = event.Id;
+        option.text = event.Subject;
+        select.appendChild(option);
+      });
+
+      container.appendChild(select);
+      formElement.appendChild(container);
+    }
+  }
+};
+
+
+
+
+
+
+
 const Scheduler = ({
     events,
     onEventRendered,
@@ -103,7 +138,8 @@ const Scheduler = ({
     
           {/* Scheduler component */}
           <ScheduleComponent
-            actionComplete={onActionComplete}
+          popupOpen={(args) => onPopupOpen(args, events)} // Passa `events` come argomento
+          actionComplete={onActionComplete}
             width="100%"
             height="650px"
             selectedDate={new Date()}
@@ -118,7 +154,8 @@ const Scheduler = ({
                 subject: { title: 'Task', name: 'Subject' },
                 startTime: { title: 'Start Time', name: 'StartTime' },
                 endTime: { title: 'End Time', name: 'EndTime' },
-                description: { title: 'Summary', name: 'Description' }
+                description: { title: 'Summary', name: 'Description' },
+                parentID: { title: 'Parent Task', name: 'parentID' }, // Definisci `parentID`
               },
             }}
     
