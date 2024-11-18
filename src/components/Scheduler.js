@@ -20,41 +20,6 @@ import {
   DragAndDrop
 } from '@syncfusion/ej2-react-schedule';
 
-const onPopupOpen = (args, events) => {
-  if (args.type === 'Editor') {
-    const formElement = args.element.querySelector('.e-schedule-form');
-
-    if (formElement && !formElement.querySelector('.e-parent-field')) {
-      const container = document.createElement('div');
-      container.classList.add('e-parent-field');
-      container.style.marginTop = '10px';
-
-      const label = document.createElement('label');
-      label.innerHTML = 'Seleziona Commessa Parent:';
-      container.appendChild(label);
-
-      const select = document.createElement('select');
-      select.name = 'parentID';
-
-      events.forEach((event) => {
-        const option = document.createElement('option');
-        option.value = event.Id;
-        option.text = event.Subject;
-        select.appendChild(option);
-      });
-
-      container.appendChild(select);
-      formElement.appendChild(container);
-    }
-  }
-};
-
-
-
-
-
-
-
 const Scheduler = ({
     events,
     onEventRendered,
@@ -74,6 +39,66 @@ const Scheduler = ({
     removeCommessa,
     handleSaveSelectedCommesse
   }) => {
+
+
+// Definisci la funzione `onPopupOpen` per aggiungere il campo `parentID` al form di creazione evento
+const onPopupOpen = (args) => {
+  if (args.type === 'Editor') {
+      const formElement = args.element.querySelector('.e-schedule-form');
+      if (formElement && !formElement.querySelector('.e-parent-field')) {
+          const container = document.createElement('div');
+          container.classList.add('e-parent-field');
+          container.style.marginTop = '10px';
+
+          const label = document.createElement('label');
+          label.innerHTML = 'Seleziona Parent Task:';
+          container.appendChild(label);
+
+          const select = document.createElement('select');
+          select.name = 'parentID';
+          select.classList.add('e-field'); // Aggiungi classe 'e-field' per permettere il binding
+          const defaultOption = document.createElement('option');
+          defaultOption.value = "";
+          defaultOption.text = "Nessun genitore";
+          select.appendChild(defaultOption);
+
+          // Aggiunge gli eventi esistenti come opzioni nel campo a discesa
+          events.forEach((event) => {
+              const option = document.createElement('option');
+              option.value = event.Id;
+              option.text = event.Subject;
+              select.appendChild(option);
+          });
+
+          container.appendChild(select);
+          formElement.appendChild(container);
+      }
+  }
+};
+
+// Usa `actionBegin` per assicurarti che `parentID` venga aggiunto ai dati dell'evento
+const actionBegin = (args) => {
+  if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
+      const formElement = document.querySelector('.e-schedule-form');
+      if (formElement) {
+          const parentID = formElement.querySelector('select[name="parentID"]').value;
+
+          // Controlla se `args.data` è un array o un singolo oggetto
+          if (Array.isArray(args.data)) {
+              // Creazione: `args.data` è un array di eventi
+              args.data[0].parentID = parentID || null;
+              console.log("parentID aggiunto ai dati del nuovo evento:", parentID);
+          } else {
+              // Modifica: `args.data` è un singolo oggetto evento
+              args.data.parentID = parentID || null;
+              console.log("parentID aggiunto ai dati dell'evento modificato:", parentID);
+          }
+      }
+  }
+};
+
+
+
     return (
         <div className="App">
           {/* Menu a discesa per selezionare i collaboratori */}
@@ -138,8 +163,9 @@ const Scheduler = ({
     
           {/* Scheduler component */}
           <ScheduleComponent
-          popupOpen={(args) => onPopupOpen(args, events)} // Passa `events` come argomento
-          actionComplete={onActionComplete}
+          popupOpen={onPopupOpen}  // Associa `onPopupOpen` al popup
+          actionBegin={actionBegin} // Passa `actionBegin` qui
+            actionComplete={onActionComplete}
             width="100%"
             height="650px"
             selectedDate={new Date()}
@@ -155,7 +181,8 @@ const Scheduler = ({
                 startTime: { title: 'Start Time', name: 'StartTime' },
                 endTime: { title: 'End Time', name: 'EndTime' },
                 description: { title: 'Summary', name: 'Description' },
-                parentID: { title: 'Parent Task', name: 'parentID' }, // Definisci `parentID`
+                parentID: { title: 'Parent Task', name: 'parentID' },  // Campo aggiunto
+          
               },
             }}
     

@@ -370,9 +370,17 @@ useEffect(() => {
   function onActionComplete(args) {
     if (args.requestType === 'eventCreated') {
       args.addedRecords.forEach(event => handleSaveEvent (event));
+      events.forEach(event => {
+        console.log("Event created with parentID:", event);
+    });
+
+
     } else if (args.requestType === 'eventRemoved') {
       args.deletedRecords.forEach(event => deleteEvent(event.Id,fetchEvents));
     } else if (args.requestType === 'eventChanged') {
+      events.forEach(event => {
+        console.log("Event updated with parentID:", event);
+    });
       args.changedRecords.forEach(event => handleUpdateEvent (event)); // Aggiungi gestione aggiornamento
     }
   }
