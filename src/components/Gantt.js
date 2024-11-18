@@ -85,12 +85,13 @@ return (
       actionComplete={onActionComplete}
       taskbarTemplate={taskbarTemplate}
       taskFields={{
-        id: 'Id',
-        name: 'Subject',
-        startDate: 'StartTime',
-        endDate: 'EndTime',
-        progress: 'Progress',
-        Color: 'Color',  // Aggiungi il campo per il colore
+        id: 'Id',               // Campo per l'ID univoco dell'evento
+        name: 'Subject',         // Titolo del task/evento
+        startDate: 'StartTime',  // Data di inizio
+        endDate: 'EndTime',      // Data di fine
+        parentID: 'parentID',    // Campo per definire il genitore dell'evento
+        progress: 'Progress',    // Avanzamento del task
+        expanded: true           // Apre automaticamente i task espansi
       }}
       editSettings={{
         allowAdding: true,

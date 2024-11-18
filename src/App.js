@@ -36,37 +36,38 @@ const App = () => {
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro
   const handleUpdateEvent = (eventData) => {
-   // console.log('eventi spediti dal gantt:', eventData);
-  
     let completeEventData;
-  
+
     if (eventData.ganttProperties) {
-      // Logica per eventi dal Gantt
-      const commessaName = eventData.CommessaName || eventData.taskData?.CommessaName;
-      const projectId = projectResources.find(p => p.text.toLowerCase() === commessaName.toLowerCase())?.id || eventData.taskData?.ProjectId;
-      const collaboratoreId = Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId[0] : eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
-  
-      completeEventData = {
-        ...eventData,
-        ProjectId: projectId,
-        CommessaName: commessaName,
-        CollaboratoreId: [collaboratoreId], // Array di collaboratori
-      };
+        // Logica per eventi dal Gantt
+        const commessaName = eventData.CommessaName || eventData.taskData?.CommessaName;
+        const projectId = projectResources.find(p => p.text.toLowerCase() === commessaName.toLowerCase())?.id || eventData.taskData?.ProjectId;
+        const collaboratoreId = Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId[0] : eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
+
+        completeEventData = {
+            ...eventData,
+            ProjectId: projectId,
+            CommessaName: commessaName,
+            CollaboratoreId: [collaboratoreId], // Array di collaboratori
+            parentID: eventData.parentID || null, // Aggiungi parentID
+        };
     } else {
-      // Logica per eventi dallo Scheduler
-      completeEventData = {
-        ...eventData,
-        ProjectId: eventData.ProjectId,
-        CollaboratoreId: Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId : [eventData.CollaboratoreId],
-      };
+        // Logica per eventi dallo Scheduler
+        completeEventData = {
+            ...eventData,
+            ProjectId: eventData.ProjectId,
+            CollaboratoreId: Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId : [eventData.CollaboratoreId],
+            parentID: eventData.parentID || null, // Aggiungi parentID
+        };
     }
-  
-    //console.log("Dati evento completi per l'aggiornamento:", completeEventData);
-  
+
+    // Log di verifica
+    console.log("Dati evento completi per l'aggiornamento:", completeEventData);
+
     // Aggiorna l'evento nel database
     updateEvent(completeEventData, fetchEvents);
-  };
-  
+};
+
 
 
 // Passa `projectResources` e `fetchEvents` come argomenti a `saveEvent`

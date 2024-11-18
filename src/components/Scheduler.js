@@ -89,14 +89,14 @@ const actionBegin = (args) => {
           // Controlla se `args.data` è un array (per i nuovi eventi) o un singolo oggetto (per modifiche)
           if (Array.isArray(args.data)) {
               args.data[0].parentID = parentID;
-              console.log("parentID aggiunto ai dati del nuovo evento:", parentID);
           } else {
               args.data.parentID = parentID;
-              console.log("parentID aggiunto ai dati dell'evento modificato:", parentID);
           }
+          console.log("parentID aggiornato nei dati dell'evento:", args.data); // Verifica
       }
   }
 };
+
 
 
 
