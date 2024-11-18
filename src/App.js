@@ -369,6 +369,7 @@ useEffect(() => {
   // Gestisce il completamento delle azioni di creazione e rimozione eventi
   function onActionComplete(args) {
     if (args.requestType === 'eventCreated') {
+      console.log("HHHHHH?:", args);
       args.addedRecords.forEach(event => handleSaveEvent (event));
       events.forEach(event => {
         console.log("Event created with parentID:", event);

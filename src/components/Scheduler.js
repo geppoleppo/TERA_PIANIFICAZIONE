@@ -80,22 +80,24 @@ const onPopupOpen = (args) => {
 const actionBegin = (args) => {
   if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
       const formElement = document.querySelector('.e-schedule-form');
+      
+      // Verifica se `formElement` e `parentID` esistono nel form
       if (formElement) {
-          const parentID = formElement.querySelector('select[name="parentID"]').value;
-
-          // Controlla se `args.data` è un array o un singolo oggetto
+          const parentIDField = formElement.querySelector('select[name="parentID"]');
+          const parentID = parentIDField ? parentIDField.value : null; // Imposta a null se il campo non esiste
+          
+          // Controlla se `args.data` è un array (per i nuovi eventi) o un singolo oggetto (per modifiche)
           if (Array.isArray(args.data)) {
-              // Creazione: `args.data` è un array di eventi
-              args.data[0].parentID = parentID || null;
+              args.data[0].parentID = parentID;
               console.log("parentID aggiunto ai dati del nuovo evento:", parentID);
           } else {
-              // Modifica: `args.data` è un singolo oggetto evento
-              args.data.parentID = parentID || null;
+              args.data.parentID = parentID;
               console.log("parentID aggiunto ai dati dell'evento modificato:", parentID);
           }
       }
   }
 };
+
 
 
 

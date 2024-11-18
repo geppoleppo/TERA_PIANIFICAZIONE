@@ -64,6 +64,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
           CollaboratoreId: collaboratorIds,
           Color: eventData.Color || '#FF0000',
           Description: eventData.Description || "",
+          parentID:eventData.parentID
           // Aggiungi altri campi con la logica corretta, se necessario
       };
   
