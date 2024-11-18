@@ -114,32 +114,7 @@ app.put('/api/collaboratori/:id/aggiungi-commesse', async (req, res) => {
 
 
 
-app.put('/api/eventi/:id', async (req, res) => {
-  const { id } = req.params;
-  const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor, Description } = req.body;
 
-  try {
-    const query = `
-      UPDATE Eventi
-      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?, Descrizione = ?
-      WHERE Id = ?
-    `;
-    await runQuery(query, [
-      Subject,
-      StartTime,
-      EndTime,
-      ProjectId.toString(),
-      CollaboratoreId,  // Passiamo il CollaboratoreId come stringa corretta
-      CategoryColor,
-      Description,  // Aggiungi il campo Descrizione
-      id
-    ]);
-    res.json({ message: 'Evento aggiornato con successo!' });
-  } catch (error) {
-    console.error('Errore durante l\'aggiornamento dell\'evento:', error);
-    res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
-  }
-});
 
 
 
@@ -189,12 +164,12 @@ app.get('/api/eventi', async (req, res) => {
 
 app.put('/api/eventi/:id', async (req, res) => {
   const { id } = req.params;
-  const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor, parentID } = req.body;
+  const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor, Description, parentID } = req.body;
 
   try {
     const query = `
       UPDATE Eventi
-      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?, parentID = ?
+      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?, Descrizione = ?,parentID = ?
       WHERE Id = ?
     `;
     await runQuery(query, [
@@ -202,17 +177,19 @@ app.put('/api/eventi/:id', async (req, res) => {
       StartTime,
       EndTime,
       ProjectId.toString(),
-      CollaboratoreId, // Ora dovrebbe essere una stringa nel formato corretto
+      CollaboratoreId,  // Passiamo il CollaboratoreId come stringa corretta
       CategoryColor,
-      parentID || null, // Imposta parentID o null se non presente
+      Description,
+      parentID,  // Aggiungi il campo Descrizione
       id
     ]);
     res.json({ message: 'Evento aggiornato con successo!' });
   } catch (error) {
-    console.error("Errore durante l'aggiornamento dell'evento:", error);
-    res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
+    console.error('Errore durante l\'aggiornamento dell\'evento:', error);
+    res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
   }
 });
+
 
 
 app.get('/api/commesse', async (req, res) => {

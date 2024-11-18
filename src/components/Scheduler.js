@@ -81,18 +81,18 @@ const actionBegin = (args) => {
   if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
       const formElement = document.querySelector('.e-schedule-form');
       
-      // Verifica se `formElement` e `parentID` esistono nel form
       if (formElement) {
           const parentIDField = formElement.querySelector('select[name="parentID"]');
-          const parentID = parentIDField ? parentIDField.value : null; // Imposta a null se il campo non esiste
+          const parentID = parentIDField ? parentIDField.value : null; // Assegna null se non selezionato
           
-          // Controlla se `args.data` è un array (per i nuovi eventi) o un singolo oggetto (per modifiche)
+          // Assegna il `parentID` all'evento
           if (Array.isArray(args.data)) {
               args.data[0].parentID = parentID;
           } else {
               args.data.parentID = parentID;
           }
-          console.log("parentID aggiornato nei dati dell'evento:", args.data); // Verifica
+          
+          console.log("parentID aggiornato nei dati dell'evento:", args.data); // Log per verifica
       }
   }
 };

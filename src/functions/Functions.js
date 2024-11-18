@@ -145,7 +145,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
   
   // Funzione per aggiornare un evento
 
-export const updateEvent = async (eventData, fetchEvents) => {
+  export const updateEvent = async (eventData, fetchEvents) => {
     const collaboratorId = Array.isArray(eventData.CollaboratoreId)
       ? eventData.CollaboratoreId.join(',')
       : eventData.CollaboratoreId;
@@ -156,15 +156,14 @@ export const updateEvent = async (eventData, fetchEvents) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...eventData,
-          CollaboratoreId: collaboratorId, // Passiamo il CollaboratoreId come stringa corretta
-          Description: eventData.Description // Invia la descrizione per l'aggiornamento
+          CollaboratoreId: collaboratorId,  // Stringa corretta per CollaboratoreId
+          parentID: eventData.parentID,     // Includi `parentID` per l'aggiornamento
+          Description: eventData.Description 
         })
       });
       const data = await response.json();
-      //console.log(data);
       fetchEvents(); // Ricarica gli eventi
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
-  };
-  
+};
