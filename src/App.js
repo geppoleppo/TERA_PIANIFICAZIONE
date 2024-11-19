@@ -115,7 +115,19 @@ const handleSaveEvent = (eventData) => {
   saveEvent(completeEventData, projectResources, fetchEvents);
 };
 
+const [markers, setMarkers] = useState([]);
 
+const handleSaveMarker = (newMarker) => {
+  // Salva nel backend
+  fetch('http://localhost:3001/api/markers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newMarker),
+  })
+    .then((res) => res.json())
+    .then((savedMarker) => setMarkers((prev) => [...prev, savedMarker]))
+    .catch((err) => console.error("Errore durante il salvataggio del marker:", err));
+};
 
 
 
@@ -280,6 +292,13 @@ const sincronizzaCommesse = async () => {
     //setCategoryResources(categoryData);
   };
 
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/markers')
+      .then((res) => res.json())
+      .then((data) => setMarkers(data))
+      .catch((err) => console.error("Errore durante il recupero dei marker:", err));
+  }, []);
 // Aggiorna le commesse e i collaboratori filtrati ogni volta che cambia `selectedCommesse` o `selectedCollaboratori`
 useEffect(() => {
   const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);

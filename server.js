@@ -405,3 +405,29 @@ app.put('/api/collaboratori/:id', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento dei groupIds del collaboratore." });
   }
 });
+
+// Aggiungi un nuovo marker
+app.post('/api/markers', (req, res) => {
+  const { label, day } = req.body;
+
+  const query = 'INSERT INTO Markers (Label, Day) VALUES (?, ?)';
+  runQuery(query, [label, day])
+    .then((result) => {
+      res.status(201).json({ id: result.insertId, label, day });
+    })
+    .catch((err) => {
+      console.error("Errore durante il salvataggio del marker:", err);
+      res.status(500).json({ error: "Errore durante il salvataggio del marker." });
+    });
+});
+
+// Recupera tutti i marker
+app.get('/api/markers', (req, res) => {
+  const query = 'SELECT * FROM Markers';
+  getRecords(query)
+    .then((markers) => res.json(markers))
+    .catch((err) => {
+      console.error("Errore durante il recupero dei marker:", err);
+      res.status(500).json({ error: "Errore durante il recupero dei marker." });
+    });
+});

@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { EventMarkersDirective, EventMarkerDirective } from '@syncfusion/ej2-react-gantt';
 import { DataManager, Query } from '@syncfusion/ej2-data';
 import {
   GanttComponent,
@@ -13,7 +14,7 @@ import {
   ColumnDirective
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources }) => {
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources,markers=[] }) => {
   const ganttRef = useRef(null);
 
   const [parentTaskDataSource, setParentTaskDataSource] = useState([]);
@@ -167,6 +168,12 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
 
 
         </ColumnsDirective>
+        <EventMarkersDirective>
+          {markers.map((marker, index) => (
+            <EventMarkerDirective key={index} day={marker.day} label={marker.label} />
+          ))}
+        </EventMarkersDirective>
+
         <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
       </GanttComponent>
     </div>
