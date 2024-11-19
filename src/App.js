@@ -36,6 +36,7 @@ const App = () => {
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro
   const handleUpdateEvent = (eventData) => {
+    console.log("Event Data ricevuto per aggiornamento:", eventData);
     let completeEventData;
 
     if (eventData.ganttProperties) {

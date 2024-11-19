@@ -30,18 +30,35 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
   }, [ganttData]);
 
   const onActionComplete = (args) => {
-    if (!args || !args.data || !args.data.ganttProperties) {
-      console.warn("Dati incompleti per l'azione Gantt:", args);
-      return;
+    console.log("Dati dell'azione completata nel Gantt:", args);
+    console.log("TIPO DI AZIONE:", args.requestType);
+
+    if (!args || !args.data) {
+        console.warn("Dati incompleti per l'azione Gantt:", args);
+        return;
     }
-    if (args.action === 'TaskbarEditing') {
-      onUpdateEvent(args.data);
+
+    if (args.requestType === 'save') {
+        // Gestisce il salvataggio di dati tramite il dialogo
+        console.log("Salvataggio tramite dialogo con dati:", args.data);
+        onUpdateEvent(args.data); // Passa i dati alla funzione di aggiornamento
+    } else if (args.action === 'TaskbarEditing') {
+        // Gestisce la modifica diretta della barra
+        console.log("Aggiornamento dal Gantt con dati:", args.data);
+        onUpdateEvent(args.data);
     } else if (args.action === 'add') {
-      onSaveEvent(args.data);
+        // Gestisce l'aggiunta di nuovi eventi
+        console.log("Aggiunta di un nuovo evento con dati:", args.data);
+        onSaveEvent(args.data);
     } else if (args.requestType === 'delete') {
-      onDeleteEvent(args.data[0].Id);
+        // Gestisce l'eliminazione di eventi
+        console.log("Eliminazione di un evento con ID:", args.data[0].Id);
+        onDeleteEvent(args.data[0].Id);
+    } else {
+        console.log("Azione non gestita:", args.action || args.requestType);
     }
-  };
+};
+
 
   const taskbarTemplate = (taskData) => {
     const color = taskData?.taskData?.Color || '#000000';
