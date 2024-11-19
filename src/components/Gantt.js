@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { DataManager, JsonAdaptor } from '@syncfusion/ej2-data';
+import { DataManager, Query } from '@syncfusion/ej2-data';
 import {
   GanttComponent,
   Inject,
@@ -21,13 +21,18 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
   // Aggiorniamo parentTaskDataSource quando ganttData cambia
   useEffect(() => {
     if (ganttData && ganttData.length > 0) {
-      const newParentTaskDataSource = ganttData.map((task) => ({
-        Id: task.Id,
-        Subject: task.Subject,
-      }));
+      const newParentTaskDataSource = [
+        { Id: null, Subject: 'Nessun genitore' }, // Opzione per impostare parentID a null
+        ...ganttData.map((task) => ({
+          Id: task.Id,
+          Subject: task.Subject,
+        })),
+      ];
       setParentTaskDataSource(newParentTaskDataSource);
     }
   }, [ganttData]);
+  
+  
 
   const onActionComplete = (args) => {
     console.log("Dati dell'azione completata nel Gantt:", args);
@@ -80,20 +85,25 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
     return names.join(", ");
   };
 
-useEffect(() => {
+  useEffect(() => {
     if (ganttData && ganttData.length > 0) {
-        const newParentTaskDataSource = ganttData.map((task) => ({
-            Id: task.Id,
-            Subject: task.Subject,
-        }));
-        setParentTaskDataSource(newParentTaskDataSource);
-
-        // Forza il refresh manuale del GanttComponent per ricaricare il menu
-        if (ganttRef.current) {
-            ganttRef.current.refresh();
-        }
+      // Aggiunge l'opzione "Nessun genitore" come prima voce
+      const newParentTaskDataSource = [
+        { Id: null, Subject: 'Nessun genitore' }, // Opzione per impostare parentID a null
+        ...ganttData.map((task) => ({
+          Id: task.Id,
+          Subject: task.Subject,
+        })),
+      ];
+      setParentTaskDataSource(newParentTaskDataSource);
+  
+      // Forza il refresh del GanttComponent per aggiornare il menu a discesa
+      if (ganttRef.current) {
+        ganttRef.current.refresh();
+      }
     }
-}, [ganttData]);
+  }, [ganttData]);
+  
 
   return (
     <div>
@@ -133,18 +143,29 @@ useEffect(() => {
           <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
           <ColumnDirective field="Id" headerText="ID" width="150" />
           <ColumnDirective
-    field="parentID"
-    headerText="Parent Task"
-    editType="dropdownedit"
-    width="150"
-    edit={{
-        params: {
-            dataSource: parentTaskDataSource,  // Usa array semplice direttamente
-            fields: { text: 'Subject', value: 'Id' },
-            placeholder: "Seleziona Parent Task",
-        },
-    }}
+  field="parentID"
+  headerText="Parent Task"
+  editType="dropdownedit"
+  width="150"
+  edit={{
+    params: {
+      dataSource: new DataManager(parentTaskDataSource), // Usa DataManager per Syncfusion
+      query: new Query(), // Crea una query vuota per inizializzare
+      fields: { text: 'Subject', value: 'Id' },
+      placeholder: 'Seleziona Parent Task',
+    },
+    create: () => document.createElement('input'), // Crea l'elemento input del dropdown
+    read: (args) => args.value || null, // Legge il valore e assegna null per "Nessun genitore"
+    actionComplete: (args) => {
+      // Filtra per escludere l'ID del task corrente
+      const currentTaskId = ganttRef.current?.getSelectedRecord()?.Id;
+      args.result = args.result.filter((task) => task.Id !== currentTaskId);
+    },
+  }}
 />
+
+
+
         </ColumnsDirective>
         <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
       </GanttComponent>
