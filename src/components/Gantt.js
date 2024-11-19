@@ -97,15 +97,6 @@ useEffect(() => {
 
   return (
     <div>
-      <h3>Menu a discesa finto per Parent Task</h3>
-      <select placeholder="Seleziona Parent Task">
-        <option value="">Nessun genitore</option>
-        {parentTaskDataSource.map((task) => (
-          <option key={task.Id} value={task.Id}>
-            {task.Subject}
-          </option>
-        ))}
-      </select>
 
       <GanttComponent
         ref={ganttRef}
@@ -134,7 +125,7 @@ useEffect(() => {
         labelSettings={{
           rightLabel: (props) => getCollaboratorNames(props.taskData?.IncaricatoId, categoryResources),
         }}
-        toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
+        toolbar={['Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
         height="500px"
       >
         <ColumnsDirective>
