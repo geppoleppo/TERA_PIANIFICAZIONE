@@ -36,7 +36,7 @@ const App = () => {
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro
   const handleUpdateEvent = (eventData) => {
-    console.log("Event Data ricevuto per aggiornamento:", eventData);
+    //console.log("Event Data ricevuto per aggiornamento:", eventData);
     let completeEventData;
 
     if (eventData.ganttProperties) {
@@ -63,7 +63,7 @@ const App = () => {
     }
 
     // Log di verifica
-    console.log("Dati evento completi per l'aggiornamento:", completeEventData);
+    //console.log("Dati evento completi per l'aggiornamento:", completeEventData);
 
     // Aggiorna l'evento nel database
     updateEvent(completeEventData, fetchEvents);
@@ -374,7 +374,7 @@ useEffect(() => {
       console.log("HHHHHH?:", args);
       args.addedRecords.forEach(event => handleSaveEvent (event));
       events.forEach(event => {
-        console.log("Event created with parentID:", event);
+       // console.log("Event created with parentID:", event);
     });
 
 
@@ -382,7 +382,7 @@ useEffect(() => {
       args.deletedRecords.forEach(event => deleteEvent(event.Id,fetchEvents));
     } else if (args.requestType === 'eventChanged') {
       events.forEach(event => {
-        console.log("Event updated with parentID:", event);
+      //  console.log("Event updated with parentID:", event);
     });
       args.changedRecords.forEach(event => handleUpdateEvent (event)); // Aggiungi gestione aggiornamento
     }

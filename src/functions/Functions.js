@@ -112,30 +112,51 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
     selectedCollaboratori,
     selectedCommesse
   ) => {
-    console.error("popolini:", selectedCollaboratori);
-    console.error("popolini2:", selectedCommesse);
     try {
+      console.log("Collaboratori selezionati:", selectedCollaboratori);
+      console.log("Commesse selezionate:", selectedCommesse);
+  
+      // Verifica che i collaboratori siano corretti
       if (!Array.isArray(selectedCollaboratori) || selectedCollaboratori.length !== 1) {
-        throw new Error('Devi selezionare un solo collaboratore per salvare le commesse associate.');
+        throw new Error(
+          'Devi selezionare un solo collaboratore per salvare le commesse associate.'
+        );
       }
   
-      const collaboratoreId = selectedCollaboratori[0];
-      const groupIds = selectedCommesse.map(commessa => commessa.value);
+      const collaboratoreId = selectedCollaboratori[0]?.value || selectedCollaboratori[0];
+      const groupIds = selectedCommesse.map((commessa) => commessa.value);
   
-      // Aggiorna il campo groupIds del collaboratore nel backend
-      const response = await fetch(`http://localhost:3001/api/collaboratori/${collaboratoreId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupIds })
-      });
+      if (!collaboratoreId || groupIds.length === 0) {
+        throw new Error('Dati insufficienti per salvare le commesse.');
+      }
+  
+      // Log del payload
+      console.log('Payload inviato al server:', { collaboratoreId, groupIds });
+  
+      // Invio della richiesta al server
+      const response = await fetch(
+        `http://localhost:3001/api/collaboratori/${collaboratoreId}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupIds }),
+        }
+      );
   
       if (!response.ok) {
-        throw new Error(`Errore durante l'associazione delle commesse al collaboratore con ID ${collaboratoreId}: ${response.statusText}`);
+        throw new Error(
+          `Errore durante l'associazione delle commesse al collaboratore con ID ${collaboratoreId}: ${response.statusText}`
+        );
       }
   
-      console.log('Le commesse selezionate sono state associate al collaboratore selezionato');
+      console.log(
+        'Le commesse selezionate sono state associate al collaboratore selezionato'
+      );
     } catch (error) {
-      console.error("Errore durante l'associazione delle commesse al collaboratore:", error);
+      console.error(
+        "Errore durante l'associazione delle commesse al collaboratore:",
+        error
+      );
     }
   };
   

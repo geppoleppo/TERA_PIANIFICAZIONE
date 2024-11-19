@@ -40,11 +40,11 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
 
     if (args.requestType === 'save') {
         // Gestisce il salvataggio di dati tramite il dialogo
-        console.log("Salvataggio tramite dialogo con dati:", args.data);
+       // console.log("Salvataggio tramite dialogo con dati:", args.data);
         onUpdateEvent(args.data); // Passa i dati alla funzione di aggiornamento
     } else if (args.action === 'TaskbarEditing') {
         // Gestisce la modifica diretta della barra
-        console.log("Aggiornamento dal Gantt con dati:", args.data);
+       // console.log("Aggiornamento dal Gantt con dati:", args.data);
         onUpdateEvent(args.data);
     } else if (args.action === 'add') {
         // Gestisce l'aggiunta di nuovi eventi
@@ -52,10 +52,10 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
         onSaveEvent(args.data);
     } else if (args.requestType === 'delete') {
         // Gestisce l'eliminazione di eventi
-        console.log("Eliminazione di un evento con ID:", args.data[0].Id);
+        //console.log("Eliminazione di un evento con ID:", args.data[0].Id);
         onDeleteEvent(args.data[0].Id);
     } else {
-        console.log("Azione non gestita:", args.action || args.requestType);
+       // console.log("Azione non gestita:", args.action || args.requestType);
     }
 };
 

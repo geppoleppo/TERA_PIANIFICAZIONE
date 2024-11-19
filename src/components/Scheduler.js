@@ -49,36 +49,52 @@ const Scheduler = ({
         const container = document.createElement('div');
         container.classList.add('e-parent-field');
         container.style.marginTop = '10px';
-
+  
         const label = document.createElement('label');
         label.innerHTML = 'Seleziona Parent Task:';
         container.appendChild(label);
-
+  
         const select = document.createElement('select');
         select.name = 'parentID';
         select.classList.add('e-field'); // Aggiungi classe 'e-field' per permettere il binding
         const defaultOption = document.createElement('option');
-        defaultOption.value = "";
-        defaultOption.text = "Nessun genitore";
+        defaultOption.value = '';
+        defaultOption.text = 'Nessun genitore';
         select.appendChild(defaultOption);
-
-        // Aggiunge gli eventi esistenti come opzioni nel campo a discesa
-        events.forEach((event) => {
-          const option = document.createElement('option');
-          option.value = event.Id;
-          option.text = event.Subject;
-          select.appendChild(option);
-        });
-
+  
+        // Filtra gli eventi per escludere quelli senza collaboratori visibili
+        events
+          .filter((event) => {
+            const collaboratori = event.CollaboratoreId.map((collabId) =>
+              filteredCategoryResources.find((collab) => collab.id === collabId)
+            ).filter(Boolean); // Rimuove eventuali null
+            return collaboratori.length > 0; // Includi solo eventi con collaboratori visibili
+          })
+          .forEach((event) => {
+            const collaboratori = event.CollaboratoreId.map((collabId) =>
+              filteredCategoryResources.find((collab) => collab.id === collabId)
+            )
+              .filter(Boolean) // Rimuove eventuali null
+              .map((collab) => collab.text) // Ottiene i nomi dei collaboratori
+              .join(', '); // Unisce i nomi dei collaboratori
+  
+            const option = document.createElement('option');
+            option.value = event.Id;
+            option.text = `${event.Subject} - ${collaboratori}`;
+            select.appendChild(option);
+          });
+  
         container.appendChild(select);
         formElement.appendChild(container);
       }
     }
   };
+  
+  
 
   // Usa `actionBegin` per assicurarti che `parentID` venga aggiunto ai dati dell'evento
   const actionBegin = (args) => {
-    console.log("Azioni iniziate nello Scheduler:", args);
+    //console.log("Azioni iniziate nello Scheduler:", args);
   
     // Gestione creazione e modifica tramite popup
     if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
@@ -93,19 +109,19 @@ const Scheduler = ({
           args.data.parentID = parentID;
         }
   
-        console.log("parentID aggiornato nei dati dell'evento (popup):", args.data);
+        //console.log("parentID aggiornato nei dati dell'evento (popup):", args.data);
       }
     }
   
     // Gestione trascinamento o ridimensionamento
     if (args.requestType === 'eventChange') {
-      console.log("Evento cambiato tramite trascinamento o ridimensionamento:", args.data);
+      //console.log("Evento cambiato tramite trascinamento o ridimensionamento:", args.data);
   
       // Cerca l'evento originale se il parentID è mancante
       if (!args.data.parentID) {
         const originalEvent = events.find(e => e.Id === args.data.Id);
         args.data.parentID = originalEvent ? originalEvent.parentID : null;
-        console.log("parentID recuperato per trascinamento/ridimensionamento:", args.data.parentID);
+       // console.log("parentID recuperato per trascinamento/ridimensionamento:", args.data.parentID);
       }
     }
   };
