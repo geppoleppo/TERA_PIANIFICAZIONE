@@ -75,6 +75,9 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
     );
   };
 
+  const rowSelected = (args) => {
+    setSelectedEventId(args.data.Id); // Imposta l'evento selezionato
+};
   const getCollaboratorNames = (incaricatoIds, categoryResources) => {
     if (!Array.isArray(incaricatoIds) || incaricatoIds.length === 0) {
       return "Incaricato sconosciuto";
@@ -110,6 +113,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
     <div>
 
       <GanttComponent
+        rowSelected={rowSelected}
         ref={ganttRef}
         dataSource={ganttData}
         allowSelection={true}
