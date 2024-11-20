@@ -14,7 +14,7 @@ import {
   ColumnDirective
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources,markers=[] }) => {
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources,markers=[], setSelectedEventId }) => {
   const ganttRef = useRef(null);
 
   const [parentTaskDataSource, setParentTaskDataSource] = useState([]);
@@ -109,6 +109,13 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
   }, [ganttData]);
   console.log("Markers formattati:", markers);
 
+  const onRowSelected = (args) => {
+    const selectedRecord = args.data; // Dati della riga selezionata
+    if (selectedRecord && setSelectedEventId) {
+        setSelectedEventId(selectedRecord.Id); // Imposta l'ID dell'evento selezionato
+    }
+};
+
   return (
     <div>
 
@@ -120,6 +127,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
         allowSorting={true}
         actionComplete={onActionComplete}
         taskbarTemplate={taskbarTemplate}
+        rowSelected={onRowSelected} // Associa l'handler qui
         taskFields={{
           id: 'Id',
           name: 'Subject',

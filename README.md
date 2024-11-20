@@ -7,19 +7,8 @@ Road map
 4) associare le commesse ai collaboratori... bel casino==>mi sembra che ci siamo
 5) memorizzare anche la descrizione degli eveenti
 
-     Id: 2,
-      Subject: "Sviluppo Codice",
-      Location: "Studio",
-      StartTime: "2023-01-04T13:00:00.000Z",
-      EndTime: "2023-01-04T15:00:00.000Z",
-      ProjectId: 2,
-      TaskId: [2, 4],
-      CategoryColor: "#56ca85"
-
-CategoryColor:"#000000"
-CollaboratoreId:[1]
-EndTime:"2024-10-18T22:00:00.000Z"
-Id:1
-ProjectId:1
-StartTime:"2024-10-14T22:00:00.000Z"
-Subject:"fff"
+-----
+sistemare form marker
+sistemare aggiornamento commesse (non sovrascrivere quelle esistenti)
+sistemare visualizzazione gant quando si apre applicativo
+implementare aggiornamento ore

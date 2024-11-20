@@ -3,6 +3,7 @@ import './App.css';
 import Scheduler from './components/Scheduler';  // Importa Scheduler da Scheduler.js
 import Gantt from './components/Gantt';  // Importa Gantt da Gantt.js
 import Sidebar from './sidebar/Sidebar';
+import MarkerForm from './components/MarkerForm';
 import {
   handleCollaboratoreChange,
   handleCommesseChange,
@@ -477,12 +478,17 @@ useEffect(() => {
   removeCommessa={removeCommessa} // Funzione gestione rimozione commessa
   handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
 />
-<Sidebar 
-  onSyncCommesse={sincronizzaCommesse}
-  filteredProjectResources={filteredProjectResources}
-  setProjectResources={setProjectResources}
-  onSaveMarker={handleSaveMarker} // Prop per salvare i marker
+<Sidebar
+    onSyncCommesse={sincronizzaCommesse}
+    filteredProjectResources={filteredProjectResources}
+    setProjectResources={setProjectResources}
+    onSaveMarker={(marker) => handleSaveMarker(marker, selectedEventId)} // Passa selectedEventId qui
+>
+<MarkerForm
+    selectedEvent={events.find((event) => event.Id === selectedEventId)} // Passa l'evento selezionato
+    onSaveMarker={(marker) => handleSaveMarker(marker, selectedEventId)} // Prop per salvare il marker
 />
+</Sidebar>
 {categoryResources.length > 0 && (
   
   <Gantt
@@ -495,11 +501,17 @@ useEffect(() => {
   onDeleteEvent={handleDeleteEvent}
   categoryResources={categoryResources}
   markers={filteredMarkers}
+  setSelectedEventId={setSelectedEventId} // Passa la funzione come prop
 />
 
 
+
     
-    )}
+    
+    )
+    
+    
+    }
     </div>
   );
 };
