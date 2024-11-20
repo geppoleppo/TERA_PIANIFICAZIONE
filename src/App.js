@@ -304,20 +304,21 @@ const sincronizzaCommesse = async () => {
     fetch('http://localhost:3001/api/markers')
       .then((res) => res.json())
       .then((data) => {
-        const formattedMarkers = data.map(marker => ({
-          ...marker,
-          day: new Date(marker.Day), // Converte `Day` in un oggetto Date
-        }));
-    
-        // Filtra i marker in base agli eventi renderizzati
-        const filteredMarkers = formattedMarkers.filter(marker =>
-          events.some(event => event.Id === marker.eventId) // Usa `events` al posto di `ganttData`
-        );
-    
-        setMarkers(filteredMarkers);
+        const formattedMarkers = data.map((marker) => {
+          const validDate = new Date(marker.Day); // Prova a creare un oggetto Date
+          if (isNaN(validDate)) {
+            console.error(`Data non valida: ${marker.Day}`);
+          }
+          return {
+            ...marker,
+            day: isNaN(validDate) ? null : validDate, // Assegna `null` se la data è invalida
+          };
+        });
+        setMarkers(formattedMarkers);
       })
       .catch((err) => console.error("Errore durante il recupero dei marker:", err));
-  }, [events]); // Usa `events` come dipendenza
+  }, []);
+  
   
   
   
