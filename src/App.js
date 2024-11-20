@@ -118,16 +118,24 @@ const handleSaveEvent = (eventData) => {
 const [markers, setMarkers] = useState([]);
 
 const handleSaveMarker = (newMarker) => {
-  // Salva nel backend
   fetch('http://localhost:3001/api/markers', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(newMarker),
+    body: JSON.stringify({
+      ...newMarker,
+      eventId: selectedEventId, // L'ID dell'evento a cui associare il marker
+    }),
   })
     .then((res) => res.json())
-    .then((savedMarker) => setMarkers((prev) => [...prev, savedMarker]))
+    .then(() => {
+      fetch('http://localhost:3001/api/markers') // Ricarica i marker
+        .then((res) => res.json())
+        .then((data) => setMarkers(data))
+        .catch((err) => console.error("Errore durante il recupero dei marker:", err));
+    })
     .catch((err) => console.error("Errore durante il salvataggio del marker:", err));
 };
+
 
 
 
@@ -292,13 +300,29 @@ const sincronizzaCommesse = async () => {
     //setCategoryResources(categoryData);
   };
 
-
   useEffect(() => {
     fetch('http://localhost:3001/api/markers')
       .then((res) => res.json())
-      .then((data) => setMarkers(data))
+      .then((data) => {
+        const formattedMarkers = data.map(marker => ({
+          ...marker,
+          day: new Date(marker.Day), // Converte `Day` in un oggetto Date
+        }));
+    
+        // Filtra i marker in base agli eventi renderizzati
+        const filteredMarkers = formattedMarkers.filter(marker =>
+          events.some(event => event.Id === marker.eventId) // Usa `events` al posto di `ganttData`
+        );
+    
+        setMarkers(filteredMarkers);
+      })
       .catch((err) => console.error("Errore durante il recupero dei marker:", err));
-  }, []);
+  }, [events]); // Usa `events` come dipendenza
+  
+  
+  
+  
+  
 // Aggiorna le commesse e i collaboratori filtrati ogni volta che cambia `selectedCommesse` o `selectedCollaboratori`
 useEffect(() => {
   const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
@@ -410,11 +434,7 @@ useEffect(() => {
 
   return (
     <div className="App">
-      {/* Altri componenti e menu come Select */}
-      <Sidebar 
-      onSyncCommesse={sincronizzaCommesse}
-      filteredProjectResources={filteredProjectResources}
-      setProjectResources={setProjectResources} />
+      
       {/* Passa le props necessarie a Scheduler */}
       <Scheduler
   events={events}
@@ -435,6 +455,12 @@ useEffect(() => {
   removeCommessa={removeCommessa} // Funzione gestione rimozione commessa
   handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
 />
+<Sidebar 
+  onSyncCommesse={sincronizzaCommesse}
+  filteredProjectResources={filteredProjectResources}
+  setProjectResources={setProjectResources}
+  onSaveMarker={handleSaveMarker} // Prop per salvare i marker
+/>
 {categoryResources.length > 0 && (
   <Gantt
   ganttData={events.filter(event =>
@@ -445,10 +471,13 @@ useEffect(() => {
   onUpdateEvent={handleUpdateEvent}
   onDeleteEvent={handleDeleteEvent}
   categoryResources={categoryResources}
+  markers={markers}
 />
+
     )}
     </div>
   );
 };
 
 export default App;
+

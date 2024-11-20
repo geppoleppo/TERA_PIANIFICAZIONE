@@ -413,6 +413,10 @@ app.post('/api/markers', (req, res) => {
   const query = 'INSERT INTO Markers (Label, Day) VALUES (?, ?)';
   runQuery(query, [label, day])
     .then((result) => {
+      console.log("Risultato dell'inserimento:", result); // Log utile per il debug
+      if (!result.insertId) {
+        return res.status(500).json({ error: "Id non generato durante l'inserimento." });
+      }
       res.status(201).json({ id: result.insertId, label, day });
     })
     .catch((err) => {
@@ -420,6 +424,7 @@ app.post('/api/markers', (req, res) => {
       res.status(500).json({ error: "Errore durante il salvataggio del marker." });
     });
 });
+
 
 // Recupera tutti i marker
 app.get('/api/markers', (req, res) => {

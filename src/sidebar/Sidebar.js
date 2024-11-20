@@ -43,7 +43,7 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
                 <div className="sidebar-buttons">
                     <button onClick={onSyncCommesse}>Sincronizza Commesse</button>
                 </div>
-                <div className="commesse-container"> {/* Aggiunta della classe per la sezione scrollabile */}
+                <div className="commesse-container">
                     <h4>Assegna Colori Alle Commesse</h4>
                     {filteredProjectResources && filteredProjectResources.length > 0 ? (
                         filteredProjectResources.map((commessa, index) => (
@@ -59,15 +59,14 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
                         <p>Nessuna commessa disponibile</p>
                     )}
                 </div>
-            </div>
-            <div className="sidebar">
-                {/* Pulsante per mostrare il form */}
-                <button onClick={() => setShowMarkerForm(!showMarkerForm)}>
-                    {showMarkerForm ? "Chiudi Form Marker" : "Aggiungi Marker"}
-                </button>
-
-                {/* Form Marker */}
-                {showMarkerForm && <MarkerForm onSaveMarker={onSaveMarker} />}
+                <div className="marker-section">
+                    {/* Pulsante per mostrare/nascondere il form */}
+                    <button onClick={() => setShowMarkerForm(!showMarkerForm)}>
+                        {showMarkerForm ? "Chiudi Form Marker" : "Aggiungi Marker"}
+                    </button>
+                    {/* Form Marker */}
+                    {showMarkerForm && <MarkerForm onSaveMarker={onSaveMarker} />}
+                </div>
             </div>
         </>
     );

@@ -6,10 +6,14 @@ const MarkerForm = ({ onSaveMarker }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSaveMarker({ label, day: new Date(day) });
-    setLabel("");
-    setDay("");
+    try {
+      const formattedDay = new Date(day).toISOString().split('T')[0];
+      onSaveMarker({ label, day: formattedDay });
+    } catch (err) {
+      console.error("Errore nel form:", err);
+    }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="marker-form">

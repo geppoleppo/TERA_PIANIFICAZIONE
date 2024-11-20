@@ -104,7 +104,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
       }
     }
   }, [ganttData]);
-  
+  console.log("Markers formattati:", markers);
 
   return (
     <div>
@@ -169,12 +169,18 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
 
         </ColumnsDirective>
         <EventMarkersDirective>
-          {markers.map((marker, index) => (
-            <EventMarkerDirective key={index} day={marker.day} label={marker.label} />
-          ))}
-        </EventMarkersDirective>
+  {markers.map((marker, index) => (
+    <EventMarkerDirective
+      key={index}
+      day={marker.day}
+      label={marker.Label}
+      cssClass="custom-marker-label"
+      style={{ color: marker.color || '#000' }} // Applica il colore dell'etichetta
+    />
+  ))}
+</EventMarkersDirective>
 
-        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
+        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort,DayMarkers]} />
       </GanttComponent>
     </div>
   );
