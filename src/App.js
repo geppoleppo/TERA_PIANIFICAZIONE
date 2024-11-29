@@ -26,8 +26,7 @@ const App = () => {
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
   const [loading, setLoading] = useState(false);
-  
-  
+
 // App.js
 // App.js
 // App.js
@@ -156,6 +155,7 @@ const handleSaveEvent = (eventData) => {
 };
 
 const [markers, setMarkers] = useState([]);
+
 
 const handleSaveMarker = (newMarker) => {
   fetch('http://localhost:3001/api/markers', {
@@ -491,6 +491,37 @@ useEffect(() => {
   }
   //console.log("categoryResources nel render di App:", categoryResources);
 
+
+  const filteredMarkersByEventId = markers.filter(marker =>
+    events.some(event => parseInt(event.Id) === parseInt(marker.eventId))
+  );
+
+  const filteredMarkersByProject = filteredMarkersByEventId.filter(marker =>
+    events.some(event =>
+      parseInt(event.Id) === parseInt(marker.eventId) &&
+      filteredProjectResources.some(resource => resource.id === event.ProjectId)
+    )
+  );
+
+  const filteredMarkersFinal = filteredMarkersByProject.filter(marker =>
+    events.some(event =>
+      parseInt(event.Id) === parseInt(marker.eventId) &&
+      filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
+      event.CollaboratoreId.some(id =>
+        filteredCategoryResources.some(collab => collab.id === id)
+      )
+    )
+  ).map(marker => ({
+    Id: marker.Id,
+    Label: marker.Label,
+    Day: marker.Day,  // Assicurati che Day sia nel formato corretto, preferibilmente `Date`
+    day: marker.day,
+    eventId: marker.eventId  // Aggiungi `eventId` per mantenere l'associazione corretta
+  }));
+  
+  const areMarkersEqual = JSON.stringify(markers) === JSON.stringify(filteredMarkersFinal);
+  console.log("Equal Markers?", areMarkersEqual);
+
   return (
     <div className="App">
 {/* Mostra l'overlay di caricamento se `loading` è true */}
@@ -536,7 +567,11 @@ useEffect(() => {
         onUpdateEvent={handleUpdateEvent}
         onDeleteEvent={handleDeleteEvent}
         categoryResources={categoryResources}
-        markers={markers}
+      
+        markers={
+          filteredMarkersFinal
+         
+        }
       />
     )}  </div>
   );
