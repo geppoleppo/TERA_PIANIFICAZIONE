@@ -350,6 +350,7 @@ app.get('/api/commesse-mysql', (req, res) => {
 });
 
 
+
 // Endpoint per sincronizzare le commesse da MySQL a SQLite
 app.get('/api/sincronizza-commesse', (req, res) => {
   const queryMySQL = 'SELECT NOME AS CommessaName, Descrizione, "#FFFFFF" AS Colore FROM COMMESSE';
@@ -361,17 +362,17 @@ app.get('/api/sincronizza-commesse', (req, res) => {
       return;
     }
 
-    // Usa INSERT OR REPLACE basato su CommessaName come chiave unica
-    const insertOrUpdateQuery = `
+    // Usa INSERT solo se la commessa non esiste già
+    const insertIfNotExistsQuery = `
       INSERT INTO Commesse (CommessaName, Descrizione, Colore)
-      VALUES (?, ?, ?)
-      ON CONFLICT(CommessaName) DO UPDATE SET
-        Descrizione = excluded.Descrizione,
-        Colore = excluded.Colore
+      SELECT ?, ?, ?
+      WHERE NOT EXISTS (
+        SELECT 1 FROM Commesse WHERE CommessaName = ?
+      )
     `;
 
     const promises = results.map(row => {
-      return runQuery(insertOrUpdateQuery, [row.CommessaName, row.Descrizione, row.Colore]);
+      return runQuery(insertIfNotExistsQuery, [row.CommessaName, row.Descrizione, row.Colore, row.CommessaName]);
     });
 
     Promise.all(promises)

@@ -25,8 +25,7 @@ const App = () => {
   const [selectedCollaboratori, setSelectedCollaboratori] = useState([]); // Inizializza come array vuoto
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
-  const [commesse, setCommesse] = useState([]);
-  const [renderGantt, setRenderGantt] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   
 // App.js
@@ -322,14 +321,22 @@ const handleDeleteEvent = (eventId) => {
 
 // Funzione per sincronizzare le commesse con il database MySQL
 
+// App.js
 const sincronizzaCommesse = async () => {
+  setLoading(true); // Mostra l'overlay di caricamento
+
   try {
     const response = await fetch('http://localhost:3001/api/sincronizza-commesse');
     const data = await response.json();
     console.log(data.message);
-    // Aggiorna la tabella delle commesse nel frontend, se necessario
+
+    // Aggiorna la tabella delle commesse nel frontend
+    await fetchProjectResources(); // Aggiorna le commesse dopo la sincronizzazione
+
   } catch (error) {
     console.error('Errore durante la sincronizzazione delle commesse:', error);
+  } finally {
+    setLoading(false); // Nascondi l'overlay di caricamento al termine
   }
 };
 
@@ -486,7 +493,12 @@ useEffect(() => {
 
   return (
     <div className="App">
-      
+{/* Mostra l'overlay di caricamento se `loading` è true */}
+{loading && (
+        <div className="loading-overlay">
+          Sincronizzazione delle commesse in corso, attendere...
+        </div>
+      )}
       {/* Passa le props necessarie a Scheduler */}
       <Scheduler
   events={events}
