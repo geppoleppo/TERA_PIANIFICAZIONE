@@ -29,11 +29,51 @@ const App = () => {
   const [renderGantt, setRenderGantt] = useState(false);
   
   
-  const handleSaveSelectedCommesse = () => {
+// App.js
+// App.js
+// App.js
+const handleSaveSelectedCommesse = async () => {
+  try {
     console.log("Collaboratori selezionati:", selectedCollaboratori);
     console.log("Commesse selezionate:", selectedCommesse);
-    saveSelectedCommesse(selectedCollaboratori, selectedCommesse);
-  };
+
+    // Salva le commesse selezionate per il collaboratore
+    await saveSelectedCommesse(selectedCollaboratori, selectedCommesse);
+
+    // Dopo aver salvato le commesse, esegui un nuovo fetch per aggiornare i dati
+    await fetchProjectResources(); // Aggiorna le commesse dal database
+    await fetchCategoryResources(); // Aggiorna i collaboratori dal database
+    await fetchEvents(); // Aggiorna gli eventi
+
+    // Aggiorna selectedCommesse in base alle nuove commesse assegnate al collaboratore
+    if (selectedCollaboratori.length === 1) {
+      const collaboratoreId = selectedCollaboratori[0];
+      
+      // Usa i dati aggiornati di `categoryResources` dopo il fetch
+      const updatedCollaboratore = categoryResources.find(
+        (collab) => collab.id === collaboratoreId
+      );
+
+      if (updatedCollaboratore && updatedCollaboratore.groupIds) {
+        const newSelectedCommesse = projectResources.filter((commessa) =>
+          updatedCollaboratore.groupIds.includes(commessa.id)
+        );
+
+        setSelectedCommesse(
+          newSelectedCommesse.map((commessa) => ({
+            value: commessa.id,
+            label: commessa.text,
+            color: commessa.color,
+          }))
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Errore durante il salvataggio e l'aggiornamento delle commesse:", error);
+  }
+};
+
+
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro
   const handleUpdateEvent = (eventData) => {
