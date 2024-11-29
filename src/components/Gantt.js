@@ -14,7 +14,7 @@ import {
   ColumnDirective
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources,markers=[], setSelectedEventId }) => {
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources,markers=[] }) => {
   const ganttRef = useRef(null);
 
   const [parentTaskDataSource, setParentTaskDataSource] = useState([]);
@@ -75,9 +75,6 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
     );
   };
 
-  const rowSelected = (args) => {
-    setSelectedEventId(args.data.Id); // Imposta l'evento selezionato
-};
   const getCollaboratorNames = (incaricatoIds, categoryResources) => {
     if (!Array.isArray(incaricatoIds) || incaricatoIds.length === 0) {
       return "Incaricato sconosciuto";
@@ -109,25 +106,16 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
   }, [ganttData]);
   console.log("Markers formattati:", markers);
 
-  const onRowSelected = (args) => {
-    const selectedRecord = args.data; // Dati della riga selezionata
-    if (selectedRecord && setSelectedEventId) {
-        setSelectedEventId(selectedRecord.Id); // Imposta l'ID dell'evento selezionato
-    }
-};
-
   return (
     <div>
 
       <GanttComponent
-        rowSelected={rowSelected}
         ref={ganttRef}
         dataSource={ganttData}
         allowSelection={true}
         allowSorting={true}
         actionComplete={onActionComplete}
         taskbarTemplate={taskbarTemplate}
-        rowSelected={onRowSelected} // Associa l'handler qui
         taskFields={{
           id: 'Id',
           name: 'Subject',

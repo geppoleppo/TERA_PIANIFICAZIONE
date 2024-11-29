@@ -3,7 +3,6 @@ import './App.css';
 import Scheduler from './components/Scheduler';  // Importa Scheduler da Scheduler.js
 import Gantt from './components/Gantt';  // Importa Gantt da Gantt.js
 import Sidebar from './sidebar/Sidebar';
-import MarkerForm from './components/MarkerForm';
 import {
   handleCollaboratoreChange,
   handleCommesseChange,
@@ -27,6 +26,7 @@ const App = () => {
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
   const [commesse, setCommesse] = useState([]);
+  const [renderGantt, setRenderGantt] = useState(false);
   
   
   const handleSaveSelectedCommesse = () => {
@@ -34,8 +34,6 @@ const App = () => {
     console.log("Commesse selezionate:", selectedCommesse);
     saveSelectedCommesse(selectedCollaboratori, selectedCommesse);
   };
-
-  const [selectedEventId, setSelectedEventId] = useState(null); // Stato per ID evento selezionato
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro
   const handleUpdateEvent = (eventData) => {
@@ -120,28 +118,23 @@ const handleSaveEvent = (eventData) => {
 
 const [markers, setMarkers] = useState([]);
 
-const handleSaveMarker = (newMarker, selectedEventId) => {
-  if (!selectedEventId) {
-      console.error("Nessun evento selezionato per il marker.");
-      return;
-  }
-
+const handleSaveMarker = (newMarker) => {
   fetch('http://localhost:3001/api/markers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-          ...newMarker,
-          eventId: selectedEventId, // Aggiungi l'ID evento selezionato
-      }),
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...newMarker,
+      eventId: selectedEventId, // L'ID dell'evento a cui associare il marker
+    }),
   })
-      .then((res) => res.json())
-      .then(() => {
-          fetch('http://localhost:3001/api/markers') // Ricarica i marker
-              .then((res) => res.json())
-              .then((data) => setMarkers(data))
-              .catch((err) => console.error("Errore durante il recupero dei marker:", err));
-      })
-      .catch((err) => console.error("Errore durante il salvataggio del marker:", err));
+    .then((res) => res.json())
+    .then(() => {
+      fetch('http://localhost:3001/api/markers') // Ricarica i marker
+        .then((res) => res.json())
+        .then((data) => setMarkers(data))
+        .catch((err) => console.error("Errore durante il recupero dei marker:", err));
+    })
+    .catch((err) => console.error("Errore durante il salvataggio del marker:", err));
 };
 
 
@@ -268,6 +261,16 @@ const handleDeleteEvent = (eventId) => {
     }
   };
 
+  const updateGanttView = () => {
+    if (selectedCollaboratori.length > 0 && selectedCommesse.length > 0) {
+      setRenderGantt(true);
+    } else {
+      setRenderGantt(false);
+    }
+  };
+
+
+
   const onEventRendered = (args) => {
     const event = args.data;
     const commessa = projectResources.find(p => p.id === event.ProjectId);
@@ -312,27 +315,20 @@ const sincronizzaCommesse = async () => {
     fetch('http://localhost:3001/api/markers')
       .then((res) => res.json())
       .then((data) => {
-        const formattedMarkers = data.map(marker => ({
-          ...marker,
-          day: new Date(marker.Day), // Converte `Day` in un oggetto Date
-        }));
-        console.log("Formatted Markers:", formattedMarkers);
-  
-        // Filtra i marker in base agli eventi renderizzati
-        const filteredMarkers = formattedMarkers.filter(marker =>
-          events.some(event => {
-            console.log("Event ID:", event.Id, "Marker Event ID:", marker.eventId);
-            return event.Id === marker.eventId;
-          })
-        );
-  
-        console.log("Filtered Markers:", filteredMarkers);
-        setMarkers(filteredMarkers);
+        const formattedMarkers = data.map((marker) => {
+          const validDate = new Date(marker.Day); // Prova a creare un oggetto Date
+          if (isNaN(validDate)) {
+            console.error(`Data non valida: ${marker.Day}`);
+          }
+          return {
+            ...marker,
+            day: isNaN(validDate) ? null : validDate, // Assegna `null` se la data è invalida
+          };
+        });
+        setMarkers(formattedMarkers);
       })
       .catch((err) => console.error("Errore durante il recupero dei marker:", err));
-  }, [events]);
-  
-  
+  }, []);
   
   
   
@@ -448,13 +444,6 @@ useEffect(() => {
   }
   //console.log("categoryResources nel render di App:", categoryResources);
 
-  const filteredMarkers = markers.filter(marker =>
-    events.some(event => new Date(event.StartTime) <= marker.day && marker.day <= new Date(event.EndTime))
-  );
-
-  
-  console.log("FITRO",markers)
-
   return (
     <div className="App">
       
@@ -478,41 +467,26 @@ useEffect(() => {
   removeCommessa={removeCommessa} // Funzione gestione rimozione commessa
   handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
 />
-<Sidebar
-    onSyncCommesse={sincronizzaCommesse}
-    filteredProjectResources={filteredProjectResources}
-    setProjectResources={setProjectResources}
-    onSaveMarker={(marker) => handleSaveMarker(marker, selectedEventId)} // Passa selectedEventId qui
->
-<MarkerForm
-    selectedEvent={events.find((event) => event.Id === selectedEventId)} // Passa l'evento selezionato
-    onSaveMarker={(marker) => handleSaveMarker(marker, selectedEventId)} // Prop per salvare il marker
+<Sidebar 
+  onSyncCommesse={sincronizzaCommesse}
+  filteredProjectResources={filteredProjectResources}
+  setProjectResources={setProjectResources}
+  onSaveMarker={handleSaveMarker} // Prop per salvare i marker
 />
-</Sidebar>
-{categoryResources.length > 0 && (
-  
-  <Gantt
-  ganttData={events.filter(event =>
-    filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
-    event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
-  )}
-  onSaveEvent={handleSaveEvent}
-  onUpdateEvent={handleUpdateEvent}
-  onDeleteEvent={handleDeleteEvent}
-  categoryResources={categoryResources}
-  markers={filteredMarkers}
-  setSelectedEventId={setSelectedEventId} // Passa la funzione come prop
-/>
-
-
-
-    
-    
-    )
-    
-    
-    }
-    </div>
+{/* Gantt component */}
+{selectedCollaboratori.length > 0 && selectedCommesse.length > 0 && categoryResources.length > 0 && (
+      <Gantt
+        ganttData={events.filter(event =>
+          filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
+          event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
+        )}
+        onSaveEvent={handleSaveEvent}
+        onUpdateEvent={handleUpdateEvent}
+        onDeleteEvent={handleDeleteEvent}
+        categoryResources={categoryResources}
+        markers={markers}
+      />
+    )}  </div>
   );
 };
 

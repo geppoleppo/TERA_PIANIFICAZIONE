@@ -41,11 +41,6 @@ const Scheduler = ({
 }) => {
 
 
-  const onEventClick = (eventData) => {
-    setSelectedEventId(eventData.Id); // Aggiorna l'ID evento selezionato
-};
-
-
   // Definisci la funzione `onPopupOpen` per aggiungere il campo `parentID` al form di creazione evento
   const onPopupOpen = (args) => {
     if (args.type === 'Editor') {
