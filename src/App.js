@@ -26,9 +26,59 @@ const App = () => {
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
   const [loading, setLoading] = useState(false);
+  const [markers, setMarkers] = useState([]);
+  const [filteredMarkersFinal, setFilteredMarkersFinal] = useState([]); // Stato per filteredMarkersFinal
 
-// App.js
-// App.js
+// Funzione per caricare i marker
+const fetchMarkers = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/markers');
+    const data = await response.json();
+    const formattedMarkers = data.map(marker => {
+      const validDate = marker.Day;
+ 
+      return {
+        ...marker,
+        day: validDate,
+      };
+    });
+    setMarkers(formattedMarkers);
+  } catch (err) {
+    console.error('Errore durante il recupero dei marker:', err);
+  }
+};
+// Funzione per filtrare i markers in base ai dati del Gantt
+const filterMarkers = () => {
+  const ganttData = events.filter(event =>
+    filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
+    event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
+  );
+
+  // Filtra i marker utilizzando `ganttData`
+  const filteredResults = markers.filter(marker => 
+    ganttData.some(event => parseInt(event.Id) === parseInt(marker.eventId))
+  ).map(marker => ({
+    Label: marker.Label,
+    //day: marker.day
+    day: new Date(marker.Day) //
+  }));
+
+  setFilteredMarkersFinal(filteredResults);
+};
+
+
+// Log markers che funzionano
+const filteredMarkersStatic = [
+  {
+    Label: "popologggg",
+    day: new Date('11/30/2024'),
+  },
+  {
+    Label: "cantante",
+    day: new Date('11/24/2024'),
+  },
+];
+
 // App.js
 const handleSaveSelectedCommesse = async () => {
   try {
@@ -153,9 +203,6 @@ const handleSaveEvent = (eventData) => {
   // Salva l'evento nel database
   saveEvent(completeEventData, projectResources, fetchEvents);
 };
-
-const [markers, setMarkers] = useState([]);
-
 
 const handleSaveMarker = (newMarker) => {
   fetch('http://localhost:3001/api/markers', {
@@ -344,6 +391,8 @@ const sincronizzaCommesse = async () => {
     // Carica eventi, commesse e collaboratori una volta al montaggio del componente
     useEffect(() => {
       loadAllData();
+      fetchMarkers(); // Carica anche i marker al montaggio
+
     }, [])
   
   // Funzione per caricare tutti i dati
@@ -358,7 +407,7 @@ const sincronizzaCommesse = async () => {
     //setCategoryResources(categoryData);
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     fetch('http://localhost:3001/api/markers')
       .then((res) => res.json())
       .then((data) => {
@@ -375,7 +424,7 @@ const sincronizzaCommesse = async () => {
         setMarkers(formattedMarkers);
       })
       .catch((err) => console.error("Errore durante il recupero dei marker:", err));
-  }, []);
+  }, []);*/
   
   
   
@@ -491,36 +540,33 @@ useEffect(() => {
   }
   //console.log("categoryResources nel render di App:", categoryResources);
 
+// Effetto per aggiornare i marker ogni volta che vengono selezionati collaboratori o commesse (o al cambiamento di categoria risorse)
+useEffect(() => {
+  if (selectedCollaboratori.length > 0 && selectedCommesse.length > 0 && categoryResources.length > 0) {
+    fetchMarkers();
+  }
+}, [selectedCollaboratori, selectedCommesse, categoryResources]);
 
-  const filteredMarkersByEventId = markers.filter(marker =>
-    events.some(event => parseInt(event.Id) === parseInt(marker.eventId))
-  );
 
-  const filteredMarkersByProject = filteredMarkersByEventId.filter(marker =>
-    events.some(event =>
-      parseInt(event.Id) === parseInt(marker.eventId) &&
-      filteredProjectResources.some(resource => resource.id === event.ProjectId)
-    )
-  );
 
-  const filteredMarkersFinal = filteredMarkersByProject.filter(marker =>
-    events.some(event =>
-      parseInt(event.Id) === parseInt(marker.eventId) &&
-      filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
-      event.CollaboratoreId.some(id =>
-        filteredCategoryResources.some(collab => collab.id === id)
-      )
-    )
-  ).map(marker => ({
-    Id: marker.Id,
-    Label: marker.Label,
-    Day: marker.Day,  // Assicurati che Day sia nel formato corretto, preferibilmente `Date`
-    day: marker.day,
-    eventId: marker.eventId  // Aggiungi `eventId` per mantenere l'associazione corretta
-  }));
-  
-  const areMarkersEqual = JSON.stringify(markers) === JSON.stringify(filteredMarkersFinal);
-  console.log("Equal Markers?", areMarkersEqual);
+
+// Array per contenere i risultati del filtro per i markers
+let filteredResults = [];
+
+// Prendi solo gli eventi passati al Gantt per il filtraggio dei marker
+const ganttData = events.filter(event =>
+  filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
+  event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
+);
+
+// Effetto per filtrare i markers quando cambiano gli eventi, le commesse, i collaboratori, o i marker stessi
+useEffect(() => {
+  if (events.length > 0 && markers.length > 0) {
+    filterMarkers();
+  }
+}, [events, markers, filteredProjectResources, filteredCategoryResources]);
+
+
 
   return (
     <div className="App">

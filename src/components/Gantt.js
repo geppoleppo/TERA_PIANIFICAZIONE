@@ -14,10 +14,25 @@ import {
   ColumnDirective
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources,markers=[] }) => {
+
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources, markers = [] }) => {
   const ganttRef = useRef(null);
 
   const [parentTaskDataSource, setParentTaskDataSource] = useState([]);
+
+  const staticMarkers = markers.map((marker, index) => ({
+
+    day: new Date(),
+    label: marker.Label,
+
+  }));
+
+
+  useEffect(() => {
+    if (ganttRef.current) {
+      ganttRef.current.refresh(); // Forza il refresh del componente Syncfusion
+    }
+  }, [markers]); // Triggera ogni volta che `markers` cambia
 
   // Aggiorniamo parentTaskDataSource quando ganttData cambia
   useEffect(() => {
@@ -32,38 +47,38 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
       setParentTaskDataSource(newParentTaskDataSource);
     }
   }, [ganttData]);
-  
-  
+
+
 
   const onActionComplete = (args) => {
     console.log("Dati dell'azione completata nel Gantt:", args);
     console.log("TIPO DI AZIONE:", args.requestType);
 
     if (!args || !args.data) {
-        console.warn("Dati incompleti per l'azione Gantt:", args);
-        return;
+      console.warn("Dati incompleti per l'azione Gantt:", args);
+      return;
     }
 
     if (args.requestType === 'save') {
-        // Gestisce il salvataggio di dati tramite il dialogo
-       // console.log("Salvataggio tramite dialogo con dati:", args.data);
-        onUpdateEvent(args.data); // Passa i dati alla funzione di aggiornamento
+      // Gestisce il salvataggio di dati tramite il dialogo
+      // console.log("Salvataggio tramite dialogo con dati:", args.data);
+      onUpdateEvent(args.data); // Passa i dati alla funzione di aggiornamento
     } else if (args.action === 'TaskbarEditing') {
-        // Gestisce la modifica diretta della barra
-       // console.log("Aggiornamento dal Gantt con dati:", args.data);
-        onUpdateEvent(args.data);
+      // Gestisce la modifica diretta della barra
+      // console.log("Aggiornamento dal Gantt con dati:", args.data);
+      onUpdateEvent(args.data);
     } else if (args.action === 'add') {
-        // Gestisce l'aggiunta di nuovi eventi
-        console.log("Aggiunta di un nuovo evento con dati:", args.data);
-        onSaveEvent(args.data);
+      // Gestisce l'aggiunta di nuovi eventi
+      console.log("Aggiunta di un nuovo evento con dati:", args.data);
+      onSaveEvent(args.data);
     } else if (args.requestType === 'delete') {
-        // Gestisce l'eliminazione di eventi
-        //console.log("Eliminazione di un evento con ID:", args.data[0].Id);
-        onDeleteEvent(args.data[0].Id);
+      // Gestisce l'eliminazione di eventi
+      //console.log("Eliminazione di un evento con ID:", args.data[0].Id);
+      onDeleteEvent(args.data[0].Id);
     } else {
-       // console.log("Azione non gestita:", args.action || args.requestType);
+      // console.log("Azione non gestita:", args.action || args.requestType);
     }
-};
+  };
 
 
   const taskbarTemplate = (taskData) => {
@@ -97,14 +112,14 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
         })),
       ];
       setParentTaskDataSource(newParentTaskDataSource);
-  
+
       // Forza il refresh del GanttComponent per aggiornare il menu a discesa
       if (ganttRef.current) {
         ganttRef.current.refresh();
       }
     }
   }, [ganttData]);
-
+  console.log('staticMarkers:', staticMarkers);
 
   return (
     <div>
@@ -139,51 +154,58 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
         toolbar={['Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
         height="500px"
       >
+        <EventMarkersDirective>
+
+
+          {staticMarkers && staticMarkers.length > 0 && staticMarkers.map((marker, index) => {
+            console.log('marker', marker)
+            const date = marker.day;
+
+            return (
+              <EventMarkerDirective
+                key={marker.key}  // Usa la chiave unica fornita nei dati
+                day={date}  // Usa la data corretta
+                label={marker.label}  // Usa il testo del marker
+                cssClass="custom-marker-label"
+                style={{ color: marker.color || '#000' }}  // Usa il colore specificato o uno di default
+              />
+            );
+          })}
+
+        </EventMarkersDirective>
+
         <ColumnsDirective>
           <ColumnDirective field="Subject" headerText="Titolo" isPrimaryKey={true} width="150" />
           <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
           <ColumnDirective field="Id" headerText="ID" width="150" />
           <ColumnDirective
-  field="parentID"
-  headerText="Parent Task"
-  editType="dropdownedit"
-  width="150"
-  edit={{
-    params: {
-      dataSource: new DataManager(parentTaskDataSource), // Usa DataManager per Syncfusion
-      query: new Query(), // Crea una query vuota per inizializzare
-      fields: { text: 'Subject', value: 'Id' },
-      placeholder: 'Seleziona Parent Task',
-    },
-    create: () => document.createElement('input'), // Crea l'elemento input del dropdown
-    read: (args) => args.value || null, // Legge il valore e assegna null per "Nessun genitore"
-    actionComplete: (args) => {
-      // Filtra per escludere l'ID del task corrente
-      const currentTaskId = ganttRef.current?.getSelectedRecord()?.Id;
-      args.result = args.result.filter((task) => task.Id !== currentTaskId);
-    },
-  }}
-/>
+            field="parentID"
+            headerText="Parent Task"
+            editType="dropdownedit"
+            width="150"
+            edit={{
+              params: {
+                dataSource: new DataManager(parentTaskDataSource), // Usa DataManager per Syncfusion
+                query: new Query(), // Crea una query vuota per inizializzare
+                fields: { text: 'Subject', value: 'Id' },
+                placeholder: 'Seleziona Parent Task',
+              },
+              create: () => document.createElement('input'), // Crea l'elemento input del dropdown
+              read: (args) => args.value || null, // Legge il valore e assegna null per "Nessun genitore"
+              actionComplete: (args) => {
+                // Filtra per escludere l'ID del task corrente
+                const currentTaskId = ganttRef.current?.getSelectedRecord()?.Id;
+                args.result = args.result.filter((task) => task.Id !== currentTaskId);
+              },
+            }}
+          />
 
 
 
         </ColumnsDirective>
-        <EventMarkersDirective>
-  {markers.map((marker, index) => {
-    console.log(`Marker ${index}`, marker);
-    return (
-      <EventMarkerDirective
-        key={index}
-        day={marker.day}
-        label={marker.Label}
-        cssClass="custom-marker-label"
-        style={{ color: marker.color || '#000' }} // Applica il colore dell'etichetta
-      />
-    );
-  })}
-</EventMarkersDirective>
 
-        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort,DayMarkers]} />
+
+        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort, DayMarkers]} />
       </GanttComponent>
     </div>
   );
