@@ -67,17 +67,6 @@ const filterMarkers = () => {
 };
 
 
-// Log markers che funzionano
-const filteredMarkersStatic = [
-  {
-    Label: "popologggg",
-    day: new Date('11/30/2024'),
-  },
-  {
-    Label: "cantante",
-    day: new Date('11/24/2024'),
-  },
-];
 
 // App.js
 const handleSaveSelectedCommesse = async () => {
@@ -407,29 +396,7 @@ const sincronizzaCommesse = async () => {
     //setCategoryResources(categoryData);
   };
 
-  /*useEffect(() => {
-    fetch('http://localhost:3001/api/markers')
-      .then((res) => res.json())
-      .then((data) => {
-        const formattedMarkers = data.map((marker) => {
-          const validDate = new Date(marker.Day); // Prova a creare un oggetto Date
-          if (isNaN(validDate)) {
-            console.error(`Data non valida: ${marker.Day}`);
-          }
-          return {
-            ...marker,
-            day: isNaN(validDate) ? null : validDate, // Assegna `null` se la data è invalida
-          };
-        });
-        setMarkers(formattedMarkers);
-      })
-      .catch((err) => console.error("Errore durante il recupero dei marker:", err));
-  }, []);*/
-  
-  
-  
-  
-  
+
   
 // Aggiorna le commesse e i collaboratori filtrati ogni volta che cambia `selectedCommesse` o `selectedCollaboratori`
 useEffect(() => {
@@ -566,7 +533,7 @@ useEffect(() => {
   }
 }, [events, markers, filteredProjectResources, filteredCategoryResources]);
 
-
+console.log('filteredMarkersFinal',filteredMarkersFinal)
 
   return (
     <div className="App">
@@ -614,7 +581,7 @@ useEffect(() => {
         onDeleteEvent={handleDeleteEvent}
         categoryResources={categoryResources}
       
-        markers={filteredMarkersFinal.length > 0 ? filteredMarkersFinal : [{ day: new Date(), label: 'Default Marker' }]}
+        markers={filteredMarkersFinal}
       />
     )}  </div>
   );

@@ -13,7 +13,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
     eventMarkers = markers.map((marker, index) => {
       // Imposta la data come new Date() per assicurarci che `day` sia un oggetto `Date`
       const day = marker.day ? new Date(marker.day) : new Date('11/25/2024'); // Usa una data di fallback se `marker.day` non esiste
-      const label = marker.Label || `Marker #${index + 1}`; // Usa il label o un valore di default
+      const label = marker.Label ; // Usa il label o un valore di default
       
       return {
         day,
@@ -116,7 +116,7 @@ console.log('MMMM',markers)
 
   return (
     <div>
-       {markers && markers.length > 0 ? (
+       {markers &&eventMarkers[0] && markers.length > 0 ? (
       <GanttComponent
         ref={ganttRef}
         dataSource={ganttData}
