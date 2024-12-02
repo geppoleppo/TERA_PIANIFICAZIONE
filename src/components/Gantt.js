@@ -1,38 +1,42 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { EventMarkersDirective, EventMarkerDirective } from '@syncfusion/ej2-react-gantt';
+import { GanttComponent, Inject, Selection, Toolbar, DayMarkers, Edit, Filter, Sort, ColumnsDirective, ColumnDirective } from '@syncfusion/ej2-react-gantt';
 import { DataManager, Query } from '@syncfusion/ej2-data';
-import {
-  GanttComponent,
-  Inject,
-  Selection,
-  Toolbar,
-  DayMarkers,
-  Edit,
-  Filter,
-  Sort,
-  ColumnsDirective,
-  ColumnDirective
-} from '@syncfusion/ej2-react-gantt';
-
-
 const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources, markers = [] }) => {
   const ganttRef = useRef(null);
 
   const [parentTaskDataSource, setParentTaskDataSource] = useState([]);
+  
+  let eventMarkers = [];
 
-  const staticMarkers = markers.map((marker, index) => ({
-
-    day: new Date(),
-    label: marker.Label,
-
-  }));
-
+  if (markers && markers.length > 0) {
+    console.log("Markers disponibili:", markers);
+    eventMarkers = markers.map((marker, index) => {
+      // Imposta la data come new Date() per assicurarci che `day` sia un oggetto `Date`
+      const day = marker.day ? new Date(marker.day) : new Date('11/25/2024'); // Usa una data di fallback se `marker.day` non esiste
+      const label = marker.Label || `Marker #${index + 1}`; // Usa il label o un valore di default
+      
+      return {
+        day,
+        label,
+        cssClass: 'e-custom-event-marker', // Usa una classe CSS predefinita per la personalizzazione
+      };
+    });
+  } else {
+    // Se markers è vuoto, usa un array vuoto
+    console.log("Markers non disponibili");
+    eventMarkers = [
+      { day: new Date('12/01/2024'), label: 'Default Label', cssClass: 'e-custom-event-marker' },
+    ];
+  }
+  
+  // Log per controllare i valori di `eventMarkers`
+  console.log("Event Markers Array:", eventMarkers);
 
   useEffect(() => {
     if (ganttRef.current) {
       ganttRef.current.refresh(); // Forza il refresh del componente Syncfusion
     }
-  }, [markers]); // Triggera ogni volta che `markers` cambia
+  }, [markers]);
 
   // Aggiorniamo parentTaskDataSource quando ganttData cambia
   useEffect(() => {
@@ -48,38 +52,22 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
     }
   }, [ganttData]);
 
-
-
   const onActionComplete = (args) => {
-    console.log("Dati dell'azione completata nel Gantt:", args);
-    console.log("TIPO DI AZIONE:", args.requestType);
-
     if (!args || !args.data) {
       console.warn("Dati incompleti per l'azione Gantt:", args);
       return;
     }
 
     if (args.requestType === 'save') {
-      // Gestisce il salvataggio di dati tramite il dialogo
-      // console.log("Salvataggio tramite dialogo con dati:", args.data);
-      onUpdateEvent(args.data); // Passa i dati alla funzione di aggiornamento
+      onUpdateEvent(args.data);
     } else if (args.action === 'TaskbarEditing') {
-      // Gestisce la modifica diretta della barra
-      // console.log("Aggiornamento dal Gantt con dati:", args.data);
       onUpdateEvent(args.data);
     } else if (args.action === 'add') {
-      // Gestisce l'aggiunta di nuovi eventi
-      console.log("Aggiunta di un nuovo evento con dati:", args.data);
       onSaveEvent(args.data);
     } else if (args.requestType === 'delete') {
-      // Gestisce l'eliminazione di eventi
-      //console.log("Eliminazione di un evento con ID:", args.data[0].Id);
       onDeleteEvent(args.data[0].Id);
-    } else {
-      // console.log("Azione non gestita:", args.action || args.requestType);
     }
   };
-
 
   const taskbarTemplate = (taskData) => {
     const color = taskData?.taskData?.Color || '#000000';
@@ -103,9 +91,8 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
 
   useEffect(() => {
     if (ganttData && ganttData.length > 0) {
-      // Aggiunge l'opzione "Nessun genitore" come prima voce
       const newParentTaskDataSource = [
-        { Id: null, Subject: 'Nessun genitore' }, // Opzione per impostare parentID a null
+        { Id: null, Subject: 'Nessun genitore' },
         ...ganttData.map((task) => ({
           Id: task.Id,
           Subject: task.Subject,
@@ -113,17 +100,23 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
       ];
       setParentTaskDataSource(newParentTaskDataSource);
 
-      // Forza il refresh del GanttComponent per aggiornare il menu a discesa
       if (ganttRef.current) {
         ganttRef.current.refresh();
       }
     }
   }, [ganttData]);
-  console.log('staticMarkers:', staticMarkers);
+
+  if (ganttRef.current) {
+    ganttRef.current.refresh();
+  }
+  
+console.log('MMMM',markers)
+
+
 
   return (
     <div>
-
+       {markers && markers.length > 0 ? (
       <GanttComponent
         ref={ganttRef}
         dataSource={ganttData}
@@ -138,14 +131,17 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
           endDate: 'EndTime',
           parentID: 'parentID',
           progress: 'Progress',
-          expanded: true
+          expanded: true,
         }}
+
+        eventMarkers={eventMarkers} // Passa i marker come array alla proprietà eventMarkers
+        
         editSettings={{
           allowAdding: true,
           allowEditing: true,
           allowDeleting: true,
           allowTaskbarEditing: true,
-          showDeleteConfirmDialog: true
+          showDeleteConfirmDialog: true,
         }}
         filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
         labelSettings={{
@@ -154,26 +150,6 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
         toolbar={['Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
         height="500px"
       >
-        <EventMarkersDirective>
-
-
-          {staticMarkers && staticMarkers.length > 0 && staticMarkers.map((marker, index) => {
-            console.log('marker', marker)
-            const date = marker.day;
-
-            return (
-              <EventMarkerDirective
-                key={marker.key}  // Usa la chiave unica fornita nei dati
-                day={date}  // Usa la data corretta
-                label={marker.label}  // Usa il testo del marker
-                cssClass="custom-marker-label"
-                style={{ color: marker.color || '#000' }}  // Usa il colore specificato o uno di default
-              />
-            );
-          })}
-
-        </EventMarkersDirective>
-
         <ColumnsDirective>
           <ColumnDirective field="Subject" headerText="Titolo" isPrimaryKey={true} width="150" />
           <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
@@ -185,28 +161,25 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
             width="150"
             edit={{
               params: {
-                dataSource: new DataManager(parentTaskDataSource), // Usa DataManager per Syncfusion
-                query: new Query(), // Crea una query vuota per inizializzare
+                dataSource: new DataManager(parentTaskDataSource),
+                query: new Query(),
                 fields: { text: 'Subject', value: 'Id' },
                 placeholder: 'Seleziona Parent Task',
               },
-              create: () => document.createElement('input'), // Crea l'elemento input del dropdown
-              read: (args) => args.value || null, // Legge il valore e assegna null per "Nessun genitore"
+              create: () => document.createElement('input'),
+              read: (args) => args.value || null,
               actionComplete: (args) => {
-                // Filtra per escludere l'ID del task corrente
                 const currentTaskId = ganttRef.current?.getSelectedRecord()?.Id;
                 args.result = args.result.filter((task) => task.Id !== currentTaskId);
               },
             }}
           />
-
-
-
         </ColumnsDirective>
-
-
-        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort, DayMarkers]} />
+        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
       </GanttComponent>
+       ) : (
+        <div>Caricamento in corso...</div>
+      )}
     </div>
   );
 };

@@ -60,7 +60,7 @@ const filterMarkers = () => {
   ).map(marker => ({
     Label: marker.Label,
     //day: marker.day
-    day: new Date(marker.Day) //
+    day: marker.Day //
   }));
 
   setFilteredMarkersFinal(filteredResults);
@@ -614,10 +614,7 @@ useEffect(() => {
         onDeleteEvent={handleDeleteEvent}
         categoryResources={categoryResources}
       
-        markers={
-          filteredMarkersFinal
-         
-        }
+        markers={filteredMarkersFinal.length > 0 ? filteredMarkersFinal : [{ day: new Date(), label: 'Default Marker' }]}
       />
     )}  </div>
   );
