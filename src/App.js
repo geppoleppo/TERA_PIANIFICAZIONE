@@ -210,9 +210,6 @@ const handleSaveMarker = (newMarker) => {
 };
 
 
-
-
-
 const handleDeleteEvent = (eventId) => {
   console.log("Eliminazione evento con ID:", eventId); // Log per verifica
   deleteEvent(eventId, loadAllData);
@@ -374,13 +371,7 @@ const sincronizzaCommesse = async () => {
 };
 
 
-    // Carica eventi, commesse e collaboratori una volta al montaggio del componente
-    useEffect(() => {
-      loadAllData();
-      fetchMarkers(); // Carica anche i marker al montaggio
 
-    }, [])
-  
   // Funzione per caricare tutti i dati
   const loadAllData = async () => {
     const eventsData = await fetchEvents();
@@ -393,40 +384,90 @@ const sincronizzaCommesse = async () => {
     //setCategoryResources(categoryData);
   };
 
-
   
-// Aggiorna le commesse e i collaboratori filtrati ogni volta che cambia `selectedCommesse` o `selectedCollaboratori`
-useEffect(() => {
-  const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
-  const filteredResources = selectedCommesseIds.length
-      ? projectResources.filter(resource => selectedCommesseIds.includes(resource.id))
-      : [];
 
-  setFilteredProjectResources(filteredResources);
+  // Stato per risorse dei collaboratori filtrati in base ai collaboratori selezionati
+  const [filteredCategoryResources, setFilteredCategoryResources] = useState(categoryResources);
 
-  if (selectedCollaboratori.length > 0) {
-      const filteredCollaborators = categoryResources.filter(resource =>
-          selectedCollaboratori.includes(resource.id)
-      );
-      setFilteredCategoryResources(filteredCollaborators);
-  } else {
-      setFilteredCategoryResources(categoryResources);
+
+
+
+ 
+  // Gestisce il completamento delle azioni di creazione e rimozione eventi
+  function onActionComplete(args) {
+    if (args.requestType === 'eventCreated') {
+      console.log("HHHHHH?:", args);
+      args.addedRecords.forEach(event => handleSaveEvent (event));
+      events.forEach(event => {
+       // console.log("Event created with parentID:", event);
+    });
+
+
+    } else if (args.requestType === 'eventRemoved') {
+      args.deletedRecords.forEach(event => deleteEvent(event.Id,fetchEvents));
+    } else if (args.requestType === 'eventChanged') {
+      events.forEach(event => {
+      //  console.log("Event updated with parentID:", event);
+    });
+      args.changedRecords.forEach(event => handleUpdateEvent (event)); // Aggiungi gestione aggiornamento
+    }
   }
-}, [selectedCommesse, selectedCollaboratori, projectResources, categoryResources]);
+  //console.log("categoryResources nel render di App:", categoryResources);
 
 
-  // Aggiorna le commesse filtrate non appena `selectedCommesse` cambia
+// Array per contenere i risultati del filtro per i markers
+let filteredResults = [];
+
+// Prendi solo gli eventi passati al Gantt per il filtraggio dei marker
+const ganttData = events.filter(event =>
+  filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
+  event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
+);
+
+
+
+////////////////////////USE EFFECT///////////////////////////
+
+    // Carica eventi, commesse e collaboratori una volta al montaggio del componente
+    useEffect(() => {
+      loadAllData();
+      fetchMarkers(); // Carica anche i marker al montaggio
+
+    }, [])
+  
+
+// Effetto per aggiornare i marker ogni volta che vengono selezionati collaboratori o commesse (o al cambiamento di categoria risorse)
+useEffect(() => {
+  if (selectedCollaboratori.length > 0 && selectedCommesse.length > 0 && categoryResources.length > 0) {
+    fetchMarkers();
+  }
+}, [selectedCollaboratori, selectedCommesse, categoryResources]);
+
+// Effetto per filtrare i markers quando cambiano gli eventi, le commesse, i collaboratori, o i marker stessi
+useEffect(() => {
+  if (events.length > 0 && markers.length > 0) {
+    filterMarkers();
+  }
+}, [events, markers, filteredProjectResources, filteredCategoryResources]);
+
+  // Filtra le risorse dei collaboratori in base ai collaboratori selezionati
   useEffect(() => {
-    const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
+    if (selectedCollaboratori.length > 0) {
+      // Filtra `categoryResources` in base a `selectedCollaboratori`
+      const filteredResources = categoryResources.filter(resource =>
+        selectedCollaboratori.includes(resource.id)
+      );
+      setFilteredCategoryResources(filteredResources);
+    } else {
+      // Se nessun collaboratore è selezionato, mostra tutti i collaboratori
+      setFilteredCategoryResources(categoryResources);
+    }
+  }, [selectedCollaboratori, categoryResources]);
 
-    // Se non ci sono commesse selezionate, imposta filteredProjectResources su un array vuoto
-    const filteredResources = selectedCommesseIds.length
-      ? projectResources.filter(resource => selectedCommesseIds.includes(resource.id))
-      : []; // Seleziona nessuna commessa se selectedCommesse è vuoto
-
-    setFilteredProjectResources(filteredResources);
-  }, [selectedCommesse, projectResources]);
-
+  // Sincronizza `filteredCategoryResources` con lo Scheduler
+  useEffect(() => {
+    fetchEvents();
+  }, [filteredCategoryResources]);
 
   // Sincronizza lo Scheduler con il cambiamento di `filteredProjectResources`
   useEffect(() => {
@@ -457,78 +498,25 @@ useEffect(() => {
       setSelectedCommesse([]);
     }
   }, [selectedCollaboratori, projectResources]);
+
+
+  useEffect(() => {
+    const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
+  
+    const filteredResources = selectedCommesseIds.length
+      ? projectResources.filter(resource => selectedCommesseIds.includes(resource.id))
+      : [];
+  
+    const filteredCollaborators = selectedCollaboratori.length
+      ? categoryResources.filter(resource => selectedCollaboratori.includes(resource.id))
+      : categoryResources;
+  
+    setFilteredProjectResources(filteredResources);
+    setFilteredCategoryResources(filteredCollaborators);
+  }, [selectedCommesse, selectedCollaboratori, projectResources, categoryResources]);
   
 
-  // Stato per risorse dei collaboratori filtrati in base ai collaboratori selezionati
-  const [filteredCategoryResources, setFilteredCategoryResources] = useState(categoryResources);
 
-  // Filtra le risorse dei collaboratori in base ai collaboratori selezionati
-  useEffect(() => {
-    if (selectedCollaboratori.length > 0) {
-      // Filtra `categoryResources` in base a `selectedCollaboratori`
-      const filteredResources = categoryResources.filter(resource =>
-        selectedCollaboratori.includes(resource.id)
-      );
-      setFilteredCategoryResources(filteredResources);
-    } else {
-      // Se nessun collaboratore è selezionato, mostra tutti i collaboratori
-      setFilteredCategoryResources(categoryResources);
-    }
-  }, [selectedCollaboratori, categoryResources]);
-
-  // Sincronizza `filteredCategoryResources` con lo Scheduler
-  useEffect(() => {
-    fetchEvents();
-  }, [filteredCategoryResources]);
-
-
-  
-  // Gestisce il completamento delle azioni di creazione e rimozione eventi
-  function onActionComplete(args) {
-    if (args.requestType === 'eventCreated') {
-      console.log("HHHHHH?:", args);
-      args.addedRecords.forEach(event => handleSaveEvent (event));
-      events.forEach(event => {
-       // console.log("Event created with parentID:", event);
-    });
-
-
-    } else if (args.requestType === 'eventRemoved') {
-      args.deletedRecords.forEach(event => deleteEvent(event.Id,fetchEvents));
-    } else if (args.requestType === 'eventChanged') {
-      events.forEach(event => {
-      //  console.log("Event updated with parentID:", event);
-    });
-      args.changedRecords.forEach(event => handleUpdateEvent (event)); // Aggiungi gestione aggiornamento
-    }
-  }
-  //console.log("categoryResources nel render di App:", categoryResources);
-
-// Effetto per aggiornare i marker ogni volta che vengono selezionati collaboratori o commesse (o al cambiamento di categoria risorse)
-useEffect(() => {
-  if (selectedCollaboratori.length > 0 && selectedCommesse.length > 0 && categoryResources.length > 0) {
-    fetchMarkers();
-  }
-}, [selectedCollaboratori, selectedCommesse, categoryResources]);
-
-
-
-
-// Array per contenere i risultati del filtro per i markers
-let filteredResults = [];
-
-// Prendi solo gli eventi passati al Gantt per il filtraggio dei marker
-const ganttData = events.filter(event =>
-  filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
-  event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
-);
-
-// Effetto per filtrare i markers quando cambiano gli eventi, le commesse, i collaboratori, o i marker stessi
-useEffect(() => {
-  if (events.length > 0 && markers.length > 0) {
-    filterMarkers();
-  }
-}, [events, markers, filteredProjectResources, filteredCategoryResources]);
 
 console.log('filteredMarkersFinal',filteredMarkersFinal)
 
@@ -542,7 +530,7 @@ console.log('filteredMarkersFinal',filteredMarkersFinal)
       )}
       {/* Passa le props necessarie a Scheduler */}
       <Scheduler
-  events={events}
+  events={ganttData}
   onEventRendered={onEventRendered}
   resourceHeaderTemplate={resourceHeaderTemplate}
   onActionComplete={onActionComplete}
