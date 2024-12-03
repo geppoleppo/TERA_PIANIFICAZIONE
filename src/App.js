@@ -33,20 +33,17 @@ const App = () => {
 const fetchMarkers = async () => {
   try {
     const response = await fetch('http://localhost:3001/api/markers');
+    if (!response.ok) throw new Error(`Errore: ${response.statusText}`);
     const data = await response.json();
-    const formattedMarkers = data.map(marker => {
-      const validDate = marker.Day;
- 
-      return {
-        ...marker,
-        day: validDate,
-      };
-    });
-    setMarkers(formattedMarkers);
+    setMarkers(data.map(marker => ({
+      ...marker,
+      day: new Date(marker.day), // Converte subito in formato Date
+    })));
   } catch (err) {
     console.error('Errore durante il recupero dei marker:', err);
   }
 };
+
 // Funzione per filtrare i markers in base ai dati del Gantt
 const filterMarkers = () => {
   const ganttData = events.filter(event =>

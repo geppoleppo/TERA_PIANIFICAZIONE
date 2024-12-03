@@ -116,7 +116,8 @@ console.log('MMMM',markers)
 
   return (
     <div>
-       {markers &&eventMarkers[0] && markers.length > 0 ? (
+      
+        {markers ? (
       <GanttComponent
         ref={ganttRef}
         dataSource={ganttData}
