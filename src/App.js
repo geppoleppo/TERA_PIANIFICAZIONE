@@ -44,6 +44,10 @@ const App = () => {
         const projects = await fetchProjectResources(); // Carica le commesse
         setProjectResources(projects);
   
+        const categories = await fetchCategoryResources(); // Carica i collaboratori
+        console.log("Collaboratori caricati:", categories);
+        setCategoryResources(categories);
+  
         const enrichedEvents = await fetchEvents(projects); // Passa le commesse per mappare CommessaName
         setEvents(enrichedEvents);
         setFilteredEventsForGantt(enrichedEvents); // Inizialmente tutti gli eventi
@@ -53,7 +57,7 @@ const App = () => {
     };
     loadData();
   }, []);
-  ;
+  
 
   // Selezione collaboratori e aggiornamento delle commesse
   const handleCollaboratoreSelection = (selectedOptions) => {
