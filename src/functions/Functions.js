@@ -13,7 +13,7 @@ export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaborat
     const filteredResources = projectResources.filter((commessa) =>
       selectedIds.some((collabId) => {
         const collaboratore = categoryResources.find((c) => c.id === collabId);
-        console.log(`Collaboratore ${collabId} -> Commesse associate:`, collaboratore?.groupIds);
+        //console.log(`Collaboratore ${collabId} -> Commesse associate:`, collaboratore?.groupIds);
         return collaboratore?.groupIds.includes(commessa.id);
       })
     );
@@ -252,23 +252,29 @@ export const fetchCategoryResources = async () => {
 };
 
 // Funzione per caricare gli eventi dal database
-// Funzione per caricare gli eventi dal database
-export const fetchEvents = async () => {
+export const fetchEvents = async (projectResources) => {
   try {
     const response = await fetch('http://localhost:3001/api/eventi');
     const data = await response.json();
-    return data.map((event) => ({
-      ...event,
-      ProjectId: parseInt(event.ProjectId), // Assicura che sia un numero
-      CollaboratoreId: Array.isArray(event.CollaboratoreId)
-        ? event.CollaboratoreId.map((id) => parseInt(id))
-        : [],
-      Color: event.Color || '#FF0000', // Colore di default
-    }));
+
+    // Associare CommessaName usando ProjectId
+    return data.map((event) => {
+      const commessa = projectResources.find((res) => res.id === event.ProjectId);
+      return {
+        ...event,
+        ProjectId: parseInt(event.ProjectId),
+        CollaboratoreId: Array.isArray(event.CollaboratoreId)
+          ? event.CollaboratoreId.map((id) => parseInt(id))
+          : [],
+        Color: event.Color || '#FF0000', // Colore di default
+        CommessaName: commessa ? commessa.text : "Non assegnata", // Mappare il nome
+      };
+    });
   } catch (error) {
-    console.error("Errore durante il caricamento degli eventi:", error);
+    console.error('Errore durante il caricamento degli eventi:', error);
     return [];
   }
 };
+
 
 

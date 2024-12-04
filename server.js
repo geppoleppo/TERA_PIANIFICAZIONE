@@ -150,7 +150,8 @@ app.get('/api/eventi', async (req, res) => {
       ProjectId: parseInt(evento.CommessaName, 10), // Converti ProjectId in numero
       CollaboratoreId: evento.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Converti CollaboratoreId in array di numeri
       CategoryColor: evento.Colore || "#000000",
-      parentID: evento.parentID ? parseInt(evento.parentID, 10) : null // Aggiungi e converti parentID in numero, se presente
+      parentID: evento.parentID ? parseInt(evento.parentID, 10) : null, // Aggiungi e converti parentID in numero, se presente
+      CommessaName: evento.CommessaName
     }));
 
     //console.log('Dati eventi dal database (formattati):', mappedEventi); // Verifica i dati nel formato corretto

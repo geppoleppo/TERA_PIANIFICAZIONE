@@ -21,22 +21,39 @@ const App = () => {
   const ganttRef = useRef(null);
 
   useEffect(() => {
+    console.log("Dati del Gantt:", filteredEventsForGantt);
+  }, [filteredEventsForGantt]);
+  
+  useEffect(() => {
+    console.log('EVENTONE',events)
+    const enrichedEvents = events.map((event) => {
+      const commessa = filteredProjectResources.find((res) => res.id === event.ProjectId);
+      return {
+        ...event,
+        CommessaName: commessa ? commessa.text : "Non assegnata",
+      };
+    });
+  
+    setFilteredEventsForGantt(enrichedEvents);
+    console.log("Dati del Gantt (con CommessaName):", enrichedEvents);
+  }, [events, filteredProjectResources]);
+  
+  useEffect(() => {
     const loadData = async () => {
       try {
-        const projects = await fetchProjectResources();
-        const categories = await fetchCategoryResources();
-        const allEvents = await fetchEvents();
+        const projects = await fetchProjectResources(); // Carica le commesse
         setProjectResources(projects);
-        setFilteredProjectResources(projects); // Inizialmente tutte le commesse
-        setCategoryResources(categories);
-        setEvents(allEvents);
-        setFilteredEventsForGantt(allEvents); // Inizialmente tutti gli eventi
+  
+        const enrichedEvents = await fetchEvents(projects); // Passa le commesse per mappare CommessaName
+        setEvents(enrichedEvents);
+        setFilteredEventsForGantt(enrichedEvents); // Inizialmente tutti gli eventi
       } catch (error) {
         console.error("Errore nel caricamento dei dati:", error);
       }
     };
     loadData();
   }, []);
+  ;
 
   // Selezione collaboratori e aggiornamento delle commesse
   const handleCollaboratoreSelection = (selectedOptions) => {
@@ -65,7 +82,7 @@ const App = () => {
       setFilteredProjectResources(associatedCommesse);
       const selectedIds = associatedCommesse.map((res) => res.id);
       setSelectedCommesse(selectedIds);
-      console.log("Commesse selezionate automaticamente:", selectedIds);
+      //console.log("Commesse selezionate automaticamente:", selectedIds);
     }
   }, [selectedCollaboratori, projectResources, categoryResources]);
 
