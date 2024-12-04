@@ -2,17 +2,30 @@
 
 
 // Functions.js
-export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaboratori, categoryResources, setFilteredCategoryResources) => {
+// Functions.js
+export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaboratori, categoryResources, setFilteredProjectResources, projectResources) => {
   const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
   setSelectedCollaboratori(selectedIds);
 
-  // Aggiorna il filtro dei collaboratori
-  const filteredResources = categoryResources.filter(resource =>
-    selectedIds.includes(resource.id)
-  );
+  console.log("Collaboratori selezionati:", selectedIds);
 
-  setFilteredCategoryResources(filteredResources);
+  if (selectedIds.length > 0) {
+    const filteredResources = projectResources.filter((commessa) =>
+      selectedIds.some((collabId) => {
+        const collaboratore = categoryResources.find((c) => c.id === collabId);
+        console.log(`Collaboratore ${collabId} -> Commesse associate:`, collaboratore?.groupIds);
+        return collaboratore?.groupIds.includes(commessa.id);
+      })
+    );
+    console.log("Commesse filtrate:", filteredResources);
+    setFilteredProjectResources(filteredResources);
+  } else {
+    console.log("Nessun collaboratore selezionato, mostro tutte le commesse.");
+    setFilteredProjectResources(projectResources);
+  }
 };
+
+
 
 
 
@@ -202,3 +215,60 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
 };
+
+// Functions.js
+
+// Funzione per caricare le commesse dal database
+export const fetchProjectResources = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/commesse');
+    const data = await response.json();
+    return data.map((commessa) => ({
+      text: commessa.text,
+      id: commessa.Id,
+      color: commessa.color || '#FF0000', // Imposta un colore rosso di default
+    }));
+  } catch (error) {
+    console.error('Errore durante il caricamento delle commesse:', error);
+    return [];
+  }
+};
+
+// Funzione per caricare i collaboratori dal database
+export const fetchCategoryResources = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/collaboratori');
+    const data = await response.json();
+    return data.map((collaboratore) => ({
+      text: collaboratore.Nome,
+      id: collaboratore.Id,
+      groupIds: collaboratore.groupIds,
+      color: collaboratore.Colore || '#00D084',
+    }));
+  } catch (error) {
+    console.error('Errore durante il caricamento dei collaboratori:', error);
+    return [];
+  }
+};
+
+// Funzione per caricare gli eventi dal database
+// Funzione per caricare gli eventi dal database
+export const fetchEvents = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/eventi');
+    const data = await response.json();
+    return data.map((event) => ({
+      ...event,
+      ProjectId: parseInt(event.ProjectId), // Assicura che sia un numero
+      CollaboratoreId: Array.isArray(event.CollaboratoreId)
+        ? event.CollaboratoreId.map((id) => parseInt(id))
+        : [],
+      Color: event.Color || '#FF0000', // Colore di default
+    }));
+  } catch (error) {
+    console.error("Errore durante il caricamento degli eventi:", error);
+    return [];
+  }
+};
+
+

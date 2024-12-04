@@ -136,37 +136,35 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
           rightLabel: (props) => getCollaboratorNames(props.taskData?.IncaricatoId, categoryResources),
         }}
         toolbar={['Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
-        height="500px"
+        //height="500px"
       >
-        <ColumnsDirective>
-          <ColumnDirective field="Subject" headerText="Titolo" isPrimaryKey={true} width="150" />
-          <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
-          <ColumnDirective field="Id" headerText="ID" width="150" />
-          <ColumnDirective
-  field="parentID"
-  headerText="Parent Task"
-  editType="dropdownedit"
-  width="150"
-  edit={{
-    params: {
-      dataSource: new DataManager(parentTaskDataSource), // Usa DataManager per Syncfusion
-      query: new Query(), // Crea una query vuota per inizializzare
-      fields: { text: 'Subject', value: 'Id' },
-      placeholder: 'Seleziona Parent Task',
-    },
-    create: () => document.createElement('input'), // Crea l'elemento input del dropdown
-    read: (args) => args.value || null, // Legge il valore e assegna null per "Nessun genitore"
-    actionComplete: (args) => {
-      // Filtra per escludere l'ID del task corrente
-      const currentTaskId = ganttRef.current?.getSelectedRecord()?.Id;
-      args.result = args.result.filter((task) => task.Id !== currentTaskId);
-    },
-  }}
-/>
+<ColumnsDirective>
+  <ColumnDirective field="Subject" headerText="Titolo" isPrimaryKey={true} width="150" />
+  <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
+  <ColumnDirective field="Id" headerText="ID" width="150" />
+  <ColumnDirective
+    field="parentID"
+    headerText="Parent Task"
+    editType="dropdownedit"
+    width="150"
+    edit={{
+      params: {
+        dataSource: new DataManager(parentTaskDataSource), // Usa DataManager per Syncfusion
+        query: new Query(), // Crea una query vuota per inizializzare
+        fields: { text: 'Subject', value: 'Id' },
+        placeholder: 'Seleziona Parent Task',
+      },
+      create: () => document.createElement('input'), // Crea l'elemento input del dropdown
+      read: (args) => args.value || null, // Legge il valore e assegna null per "Nessun genitore"
+      actionComplete: (args) => {
+        // Filtra per escludere l'ID del task corrente
+        const currentTaskId = ganttRef.current?.getSelectedRecord()?.Id;
+        args.result = args.result.filter((task) => task.Id !== currentTaskId);
+      },
+    }}
+  />
+</ColumnsDirective>
 
-
-
-        </ColumnsDirective>
         <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
       </GanttComponent>
     </div>
