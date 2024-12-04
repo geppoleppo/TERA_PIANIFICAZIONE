@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 import { TwitterPicker } from 'react-color';
-import MarkerForm from "../components/MarkerForm";
 
-const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources, onSaveMarker }) => {
+const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [showMarkerForm, setShowMarkerForm] = useState(false);
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
@@ -43,7 +41,7 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
                 <div className="sidebar-buttons">
                     <button onClick={onSyncCommesse}>Sincronizza Commesse</button>
                 </div>
-                <div className="commesse-container">
+                <div className="commesse-container"> {/* Aggiunta della classe per la sezione scrollabile */}
                     <h4>Assegna Colori Alle Commesse</h4>
                     {filteredProjectResources && filteredProjectResources.length > 0 ? (
                         filteredProjectResources.map((commessa, index) => (
@@ -58,14 +56,6 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
                     ) : (
                         <p>Nessuna commessa disponibile</p>
                     )}
-                </div>
-                <div className="marker-section">
-                    {/* Pulsante per mostrare/nascondere il form */}
-                    <button onClick={() => setShowMarkerForm(!showMarkerForm)}>
-                        {showMarkerForm ? "Chiudi Form Marker" : "Aggiungi Marker"}
-                    </button>
-                    {/* Form Marker */}
-                    {showMarkerForm && <MarkerForm onSaveMarker={onSaveMarker} />}
                 </div>
             </div>
         </>

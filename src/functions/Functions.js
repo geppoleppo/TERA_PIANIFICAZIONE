@@ -1,37 +1,12 @@
 
 
 
-
 // Functions.js
-// Functions.js
-export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaboratori, updateGanttView) => {
+export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaboratori) => {
   console.log("Collaboratori selezionati:", selectedOptions);
   const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
   setSelectedCollaboratori(selectedIds);
-  
-  // Chiama `updateGanttView` solo se è passato come argomento ed è una funzione valida
-  if (typeof updateGanttView === 'function') {
-    updateGanttView();
-  }
 };
-
-export const handleCommesseChange = (selectedOptions, projectResources, setSelectedCommesse, updateGanttView) => {
-  const updatedCommesse = selectedOptions.map(option => {
-    const commessa = projectResources.find(p => p.id === option.value);
-    return {
-      value: option.value,
-      label: option.label,
-      color: commessa ? commessa.color : '#000000' // Usa il colore corretto o #000000 come fallback
-    };
-  });
-  setSelectedCommesse(updatedCommesse);
-
-  // Chiama `updateGanttView` solo se è passato come argomento ed è una funzione valida
-  if (typeof updateGanttView === 'function') {
-    updateGanttView();
-  }
-};
-
 
 
   export const handleColorChangeInSidebar = (color, commessaId, projectResources, setProjectResources) => {
@@ -42,6 +17,20 @@ export const handleCommesseChange = (selectedOptions, projectResources, setSelec
 };
 
     // Funzione per gestire la selezione delle commesse
+
+export const handleCommesseChange = (selectedOptions, projectResources, setSelectedCommesse) => {
+    const updatedCommesse = selectedOptions.map(option => {
+      // Trova la commessa corrispondente nel projectResources per ottenere il colore corretto
+      const commessa = projectResources.find(p => p.id === option.value);
+      return {
+        value: option.value,
+        label: option.label,
+        color: commessa ? commessa.color : '#000000' // Usa il colore corretto o #000000 come fallback
+      };
+    });
+    setSelectedCommesse(updatedCommesse);
+  };
+  // Functions.js
 
 export const handleColorChange = (color, index, selectedCommesse, setSelectedCommesse) => {
     const updatedCommesse = [...selectedCommesse];

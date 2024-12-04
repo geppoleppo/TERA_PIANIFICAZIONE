@@ -141,11 +141,6 @@ const Scheduler = ({
     }
   };
 
-
-
-
-
-
   return (
     <div className="App">
       {/* Menu a discesa per selezionare i collaboratori */}

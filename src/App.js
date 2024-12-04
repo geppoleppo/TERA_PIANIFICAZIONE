@@ -25,89 +25,14 @@ const App = () => {
   const [selectedCollaboratori, setSelectedCollaboratori] = useState([]); // Inizializza come array vuoto
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
-  const [loading, setLoading] = useState(false);
-  const [markers, setMarkers] = useState([]);
-  const [filteredMarkersFinal, setFilteredMarkersFinal] = useState([]); // Stato per filteredMarkersFinal
-
-// Funzione per caricare i marker
-const fetchMarkers = async () => {
-  try {
-    const response = await fetch('http://localhost:3001/api/markers');
-    if (!response.ok) throw new Error(`Errore: ${response.statusText}`);
-    const data = await response.json();
-    setMarkers(data.map(marker => ({
-      ...marker,
-      day: new Date(marker.day), // Converte subito in formato Date
-    })));
-  } catch (err) {
-    console.error('Errore durante il recupero dei marker:', err);
-  }
-};
-
-// Funzione per filtrare i markers in base ai dati del Gantt
-const filterMarkers = () => {
-  const ganttData = events.filter(event =>
-    filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
-    event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
-  );
-
-  // Filtra i marker utilizzando `ganttData`
-  const filteredResults = markers.filter(marker => 
-    ganttData.some(event => parseInt(event.Id) === parseInt(marker.eventId))
-  ).map(marker => ({
-    Label: marker.Label,
-    //day: marker.day
-    day: marker.Day //
-  }));
-
-  setFilteredMarkersFinal(filteredResults);
-};
+  const [commesse, setCommesse] = useState([]);
 
 
-
-// App.js
-const handleSaveSelectedCommesse = async () => {
-  try {
+  const handleSaveSelectedCommesse = () => {
     console.log("Collaboratori selezionati:", selectedCollaboratori);
     console.log("Commesse selezionate:", selectedCommesse);
-
-    // Salva le commesse selezionate per il collaboratore
-    await saveSelectedCommesse(selectedCollaboratori, selectedCommesse);
-
-    // Dopo aver salvato le commesse, esegui un nuovo fetch per aggiornare i dati
-    await fetchProjectResources(); // Aggiorna le commesse dal database
-    await fetchCategoryResources(); // Aggiorna i collaboratori dal database
-    await fetchEvents(); // Aggiorna gli eventi
-
-    // Aggiorna selectedCommesse in base alle nuove commesse assegnate al collaboratore
-    if (selectedCollaboratori.length === 1) {
-      const collaboratoreId = selectedCollaboratori[0];
-      
-      // Usa i dati aggiornati di `categoryResources` dopo il fetch
-      const updatedCollaboratore = categoryResources.find(
-        (collab) => collab.id === collaboratoreId
-      );
-
-      if (updatedCollaboratore && updatedCollaboratore.groupIds) {
-        const newSelectedCommesse = projectResources.filter((commessa) =>
-          updatedCollaboratore.groupIds.includes(commessa.id)
-        );
-
-        setSelectedCommesse(
-          newSelectedCommesse.map((commessa) => ({
-            value: commessa.id,
-            label: commessa.text,
-            color: commessa.color,
-          }))
-        );
-      }
-    }
-  } catch (error) {
-    console.error("Errore durante il salvataggio e l'aggiornamento delle commesse:", error);
-  }
-};
-
-
+    saveSelectedCommesse(selectedCollaboratori, selectedCommesse);
+  };
 
   // Usa la funzione updateEvent quando necessario, passandole fetchEvents come parametro
   const handleUpdateEvent = (eventData) => {
@@ -115,26 +40,26 @@ const handleSaveSelectedCommesse = async () => {
     let completeEventData;
 
     if (eventData.ganttProperties) {
-        // Logica per eventi dal Gantt
-        const commessaName = eventData.CommessaName || eventData.taskData?.CommessaName;
-        const projectId = projectResources.find(p => p.text.toLowerCase() === commessaName.toLowerCase())?.id || eventData.taskData?.ProjectId;
-        const collaboratoreId = Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId[0] : eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
+      // Logica per eventi dal Gantt
+      const commessaName = eventData.CommessaName || eventData.taskData?.CommessaName;
+      const projectId = projectResources.find(p => p.text.toLowerCase() === commessaName.toLowerCase())?.id || eventData.taskData?.ProjectId;
+      const collaboratoreId = Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId[0] : eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
 
-        completeEventData = {
-            ...eventData,
-            ProjectId: projectId,
-            CommessaName: commessaName,
-            CollaboratoreId: [collaboratoreId], // Array di collaboratori
-            parentID: eventData.parentID || null, // Aggiungi parentID
-        };
+      completeEventData = {
+        ...eventData,
+        ProjectId: projectId,
+        CommessaName: commessaName,
+        CollaboratoreId: [collaboratoreId], // Array di collaboratori
+        parentID: eventData.parentID || null, // Aggiungi parentID
+      };
     } else {
-        // Logica per eventi dallo Scheduler
-        completeEventData = {
-            ...eventData,
-            ProjectId: eventData.ProjectId,
-            CollaboratoreId: Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId : [eventData.CollaboratoreId],
-            parentID: eventData.parentID || null, // Aggiungi parentID
-        };
+      // Logica per eventi dallo Scheduler
+      completeEventData = {
+        ...eventData,
+        ProjectId: eventData.ProjectId,
+        CollaboratoreId: Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId : [eventData.CollaboratoreId],
+        parentID: eventData.parentID || null, // Aggiungi parentID
+      };
     }
 
     // Log di verifica
@@ -142,108 +67,93 @@ const handleSaveSelectedCommesse = async () => {
 
     // Aggiorna l'evento nel database
     updateEvent(completeEventData, fetchEvents);
-};
+  };
 
 
 
-// Passa `projectResources` e `fetchEvents` come argomenti a `saveEvent`
-const handleSaveEvent = (eventData) => {
-  //console.log("eventDataEEEEE", eventData); // Log per verifica
+  // Passa `projectResources` e `fetchEvents` come argomenti a `saveEvent`
+  const handleSaveEvent = (eventData) => {
+    //console.log("eventDataEEEEE", eventData); // Log per verifica
 
-  let completeEventData;
+    let completeEventData;
 
-  if (eventData.ganttProperties) {
-    // Logica per eventi dal Gantt
-    const commessaName = eventData.CommessaName || eventData.taskData?.CommessaName;
+    if (eventData.ganttProperties) {
+      // Logica per eventi dal Gantt
+      const commessaName = eventData.CommessaName || eventData.taskData?.CommessaName;
 
-    // Confronto case-insensitive tra `CommessaName` e `projectResources`
-    const commessa = projectResources.find(p => p.text.toLowerCase() === commessaName.toLowerCase());
-    const projectId = commessa ? commessa.id : null;
-    const collaboratoreId = eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
+      // Confronto case-insensitive tra `CommessaName` e `projectResources`
+      const commessa = projectResources.find(p => p.text.toLowerCase() === commessaName.toLowerCase());
+      const projectId = commessa ? commessa.id : null;
+      const collaboratoreId = eventData.IncaricatoId || eventData.taskData?.CollaboratoreId;
 
       // Trova il collaboratore associato
-    const incaricato = categoryResources.find(c => c.id === collaboratoreId);
+      const incaricato = categoryResources.find(c => c.id === collaboratoreId);
 
-    completeEventData = {
-      ...eventData,
-      ProjectId: projectId, // Deriva ProjectId da CommessaName
-      CommessaName: commessaName || '', // Usa il nome della commessa
-      IncaricatoId: incaricato ? incaricato.id : collaboratoreId || '', // ID dell'incaricato
-      CollaboratoreId: Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId : [collaboratoreId], // Array di collaboratori
-    };
-  } else {
-    // Logica per eventi dallo Scheduler
-    const commessa = projectResources.find(p => p.id === eventData.ProjectId);
-    const incaricato = categoryResources.find(c => c.id === eventData.CollaboratoreId);
-
-    completeEventData = {
-      ...eventData,
-      ProjectId: eventData.ProjectId,
-      CommessaName: commessa ? commessa.text : eventData.CommessaName || '', // Nome della commessa
-      IncaricatoId: incaricato ? incaricato.id : eventData.CollaboratoreId || '', // ID dell'incaricato
-    };
-  }
-
-  console.log("Salvataggio di un nuovo evento con dati completi:", completeEventData); // Log per verifica
-
-  // Salva l'evento nel database
-  saveEvent(completeEventData, projectResources, fetchEvents);
-};
-
-const handleSaveMarker = (newMarker) => {
-  fetch('http://localhost:3001/api/markers', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ...newMarker,
-      eventId: selectedEventId, // L'ID dell'evento a cui associare il marker
-    }),
-  })
-    .then((res) => res.json())
-    .then(() => {
-      fetch('http://localhost:3001/api/markers') // Ricarica i marker
-        .then((res) => res.json())
-        .then((data) => setMarkers(data))
-        .catch((err) => console.error("Errore durante il recupero dei marker:", err));
-    })
-    .catch((err) => console.error("Errore durante il salvataggio del marker:", err));
-};
-
-
-const handleDeleteEvent = (eventId) => {
-  console.log("Eliminazione evento con ID:", eventId); // Log per verifica
-  deleteEvent(eventId, loadAllData);
-};
-
- // Funzione per caricare gli eventi dal database
- const fetchEvents = async () => {
-  try {
-    const response = await fetch('http://localhost:3001/api/eventi');
-    const data = await response.json();
-
-    const mappedEvents = data.map(event => {
-      const commessa = projectResources.find(p => p.id === event.ProjectId);
-
-      return {
-        ...event,
-        ProjectId: parseInt(event.ProjectId),
-        // Assicurati che `CollaboratoreId` sia sempre un array di numeri
-        CollaboratoreId: Array.isArray(event.CollaboratoreId)
-          ? event.CollaboratoreId.map(id => parseInt(id))
-          : [],
-        Color: commessa ? commessa.color : '#FF0000',  // Assegna il colore della commessa
-        CommessaName: commessa ? commessa.text : '',    // Nome della commessa
-        IncaricatoId: Array.isArray(event.CollaboratoreId)
-          ? event.CollaboratoreId.map(id => parseInt(id)) // Usa tutto l'array di ID collaboratori
-          : []
+      completeEventData = {
+        ...eventData,
+        ProjectId: projectId, // Deriva ProjectId da CommessaName
+        CommessaName: commessaName || '', // Usa il nome della commessa
+        IncaricatoId: incaricato ? incaricato.id : collaboratoreId || '', // ID dell'incaricato
+        CollaboratoreId: Array.isArray(eventData.CollaboratoreId) ? eventData.CollaboratoreId : [collaboratoreId], // Array di collaboratori
       };
-    });
+    } else {
+      // Logica per eventi dallo Scheduler
+      const commessa = projectResources.find(p => p.id === eventData.ProjectId);
+      const incaricato = categoryResources.find(c => c.id === eventData.CollaboratoreId);
 
-    setEvents(mappedEvents);
-  } catch (error) {
-    console.error('Errore durante il caricamento degli eventi:', error);
-  }
-};
+      completeEventData = {
+        ...eventData,
+        ProjectId: eventData.ProjectId,
+        CommessaName: commessa ? commessa.text : eventData.CommessaName || '', // Nome della commessa
+        IncaricatoId: incaricato ? incaricato.id : eventData.CollaboratoreId || '', // ID dell'incaricato
+      };
+    }
+
+    console.log("Salvataggio di un nuovo evento con dati completi:", completeEventData); // Log per verifica
+
+    // Salva l'evento nel database
+    saveEvent(completeEventData, projectResources, fetchEvents);
+  };
+
+
+
+
+
+
+  const handleDeleteEvent = (eventId) => {
+    console.log("Eliminazione evento con ID:", eventId); // Log per verifica
+    deleteEvent(eventId, loadAllData);
+  };
+
+  // Funzione per caricare gli eventi dal database
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/eventi');
+      const data = await response.json();
+
+      const mappedEvents = data.map(event => {
+        const commessa = projectResources.find(p => p.id === event.ProjectId);
+
+        return {
+          ...event,
+          ProjectId: parseInt(event.ProjectId),
+          // Assicurati che `CollaboratoreId` sia sempre un array di numeri
+          CollaboratoreId: Array.isArray(event.CollaboratoreId)
+            ? event.CollaboratoreId.map(id => parseInt(id))
+            : [],
+          Color: commessa ? commessa.color : '#FF0000',  // Assegna il colore della commessa
+          CommessaName: commessa ? commessa.text : '',    // Nome della commessa
+          IncaricatoId: Array.isArray(event.CollaboratoreId)
+            ? event.CollaboratoreId.map(id => parseInt(id)) // Usa tutto l'array di ID collaboratori
+            : []
+        };
+      });
+
+      setEvents(mappedEvents);
+    } catch (error) {
+      console.error('Errore durante il caricamento degli eventi:', error);
+    }
+  };
 
 
 
@@ -330,16 +240,6 @@ const handleDeleteEvent = (eventId) => {
     }
   };
 
-  const updateGanttView = () => {
-    if (selectedCollaboratori.length > 0 && selectedCommesse.length > 0) {
-      setRenderGantt(true);
-    } else {
-      setRenderGantt(false);
-    }
-  };
-
-
-
   const onEventRendered = (args) => {
     const event = args.data;
     const commessa = projectResources.find(p => p.id === event.ProjectId);
@@ -349,106 +249,89 @@ const handleDeleteEvent = (eventId) => {
   };
 
 
-// Funzione per sincronizzare le commesse con il database MySQL
+  // Funzione per sincronizzare le commesse con il database MySQL
 
-// App.js
-const sincronizzaCommesse = async () => {
-  setLoading(true); // Mostra l'overlay di caricamento
-
-  try {
-    const response = await fetch('http://localhost:3001/api/sincronizza-commesse');
-    const data = await response.json();
-    console.log(data.message);
-
-    // Aggiorna la tabella delle commesse nel frontend
-    await fetchProjectResources(); // Aggiorna le commesse dopo la sincronizzazione
-
-  } catch (error) {
-    console.error('Errore durante la sincronizzazione delle commesse:', error);
-  } finally {
-    setLoading(false); // Nascondi l'overlay di caricamento al termine
-  }
-};
-
-
-
-  // Funzione per caricare tutti i dati
-  const loadAllData = async () => {
-    const eventsData = await fetchEvents();
-    const projectData = await fetchProjectResources();
-    const categoryData = await fetchCategoryResources();
-
-
-    //setEvents(eventsData);
-    //setProjectResources(projectData);
-    //setCategoryResources(categoryData);
+  const sincronizzaCommesse = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/sincronizza-commesse');
+      const data = await response.json();
+      console.log(data.message);
+      // Aggiorna la tabella delle commesse nel frontend, se necessario
+    } catch (error) {
+      console.error('Errore durante la sincronizzazione delle commesse:', error);
+    }
   };
 
+//////////////////////USE EFFECT/////////////////////////
+  // Carica eventi, commesse e collaboratori una volta al montaggio del componente
+  useEffect(() => {
+    // Carica tutti i dati iniziali una volta al montaggio del componente
+    const loadAllData = async () => {
+      await fetchEvents(); // Carica gli eventi
+      await fetchProjectResources(); // Carica le commesse
+      await fetchCategoryResources(); // Carica i collaboratori
+    };
   
+    loadAllData();
+  }, []);
+
+  // Aggiorna le commesse e i collaboratori filtrati ogni volta che cambia `selectedCommesse` o `selectedCollaboratori`
+  useEffect(() => {
+    const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
+    const filteredResources = selectedCommesseIds.length
+      ? projectResources.filter(resource => selectedCommesseIds.includes(resource.id))
+      : [];
+
+    setFilteredProjectResources(filteredResources);
+
+    if (selectedCollaboratori.length > 0) {
+      const filteredCollaborators = categoryResources.filter(resource =>
+        selectedCollaboratori.includes(resource.id)
+      );
+      setFilteredCategoryResources(filteredCollaborators);
+    } else {
+      setFilteredCategoryResources(categoryResources);
+    }
+   
+
+    setFilteredProjectResources(filteredResources);
+
+
+  }, [selectedCommesse, selectedCollaboratori, projectResources, categoryResources]);
+
+
+  // Sincronizza lo Scheduler con il cambiamento di `filteredProjectResources`
+  useEffect(() => {
+    // Reimposta lo stato `events` ogni volta che `filteredProjectResources` cambia
+    fetchEvents();
+  }, [filteredProjectResources]);
+
+
+  // Effetto per aggiornare le commesse in base ai collaboratori selezionati
+  useEffect(() => {
+    if (selectedCollaboratori.length > 0) {
+      const commesseUnion = projectResources.filter(commessa =>
+        selectedCollaboratori.some(collabId => {
+          const collaboratore = uniqueCollaborators.find(c => c.id === collabId);
+          return collaboratore?.groupIds.includes(commessa.id);
+        })
+      );
+
+      setSelectedCommesse(
+        commesseUnion.map(commessa => ({
+          value: commessa.id,
+          label: commessa.text,
+          color: commessa.color // Keep the color property
+        }))
+      );
+    } else {
+      setSelectedCommesse([]);
+    }
+  }, [selectedCollaboratori, projectResources]);
+
 
   // Stato per risorse dei collaboratori filtrati in base ai collaboratori selezionati
   const [filteredCategoryResources, setFilteredCategoryResources] = useState(categoryResources);
-
-
-
-
- 
-  // Gestisce il completamento delle azioni di creazione e rimozione eventi
-  function onActionComplete(args) {
-    if (args.requestType === 'eventCreated') {
-      console.log("HHHHHH?:", args);
-      args.addedRecords.forEach(event => handleSaveEvent (event));
-      events.forEach(event => {
-       // console.log("Event created with parentID:", event);
-    });
-
-
-    } else if (args.requestType === 'eventRemoved') {
-      args.deletedRecords.forEach(event => deleteEvent(event.Id,fetchEvents));
-    } else if (args.requestType === 'eventChanged') {
-      events.forEach(event => {
-      //  console.log("Event updated with parentID:", event);
-    });
-      args.changedRecords.forEach(event => handleUpdateEvent (event)); // Aggiungi gestione aggiornamento
-    }
-  }
-  //console.log("categoryResources nel render di App:", categoryResources);
-
-
-// Array per contenere i risultati del filtro per i markers
-let filteredResults = [];
-
-// Prendi solo gli eventi passati al Gantt per il filtraggio dei marker
-const ganttData = events.filter(event =>
-  filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
-  event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
-);
-
-
-
-////////////////////////USE EFFECT///////////////////////////
-
-    // Carica eventi, commesse e collaboratori una volta al montaggio del componente
-    useEffect(() => {
-      loadAllData();
-      fetchMarkers(); // Carica anche i marker al montaggio
-
-    }, [])
-  
-
-// Effetto per aggiornare i marker ogni volta che vengono selezionati collaboratori o commesse (o al cambiamento di categoria risorse)
-useEffect(() => {
-  if (selectedCollaboratori.length > 0 && selectedCommesse.length > 0 && categoryResources.length > 0) {
-    fetchMarkers();
-  }
-}, [selectedCollaboratori, selectedCommesse, categoryResources]);
-
-// Effetto per filtrare i markers quando cambiano gli eventi, le commesse, i collaboratori, o i marker stessi
-useEffect(() => {
-  if (events.length > 0 && markers.length > 0) {
-    filterMarkers();
-  }
-}, [events, markers, filteredProjectResources, filteredCategoryResources]);
 
   // Filtra le risorse dei collaboratori in base ai collaboratori selezionati
   useEffect(() => {
@@ -468,109 +351,71 @@ useEffect(() => {
   useEffect(() => {
     fetchEvents();
   }, [filteredCategoryResources]);
-
-  // Sincronizza lo Scheduler con il cambiamento di `filteredProjectResources`
-  useEffect(() => {
-    // Reimposta lo stato `events` ogni volta che `filteredProjectResources` cambia
-    fetchEvents();
-  }, [filteredProjectResources]);
+/////////////////FINE USE EFFECT/////////////////
 
 
+  // Gestisce il completamento delle azioni di creazione e rimozione eventi
+  function onActionComplete(args) {
+    if (args.requestType === 'eventCreated') {
+      console.log("HHHHHH?:", args);
+      args.addedRecords.forEach(event => handleSaveEvent(event));
+      events.forEach(event => {
+        // console.log("Event created with parentID:", event);
+      });
 
-  // Effetto per aggiornare le commesse in base ai collaboratori selezionati
-  useEffect(() => {
-    if (selectedCollaboratori.length > 0) {
-      const commesseUnion = projectResources.filter(commessa =>
-        selectedCollaboratori.some(collabId => {
-          const collaboratore = uniqueCollaborators.find(c => c.id === collabId);
-          return collaboratore?.groupIds.includes(commessa.id);
-        })
-      );
-  
-      setSelectedCommesse(
-        commesseUnion.map(commessa => ({
-          value: commessa.id,
-          label: commessa.text,
-          color: commessa.color // Keep the color property
-        }))
-      );
-    } else {
-      setSelectedCommesse([]);
+
+    } else if (args.requestType === 'eventRemoved') {
+      args.deletedRecords.forEach(event => deleteEvent(event.Id, fetchEvents));
+    } else if (args.requestType === 'eventChanged') {
+      events.forEach(event => {
+        //  console.log("Event updated with parentID:", event);
+      });
+      args.changedRecords.forEach(event => handleUpdateEvent(event)); // Aggiungi gestione aggiornamento
     }
-  }, [selectedCollaboratori, projectResources]);
-
-
-  useEffect(() => {
-    const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
-  
-    const filteredResources = selectedCommesseIds.length
-      ? projectResources.filter(resource => selectedCommesseIds.includes(resource.id))
-      : [];
-  
-    const filteredCollaborators = selectedCollaboratori.length
-      ? categoryResources.filter(resource => selectedCollaboratori.includes(resource.id))
-      : categoryResources;
-  
-    setFilteredProjectResources(filteredResources);
-    setFilteredCategoryResources(filteredCollaborators);
-  }, [selectedCommesse, selectedCollaboratori, projectResources, categoryResources]);
-  
-
-
-
-console.log('filteredMarkersFinal',filteredMarkersFinal)
+  }
+  //console.log("categoryResources nel render di App:", categoryResources);
 
   return (
     <div className="App">
-{/* Mostra l'overlay di caricamento se `loading` è true */}
-{loading && (
-        <div className="loading-overlay">
-          Sincronizzazione delle commesse in corso, attendere...
-        </div>
-      )}
+      {/* Altri componenti e menu come Select */}
+      <Sidebar
+        onSyncCommesse={sincronizzaCommesse}
+        filteredProjectResources={filteredProjectResources}
+        setProjectResources={setProjectResources} />
       {/* Passa le props necessarie a Scheduler */}
       <Scheduler
-  events={ganttData}
-  onEventRendered={onEventRendered}
-  resourceHeaderTemplate={resourceHeaderTemplate}
-  onActionComplete={onActionComplete}
-  filteredProjectResources={filteredProjectResources}
-  filteredCategoryResources={filteredCategoryResources}
-  uniqueCollaborators={uniqueCollaborators} // Passaggio di uniqueCollaborators
-  selectedCollaboratori={selectedCollaboratori} // Passaggio di selectedCollaboratori
-  setSelectedCollaboratori={setSelectedCollaboratori} // Passaggio di setSelectedCollaboratori
-  selectedCommesse={selectedCommesse} // Passaggio di selectedCommesse
-  setSelectedCommesse={setSelectedCommesse}
-  projectResources={projectResources} // Passaggio di projectResources
-  handleCollaboratoreChange={handleCollaboratoreChange} // Funzione gestione selezione collaboratori
-  handleCommesseChange={handleCommesseChange} // Funzione gestione selezione commesse
-  handleColorChange={handleColorChange} // Funzione gestione cambio colore
-  removeCommessa={removeCommessa} // Funzione gestione rimozione commessa
-  handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
-/>
-<Sidebar 
-  onSyncCommesse={sincronizzaCommesse}
-  filteredProjectResources={filteredProjectResources}
-  setProjectResources={setProjectResources}
-  onSaveMarker={handleSaveMarker} // Prop per salvare i marker
-/>
-{/* Gantt component */}
-{selectedCollaboratori.length > 0 && selectedCommesse.length > 0 && categoryResources.length > 0 && (
-      <Gantt
-        ganttData={events.filter(event =>
-          filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
-          event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
-        )}
-        onSaveEvent={handleSaveEvent}
-        onUpdateEvent={handleUpdateEvent}
-        onDeleteEvent={handleDeleteEvent}
-        categoryResources={categoryResources}
-      
-        markers={filteredMarkersFinal}
+        events={events}
+        onEventRendered={onEventRendered}
+        resourceHeaderTemplate={resourceHeaderTemplate}
+        onActionComplete={onActionComplete}
+        filteredProjectResources={filteredProjectResources}
+        filteredCategoryResources={filteredCategoryResources}
+        uniqueCollaborators={uniqueCollaborators} // Passaggio di uniqueCollaborators
+        selectedCollaboratori={selectedCollaboratori} // Passaggio di selectedCollaboratori
+        setSelectedCollaboratori={setSelectedCollaboratori} // Passaggio di setSelectedCollaboratori
+        selectedCommesse={selectedCommesse} // Passaggio di selectedCommesse
+        setSelectedCommesse={setSelectedCommesse}
+        projectResources={projectResources} // Passaggio di projectResources
+        handleCollaboratoreChange={handleCollaboratoreChange} // Funzione gestione selezione collaboratori
+        handleCommesseChange={handleCommesseChange} // Funzione gestione selezione commesse
+        handleColorChange={handleColorChange} // Funzione gestione cambio colore
+        removeCommessa={removeCommessa} // Funzione gestione rimozione commessa
+        handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
       />
-    )}  </div>
+      {categoryResources.length > 0 && (
+        <Gantt
+          ganttData={events.filter(event =>
+            filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
+            event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
+          )}
+          onSaveEvent={handleSaveEvent}
+          onUpdateEvent={handleUpdateEvent}
+          onDeleteEvent={handleDeleteEvent}
+          categoryResources={categoryResources}
+        />
+      )}
+    </div>
   );
 };
 
 export default App;
-
