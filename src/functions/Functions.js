@@ -2,11 +2,18 @@
 
 
 // Functions.js
-export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaboratori) => {
-  console.log("Collaboratori selezionati:", selectedOptions);
+export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaboratori, categoryResources, setFilteredCategoryResources) => {
   const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
   setSelectedCollaboratori(selectedIds);
+
+  // Aggiorna il filtro dei collaboratori
+  const filteredResources = categoryResources.filter(resource =>
+    selectedIds.includes(resource.id)
+  );
+
+  setFilteredCategoryResources(filteredResources);
 };
+
 
 
   export const handleColorChangeInSidebar = (color, commessaId, projectResources, setProjectResources) => {
@@ -17,19 +24,26 @@ export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaborat
 };
 
     // Funzione per gestire la selezione delle commesse
-
-export const handleCommesseChange = (selectedOptions, projectResources, setSelectedCommesse) => {
-    const updatedCommesse = selectedOptions.map(option => {
-      // Trova la commessa corrispondente nel projectResources per ottenere il colore corretto
-      const commessa = projectResources.find(p => p.id === option.value);
-      return {
-        value: option.value,
-        label: option.label,
-        color: commessa ? commessa.color : '#000000' // Usa il colore corretto o #000000 come fallback
-      };
-    });
-    setSelectedCommesse(updatedCommesse);
-  };
+    export const handleCommesseChange = (selectedOptions, projectResources, setSelectedCommesse, setFilteredProjectResources) => {
+      const updatedCommesse = selectedOptions.map(option => {
+        const commessa = projectResources.find(p => p.id === option.value);
+        return {
+          value: option.value,
+          label: option.label,
+          color: commessa ? commessa.color : '#000000'
+        };
+      });
+    
+      setSelectedCommesse(updatedCommesse);
+      
+      // Aggiorna il filtro delle commesse
+      const filteredResources = projectResources.filter(resource =>
+        updatedCommesse.some(commessa => commessa.value === resource.id)
+      );
+    
+      setFilteredProjectResources(filteredResources);
+    };
+    
   // Functions.js
 
 export const handleColorChange = (color, index, selectedCommesse, setSelectedCommesse) => {

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef  } from 'react';
 import './App.css';
 import Scheduler from './components/Scheduler';  // Importa Scheduler da Scheduler.js
 import Gantt from './components/Gantt';  // Importa Gantt da Gantt.js
 import Sidebar from './sidebar/Sidebar';
 import {
   handleCollaboratoreChange,
+  setFilteredCategoryResources,
   handleCommesseChange,
   handleColorChange,
   removeCommessa,
@@ -25,7 +26,8 @@ const App = () => {
   const [selectedCollaboratori, setSelectedCollaboratori] = useState([]); // Inizializza come array vuoto
   const [selectedCommesse, setSelectedCommesse] = useState([]);
   const [filteredProjectResources, setFilteredProjectResources] = useState(projectResources);
-  const [commesse, setCommesse] = useState([]);
+  const ganttRef = useRef(null); // Riferimento al Gantt
+  const [filteredEventsForGantt, setFilteredEventsForGantt] = useState([]);
 
 
   const handleSaveSelectedCommesse = () => {
@@ -275,6 +277,18 @@ const App = () => {
     loadAllData();
   }, []);
 
+  useEffect(() => {
+    const filteredEvents = events.filter(event =>
+      filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
+      event.CollaboratoreId.some(id => selectedCollaboratori.includes(id))
+    );
+  
+    setFilteredEventsForGantt(filteredEvents);
+  }, [filteredProjectResources, selectedCollaboratori, events]);
+  
+
+
+
   // Aggiorna le commesse e i collaboratori filtrati ogni volta che cambia `selectedCommesse` o `selectedCollaboratori`
   useEffect(() => {
     const selectedCommesseIds = selectedCommesse.map(commessa => commessa.value);
@@ -351,6 +365,18 @@ const App = () => {
   useEffect(() => {
     fetchEvents();
   }, [filteredCategoryResources]);
+
+  useEffect(() => {
+    console.log('filteredProjectResources:', filteredProjectResources);
+    console.log('filteredCategoryResources:', filteredCategoryResources);
+    console.log('events:', events);
+  
+    if (ganttRef.current) {
+      console.log('AGGIORNO IL GANTT...');
+      ganttRef.current.refresh(); // Forza il refresh del Gantt
+    }
+  }, [filteredProjectResources, filteredCategoryResources, events]);
+
 /////////////////FINE USE EFFECT/////////////////
 
 
@@ -391,6 +417,8 @@ const App = () => {
         filteredProjectResources={filteredProjectResources}
         filteredCategoryResources={filteredCategoryResources}
         uniqueCollaborators={uniqueCollaborators} // Passaggio di uniqueCollaborators
+        setFilteredCategoryResources={setFilteredCategoryResources}
+        setFilteredProjectResources={setFilteredProjectResources}
         selectedCollaboratori={selectedCollaboratori} // Passaggio di selectedCollaboratori
         setSelectedCollaboratori={setSelectedCollaboratori} // Passaggio di setSelectedCollaboratori
         selectedCommesse={selectedCommesse} // Passaggio di selectedCommesse
@@ -401,13 +429,12 @@ const App = () => {
         handleColorChange={handleColorChange} // Funzione gestione cambio colore
         removeCommessa={removeCommessa} // Funzione gestione rimozione commessa
         handleSaveSelectedCommesse={handleSaveSelectedCommesse} // Funzione gestione memorizzazione
+        categoryResources={categoryResources} // Passa questa variabile
       />
       {categoryResources.length > 0 && (
         <Gantt
-          ganttData={events.filter(event =>
-            filteredProjectResources.some(resource => resource.id === event.ProjectId) &&
-            event.CollaboratoreId.some(id => filteredCategoryResources.some(collab => collab.id === id))
-          )}
+        ref={ganttRef} // Passa il riferimento
+        ganttData={filteredEventsForGantt}
           onSaveEvent={handleSaveEvent}
           onUpdateEvent={handleUpdateEvent}
           onDeleteEvent={handleDeleteEvent}

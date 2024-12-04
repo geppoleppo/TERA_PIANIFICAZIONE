@@ -35,6 +35,9 @@ const Scheduler = ({
   projectResources,
   handleCollaboratoreChange,
   handleCommesseChange,
+  setFilteredCategoryResources,
+  setFilteredProjectResources, 
+  categoryResources, 
   handleColorChange,
   removeCommessa,
   handleSaveSelectedCommesse
@@ -148,32 +151,39 @@ const Scheduler = ({
         <label> SELEZIONA COLLABORATORE:</label>
 
         <Select
-          options={[
+  options={[
+    ...uniqueCollaborators.map(collaboratore => ({
+      value: collaboratore.id,
+      label: collaboratore.text
+    })),
+    { value: 'all', label: 'Select All' }
+  ]}
+  onChange={(selectedOptions) => {
+    if (selectedOptions.some(option => option.value === 'all')) {
+      handleCollaboratoreChange(
+        uniqueCollaborators.map(collaboratore => ({
+          value: collaboratore.id,
+          label: collaboratore.text
+        })),
+        setSelectedCollaboratori,
+        filteredCategoryResources, // Passa correttamente il parametro qui
+        setFilteredCategoryResources // Assicurati che sia una funzione valida
+      );
+    } else {
+      handleCollaboratoreChange(
+        selectedOptions,
+        setSelectedCollaboratori,
+        filteredCategoryResources, // Passa correttamente il parametro qui
+        setFilteredCategoryResources // Assicurati che sia una funzione valida
+      );
+    }
+  }}
+  isMulti
+  isClearable
+  placeholder="Seleziona Collaboratore"
+/>
 
-            ...uniqueCollaborators.map(collaboratore => ({
-              value: collaboratore.id,
-              label: collaboratore.text
-            })),
-            { value: 'all', label: 'Select All' }
-          ]}
-          onChange={(selectedOptions) => {
-            if (selectedOptions.some(option => option.value === 'all')) {
-              // Select all collaborators
-              handleCollaboratoreChange(
-                uniqueCollaborators.map(collaboratore => ({
-                  value: collaboratore.id,
-                  label: collaboratore.text
-                })),
-                setSelectedCollaboratori
-              );
-            } else {
-              handleCollaboratoreChange(selectedOptions, setSelectedCollaboratori);
-            }
-          }}
-          isMulti
-          isClearable
-          placeholder="Seleziona Collaboratore"
-        />
+
 
       </div>
 
@@ -183,15 +193,17 @@ const Scheduler = ({
       <div>
         <label>SLEZIONA COMMESSE:</label>
         <Select
-          options={projectResources.map(commessa => ({
-            value: commessa.id,
-            label: commessa.text
-          }))}
-          value={selectedCommesse}
-          isMulti
-          onChange={selectedOptions => handleCommesseChange(selectedOptions, projectResources, setSelectedCommesse)}
-          placeholder="Seleziona Commesse"
-        />
+  options={projectResources.map(commessa => ({
+    value: commessa.id,
+    label: commessa.text
+  }))}
+  value={selectedCommesse}
+  isMulti
+  onChange={selectedOptions =>
+    handleCommesseChange(selectedOptions, projectResources, setSelectedCommesse, setFilteredProjectResources)
+  }
+  placeholder="Seleziona Commesse"
+/>
       </div>
 
 
