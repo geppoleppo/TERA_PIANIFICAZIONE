@@ -1,211 +1,141 @@
-// App.js
-import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
-import axios from 'axios';
-import { TwitterPicker } from 'react-color';
+import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
-import Scheduler from './components/Scheduler';
+import Gantt from './components/Gantt';
+import Sidebar from './sidebar/Sidebar';
+import Select from 'react-select';
+import {
+  fetchProjectResources,
+  fetchCategoryResources,
+  fetchEvents,
+  handleCollaboratoreChange,
+} from './functions/Functions';
 
 const App = () => {
-  const [resources, setResources] = useState([]); // Collaboratori
-  const [commesse, setCommesse] = useState([]);   // Commesse dal DB
-  const [selectedCollaboratore, setSelectedCollaboratore] = useState([]);
-  const [selectedCommesse, setSelectedCommesse] = useState([]);
-  const [commessaColors, setCommessaColors] = useState({});
-  const [scheduleData, setScheduleData] = useState([]);  // Dati per lo scheduler
-  const [ganttData, setGanttData] = useState([]);        // Dati per il Gantt
+  const [projectResources, setProjectResources] = useState([]); // Tutte le commesse
+  const [filteredProjectResources, setFilteredProjectResources] = useState([]); // Commesse filtrate
+  const [categoryResources, setCategoryResources] = useState([]); // Collaboratori
+  const [selectedCollaboratori, setSelectedCollaboratori] = useState([]); // Collaboratori selezionati
+  const [selectedCommesse, setSelectedCommesse] = useState([]); // Commesse selezionate
+  const [events, setEvents] = useState([]); // Eventi originali
+  const [filteredEventsForGantt, setFilteredEventsForGantt] = useState([]); // Eventi filtrati
+  const ganttRef = useRef(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        const collaboratoriResponse = await axios.get('http://localhost:4443/api/collaboratori');
-        setResources(collaboratoriResponse.data);
-
-        const commesseResponse = await axios.get('http://localhost:4443/api/commesse');
-        setCommesse(commesseResponse.data);
-
-        const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
-        const eventiData = formatEventData(eventiResponse.data); // Usa la funzione formatEventData per formattare i dati
-        setScheduleData(eventiData);
-
-        console.log("Collaboratori caricati:", collaboratoriResponse.data);
-        console.log("Commesse caricate:", commesseResponse.data);
-        console.log("Eventi caricati:", eventiData);
-
+        const projects = await fetchProjectResources();
+        const categories = await fetchCategoryResources();
+        const allEvents = await fetchEvents();
+        setProjectResources(projects);
+        setFilteredProjectResources(projects); // Inizialmente tutte le commesse
+        setCategoryResources(categories);
+        setEvents(allEvents);
+        setFilteredEventsForGantt(allEvents); // Inizialmente tutti gli eventi
       } catch (error) {
-        console.error('Errore nel caricamento dei dati:', error);
+        console.error("Errore nel caricamento dei dati:", error);
       }
     };
-
-    fetchData();
+    loadData();
   }, []);
 
-// App.js
-const formatEventData = (eventi) => {
-  console.log("EVENTI:", {
-    eventi
-});
-
-  return eventi.map(evento => {
-      // Verifica che CollaboratoreId sia un array o una stringa e lo converte
-      const collaboratoriId = Array.isArray(evento.CollaboratoreId)
-          ? evento.CollaboratoreId
-          : evento.CollaboratoreId
-          ? evento.CollaboratoreId.split(',').map(id => parseInt(id.trim(), 10))
-          : [];
-
-      // Log di controllo
-      console.log("Evento formattato:", {
-          CollaboratoreId: collaboratoriId
-      });
-
-      return {
-          Id: evento.Id,
-          Subject: evento.Subject || 'Nessun titolo',
-          StartTime: new Date(evento.StartTime).toISOString(),
-          EndTime: new Date(evento.EndTime).toISOString(),
-          CategoryColor: evento.CategoryColor || '#000000',
-          CollaboratoreId: collaboratoriId, // Passiamo l'array formattato
-          CommessaName: evento.CommessaName || 'Nessuna commessa'
-      };
-  });
-};
-
-
-// App.js
-useEffect(() => {
-  const fetchData = async () => {
-      try {
-          const eventiResponse = await axios.get('http://localhost:4443/api/eventi');
-          const eventiData = formatEventData(eventiResponse.data); // Usa la funzione formatEventData per formattare i dati
-          console.log("Eventi formattati ricevuti dal backend:", eventiData); // Log nel frontend
-          setScheduleData(eventiData);
-      } catch (error) {
-          console.error('Errore nel caricamento dei dati:', error);
-      }
+  // Selezione collaboratori e aggiornamento delle commesse
+  const handleCollaboratoreSelection = (selectedOptions) => {
+    console.log("Opzioni selezionate nel menu Collaboratori:", selectedOptions);
+    handleCollaboratoreChange(
+      selectedOptions,
+      setSelectedCollaboratori,
+      categoryResources,
+      setFilteredProjectResources,
+      projectResources
+    );
   };
 
-  fetchData();
-}, []);
-
-
-
-  const handleCollaboratoreChange = async (selectedOptions) => {
-    setSelectedCollaboratore(selectedOptions);
-
-    if (!selectedOptions || selectedOptions.length === 0) {
-      setSelectedCommesse([]); 
-      return;
-    }
-
-    try {
-      const requests = selectedOptions.map(option => axios.get(`http://localhost:4443/api/commesse/collaboratore/${option.value}`));
-      const responses = await Promise.all(requests);
-
-      const commesseAssociate = responses
-        .map(response => response.data.map(commessa => commessa.CommessaName))
-        .reduce((commune, commessaList) => {
-          return commune.filter(commessa => commessaList.includes(commessa));
-        });
-
-      const commesseVisualizzabili = commesseAssociate.map(commessaName => ({
-        value: commessaName,
-        label: commessaName
-      }));
-
-      setSelectedCommesse(commesseVisualizzabili);
-
-    } catch (error) {
-      console.error('Errore nel caricamento delle commesse per i collaboratori selezionati:', error);
-    }
-  };
-
-  const handleColorChange = (color, commessaName) => {
-    setCommessaColors(prevColors => ({
-      ...prevColors,
-      [commessaName]: color.hex
-    }));
-  };
-
-  const saveSelectedCommesse = async () => {
-    try {
-      const commesseToSave = selectedCommesse.map(option => ({
-        commessaName: option.value,
-        colore: commessaColors[option.value] || '#000000'
-      }));
-
-      await Promise.all(selectedCollaboratore.map(collaboratore => 
-        axios.post('http://localhost:4443/api/associate-commesse-collaboratore', {
-          collaboratoreId: collaboratore.value,
-          commesse: commesseToSave
+  useEffect(() => {
+    if (selectedCollaboratori.length === 0) {
+      setFilteredProjectResources([]); // Nessuna commessa mostrata
+      setSelectedCommesse([]); // Nessuna commessa selezionata
+      console.log("Nessun collaboratore selezionato, nessuna commessa mostrata.");
+    } else {
+      const associatedCommesse = projectResources.filter((commessa) =>
+        selectedCollaboratori.some((collabId) => {
+          const collaboratore = categoryResources.find((c) => c.id === collabId);
+          return collaboratore?.groupIds.includes(commessa.id);
         })
-      ));
-
-      alert('Commesse associate e salvate con successo!');
-    } catch (error) {
-      console.error('Errore nel salvataggio delle commesse:', error);
-      alert('Errore nel salvataggio delle commesse');
+      );
+      setFilteredProjectResources(associatedCommesse);
+      const selectedIds = associatedCommesse.map((res) => res.id);
+      setSelectedCommesse(selectedIds);
+      console.log("Commesse selezionate automaticamente:", selectedIds);
     }
+  }, [selectedCollaboratori, projectResources, categoryResources]);
+
+  useEffect(() => {
+    const filteredEvents = events.filter((event) => {
+      const isCollaboratorMatch =
+        selectedCollaboratori.length === 0 ||
+        event.CollaboratoreId.some((id) => selectedCollaboratori.includes(id));
+      const isCommessaMatch =
+        selectedCommesse.length === 0 || selectedCommesse.includes(event.ProjectId);
+      return isCollaboratorMatch && isCommessaMatch;
+    });
+    setFilteredEventsForGantt(filteredEvents);
+  }, [selectedCollaboratori, selectedCommesse, events]);
+
+  const handleCommesseSelection = (selectedOptions) => {
+    const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+    setSelectedCommesse(selectedIds);
   };
 
   return (
-    <div className="app-container">
-      {/* Prima sezione: Associazione commesse ai collaboratori */}
-      <div className="menu-container">
-        <h3>Associa commesse ai collaboratori</h3>
-
-        {/* Seleziona il collaboratore */}
+    <div className="App">
+      {/* Menu di selezione Collaboratori */}
+      <div>
+        <label>Seleziona Collaboratore:</label>
         <Select
+          options={categoryResources.map((collab) => ({
+            value: collab.id,
+            label: collab.text,
+          }))}
           isMulti
-          options={resources
-            .filter(resource => resource && resource.Id && resource.Nome)
-            .map(collaboratore => ({
-              value: collaboratore.Id,
-              label: collaboratore.Nome
-            }))}
-          value={selectedCollaboratore}
-          onChange={handleCollaboratoreChange}
-          placeholder="Seleziona collaboratori"
+          onChange={handleCollaboratoreSelection}
+          placeholder="Seleziona Collaboratore"
         />
-
-        {/* Seleziona le commesse per il collaboratore */}
-        <Select
-          isMulti
-          options={commesse
-            .filter(commessa => commessa && commessa.CommessaName && commessa.Descrizione)
-            .map(commessa => ({
-              value: commessa.CommessaName,
-              label: commessa.CommessaName
-            }))}
-          value={selectedCommesse}
-          onChange={setSelectedCommesse}
-          placeholder="Seleziona commesse"
-        />
-
-        {/* Seleziona il colore per ogni commessa */}
-        {selectedCommesse.map((commessa, index) => (
-          <div key={index}>
-            <span>{commessa.label}</span>
-            <TwitterPicker
-              color={commessaColors[commessa.value] || '#000000'}
-              onChangeComplete={(color) => handleColorChange(color, commessa.value)}
-            />
-          </div>
-        ))}
-
-        {/* Salva le commesse e i colori */}
-        <button onClick={saveSelectedCommesse}>Salva</button>
       </div>
 
-      {/* Scheduler */}
-      <Scheduler
-    data={Array.isArray(scheduleData) ? scheduleData : []}
-    onDataChange={setScheduleData}
-    commessaColors={commessaColors}
-    commesse={commesse}
-    resources={resources}
-/>
+      {/* Menu di selezione Commesse */}
+      <div>
+        <label>Seleziona Commesse:</label>
+        <Select
+          key={filteredProjectResources.map((res) => res.id).join(",")}
+          options={filteredProjectResources.map((project) => ({
+            value: project.id,
+            label: project.text,
+          }))}
+          isMulti
+          value={filteredProjectResources
+            .filter((project) => selectedCommesse.includes(project.id))
+            .map((project) => ({
+              value: project.id,
+              label: project.text,
+            }))}
+          onChange={handleCommesseSelection}
+          placeholder="Seleziona Commesse"
+          isDisabled={filteredProjectResources.length === 0} // Disabilita il menu se non ci sono commesse
+        />
+      </div>
 
+      {/* Sidebar e Gantt */}
+      <Sidebar
+        setProjectResources={setProjectResources}
+        filteredProjectResources={filteredProjectResources}
+      />
+      <Gantt
+        ref={ganttRef}
+        ganttData={filteredEventsForGantt}
+        onSaveEvent={(eventData) => console.log("Evento salvato:", eventData)}
+        onUpdateEvent={(eventData) => console.log("Evento aggiornato:", eventData)}
+        onDeleteEvent={(eventId) => console.log("Evento eliminato:", eventId)}
+      />
     </div>
   );
 };

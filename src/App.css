@@ -18,3 +18,20 @@
   .menu-container {
     margin-bottom: 20px;
   }
+  .resource-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .template-wrap {
+    display: flex;
+    align-items: center;
+  }
+  
+  .resource-details {
+    display: flex;
+    flex-direction: column;
+  }
+  

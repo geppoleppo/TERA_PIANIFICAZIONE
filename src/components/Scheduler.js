@@ -1,250 +1,289 @@
-// Scheduler.js
-import React, { useState, useEffect } from 'react';
+import { extend } from '@syncfusion/ej2-base';
 import Select from 'react-select';
-import axios from 'axios';
-import { ScheduleComponent, Day, WorkWeek, Month, ResourcesDirective, ResourceDirective, ViewsDirective, ViewDirective, Inject, TimelineViews, Resize, DragAndDrop, TimelineMonth } from '@syncfusion/ej2-react-schedule';
-import '../index.css';
+import { TwitterPicker } from 'react-color';
 
-// Caricamento della localizzazione italiana
-import { loadCldr, L10n } from '@syncfusion/ej2-base';
-import * as numberingSystems from 'cldr-data/main/it/numbers.json';
-import * as gregorian from 'cldr-data/main/it/ca-gregorian.json';
-import * as timeZoneNames from 'cldr-data/main/it/timeZoneNames.json';
-import * as weekData from 'cldr-data/supplemental/weekData.json';
-loadCldr(numberingSystems, gregorian, timeZoneNames, weekData);
+import React from 'react';
+import {
+  ScheduleComponent,
+  ResourcesDirective,
+  ResourceDirective,
+  ViewsDirective,
+  ViewDirective,
+  Inject,
+  Day,
+  Week,
+  WorkWeek,
+  Month,
+  TimelineViews,
+  Agenda,
+  Resize,
+  DragAndDrop
+} from '@syncfusion/ej2-react-schedule';
 
-L10n.load({
-  'it': {
-    'schedule': {
-      'day': 'Giorno',
-      'week': 'Settimana',
-      'workWeek': 'Settimana lavorativa',
-      'month': 'Mese',
-      'agenda': 'Agenda',
-      'today': 'Oggi',
-      'noEvents': 'Nessun evento',
-      'allDay': 'Tutto il giorno',
-      'start': 'Inizio',
-      'end': 'Fine',
-      'more': 'di più',
-      'close': 'Chiudi',
-      'cancel': 'Annulla',
-      'noTitle': '(Nessun titolo)',
-    },
-  }
-});
+const Scheduler = ({
+  events,
+  onEventRendered,
+  resourceHeaderTemplate,
+  onActionComplete,
+  filteredProjectResources,
+  filteredCategoryResources,
+  uniqueCollaborators,
+  selectedCollaboratori,
+  setSelectedCommesse,
+  setSelectedCollaboratori,
+  selectedCommesse,
+  projectResources,
+  handleCollaboratoreChange,
+  handleCommesseChange,
+  setFilteredCategoryResources,
+  setFilteredProjectResources, 
+  categoryResources, 
+  handleColorChange,
+  removeCommessa,
+  handleSaveSelectedCommesse
+}) => {
 
-const Scheduler = ({ data, onDataChange, commessaColors, commesse, resources }) => {
-  const [selectedResources, setSelectedResources] = useState([]);
-  const [filteredCommesse, setFilteredCommesse] = useState([]);
-  const [selectedCommesse, setSelectedCommesse] = useState([]);
-  const [currentView, setCurrentView] = useState('Month');
-  const [modifiedData, setModifiedData] = useState([]);
 
-  useEffect(() => {
-    const newData = data.map(event => ({
-      ...event,
-      IncaricatoId: Array.isArray(event.IncaricatoId) ? event.IncaricatoId.map(id => parseInt(id)) : event.IncaricatoId
-    }));
-    setModifiedData(newData);
-  }, [data]);
-
-  // Funzione per gestire la selezione dei collaboratori e caricare le commesse comuni
-  const handleResourceChange = async (selectedOptions) => {
-    setSelectedResources(selectedOptions.map(option => option.value));
-
-    if (!selectedOptions || selectedOptions.length === 0) {
-      setFilteredCommesse([]); 
-      return;
-    }
-
-    try {
-      // Chiamata API per ottenere le commesse comuni ai collaboratori selezionati
-      const requests = selectedOptions.map(option => axios.get(`http://localhost:4443/api/commesse/collaboratore/${option.value}`));
-      const responses = await Promise.all(requests);
-
-      const commesseAssociate = responses
-        .map(response => response.data.map(commessa => commessa.CommessaName))
-        .reduce((commune, commessaList) => {
-          return commune.filter(commessa => commessaList.includes(commessa));
-        });
-
-      const commesseVisualizzabili = commesseAssociate.map(commessaName => ({
-        value: commessaName,
-        label: commessaName
-      }));
-
-      setFilteredCommesse(commesseVisualizzabili);
-
-    } catch (error) {
-      console.error('Errore nel caricamento delle commesse per i collaboratori selezionati:', error);
-    }
-  };
-
-  const handleCommessaChange = (selectedOptions) => {
-    setSelectedCommesse(selectedOptions ? selectedOptions.map(option => option.value) : []);
-  };
-
-  const getFilteredResources = () => {
-    if (selectedResources.length === 0) return resources;
-    return resources.filter(resource => selectedResources.includes(resource.Id));
-  };
-
-  const getFilteredCommesse = () => {
-    if (selectedCommesse.length === 0) return commesse;
-    return commesse.filter(commessa => selectedCommesse.includes(commessa.CommessaName));
-  };
-
-  const onActionComplete = (args) => {
-    if (args.requestType === 'eventCreated' || args.requestType === 'eventChanged' || args.requestType === 'eventRemoved') {
-      if (args.data) {
-        const events = Array.isArray(args.data) ? args.data : [args.data];
-        events.forEach(event => {
-          event.CommessaName = Array.isArray(event.CommessaName) ? event.CommessaName[0] : event.CommessaName;
-          event.Color = commessaColors[event.CommessaName] || '#000000';
-        });
+  // Definisci la funzione `onPopupOpen` per aggiungere il campo `parentID` al form di creazione evento
+  const onPopupOpen = (args) => {
+    if (args.type === 'Editor') {
+      const formElement = args.element.querySelector('.e-schedule-form');
+      if (formElement && !formElement.querySelector('.e-parent-field')) {
+        const container = document.createElement('div');
+        container.classList.add('e-parent-field');
+        container.style.marginTop = '10px';
+  
+        const label = document.createElement('label');
+        label.innerHTML = 'Seleziona Parent Task:';
+        container.appendChild(label);
+  
+        const select = document.createElement('select');
+        select.name = 'parentID';
+        select.classList.add('e-field'); // Aggiungi classe 'e-field' per permettere il binding
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.text = 'Nessun genitore';
+        select.appendChild(defaultOption);
+  
+        // Filtra gli eventi per escludere quelli senza collaboratori visibili
+        events
+          .filter((event) => {
+            const collaboratori = event.CollaboratoreId.map((collabId) =>
+              filteredCategoryResources.find((collab) => collab.id === collabId)
+            ).filter(Boolean); // Rimuove eventuali null
+            return collaboratori.length > 0; // Includi solo eventi con collaboratori visibili
+          })
+          .forEach((event) => {
+            const collaboratori = event.CollaboratoreId.map((collabId) =>
+              filteredCategoryResources.find((collab) => collab.id === collabId)
+            )
+              .filter(Boolean) // Rimuove eventuali null
+              .map((collab) => collab.text) // Ottiene i nomi dei collaboratori
+              .join(', '); // Unisce i nomi dei collaboratori
+  
+            const option = document.createElement('option');
+            option.value = event.Id;
+            option.text = `${event.Subject} - ${collaboratori}`;
+            select.appendChild(option);
+          });
+  
+        container.appendChild(select);
+        formElement.appendChild(container);
       }
-      onDataChange(args);
     }
   };
+  
+  
 
-  const resourceHeaderTemplate = (props) => {
-    if (!props.resourceData) return null;
-    const commessa = props.resourceData.Descrizione;
-    if (commessa) {
-      return (
-        <div className="template-wrap">
-          <div className="commessa-details">
-            <div className="commessa-name">{commessa}</div>
-          </div>
-        </div>
-      );
+  // Usa `actionBegin` per assicurarti che `parentID` venga aggiunto ai dati dell'evento
+  const actionBegin = (args) => {
+    //console.log("Azioni iniziate nello Scheduler:", args);
+  
+    // Gestione creazione e modifica tramite popup
+    if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
+      const formElement = document.querySelector('.e-schedule-form');
+      if (formElement) {
+        const parentIDField = formElement.querySelector('select[name="parentID"]');
+        const parentID = parentIDField ? parentIDField.value : null;
+  
+        if (Array.isArray(args.data)) {
+          args.data[0].parentID = parentID;
+        } else {
+          args.data.parentID = parentID;
+        }
+  
+        //console.log("parentID aggiornato nei dati dell'evento (popup):", args.data);
+      }
     }
-
-    const resource = resources.find(resource => resource.Id === props.resourceData.Id);
-    return (
-      <div className="template-wrap">
-        {resource && <img src={resource.Immagine} alt={resource.Nome} className="resource-image" />}
-        <div className="resource-details">
-          <div className="resource-name">{resource ? resource.Nome : ''}</div>
-        </div>
-      </div>
-    );
+  
+    // Gestione trascinamento o ridimensionamento
+    if (args.requestType === 'eventChange') {
+      //console.log("Evento cambiato tramite trascinamento o ridimensionamento:", args.data);
+  
+      // Cerca l'evento originale se il parentID è mancante
+      if (!args.data.parentID) {
+        const originalEvent = events.find(e => e.Id === args.data.Id);
+        args.data.parentID = originalEvent ? originalEvent.parentID : null;
+       // console.log("parentID recuperato per trascinamento/ridimensionamento:", args.data.parentID);
+      }
+    }
   };
+  
 
-  const monthEventTemplate = (props) => {
-    const commessaName = Array.isArray(props.CommessaName) ? props.CommessaName[0] : props.CommessaName;
-    const commessa = commesse.find(commessa => commessa.CommessaName === commessaName);
 
-    const commessaText = commessa ? commessa.Descrizione : 'Nessuna commessa selezionata';
-    const subjectText = props.Subject ? props.Subject : '';
-    const color = commessaColors[commessaName] || '#000000';
+  const onDragStart = (args) => {
+    console.log("Drag Start Event:", args);
 
-    return (
-      <div className="template-wrap" style={{ backgroundColor: color }}>
-        <div className="subject">{`${commessaText} - ${subjectText}`}</div>
-      </div>
-    );
+    if (!args.data.parentID) {
+      // Recupera il parentID dallo stato degli eventi o da altre fonti
+      const event = events.find(e => e.Id === args.data.Id);
+      if (event) {
+        args.data.parentID = event.parentID || null; // Assegna il valore corretto
+        console.log("parentID assegnato in dragStart:", args.data.parentID);
+      }
+    }
   };
-
-  const handleViewChange = (args) => {
-    setCurrentView(args.currentView);
-  };
-
-  const group = {
-    allowGroupEdit: true,
-    byGroupID: false,
-    resources: ['Resources', 'Commesse']
-  };
-
-  const resourceOptions = resources.map(resource => ({
-    value: resource.Id,
-    label: resource.Nome
-  }));
 
   return (
-    <div>
-      <div className="filter-selectors">
-        {/* Selezione Collaboratori */}
+    <div className="App">
+      {/* Menu a discesa per selezionare i collaboratori */}
+      <div>
+        <label> SELEZIONA COLLABORATORE:</label>
+
         <Select
-          isMulti
-          options={resourceOptions}
-          onChange={handleResourceChange}
-          placeholder="Seleziona Collaboratori"
-          className="filter-dropdown"
-        />
-        {/* Selezione Commesse Comuni ai Collaboratori */}
+  options={[
+    ...uniqueCollaborators.map(collaboratore => ({
+      value: collaboratore.id,
+      label: collaboratore.text
+    })),
+    { value: 'all', label: 'Select All' }
+  ]}
+  onChange={(selectedOptions) => {
+    if (selectedOptions.some(option => option.value === 'all')) {
+      handleCollaboratoreChange(
+        uniqueCollaborators.map(collaboratore => ({
+          value: collaboratore.id,
+          label: collaboratore.text
+        })),
+        setSelectedCollaboratori,
+        filteredCategoryResources, // Passa correttamente il parametro qui
+        setFilteredCategoryResources // Assicurati che sia una funzione valida
+      );
+    } else {
+      handleCollaboratoreChange(
+        selectedOptions,
+        setSelectedCollaboratori,
+        filteredCategoryResources, // Passa correttamente il parametro qui
+        setFilteredCategoryResources // Assicurati che sia una funzione valida
+      );
+    }
+  }}
+  isMulti
+  isClearable
+  placeholder="Seleziona Collaboratore"
+/>
+
+
+
+      </div>
+
+
+
+      {/* Menu a discesa multi-selezione per selezionare le commesse */}
+      <div>
+        <label>SLEZIONA COMMESSE:</label>
         <Select
-          isMulti
-          options={filteredCommesse}
-          onChange={handleCommessaChange}
-          value={filteredCommesse.filter(commessa => selectedCommesse.includes(commessa.value))}
-          placeholder="Seleziona Commesse"
-          className="filter-dropdown"
-        />
+  options={projectResources.map(commessa => ({
+    value: commessa.id,
+    label: commessa.text
+  }))}
+  value={selectedCommesse}
+  isMulti
+  onChange={selectedOptions =>
+    handleCommesseChange(selectedOptions, projectResources, setSelectedCommesse, setFilteredProjectResources)
+  }
+  placeholder="Seleziona Commesse"
+/>
       </div>
-      <div className="scroll-container">
-        <ScheduleComponent
-          cssClass='group-editing'
-          width='100%'
-          height='650px'
-          selectedDate={new Date()}
-          currentView={currentView}
-          locale='it'
-          dateFormat='dd/MM/yyyy'
-          resourceHeaderTemplate={resourceHeaderTemplate}
-          eventSettings={{
-            dataSource: modifiedData,
-            fields: {
-              id: 'Id',
-              subject: { title: 'Task', name: 'Subject', default: '' },
-              description: { title: 'Summary', name: 'Description' },
-              startTime: { title: 'From', name: 'StartTime' },
-              endTime: { title: 'To', name: 'EndTime' },
-              color: { name: 'Color' },
-              IncaricatoId: { title: 'Incaricato', name: 'IncaricatoId', validation: { required: true } },
-              commessaName: { title: 'Commessa', name: 'CommessaName', validation: { required: true } }
-            },
-            template: monthEventTemplate,
-          }}
-          rowAutoHeight={true}
-          group={group}
-          actionComplete={onActionComplete}
-          viewChanged={handleViewChange}
-        >
-          <ViewsDirective>
-            <ViewDirective option='Day' allowVirtualScrolling={true} />
-            <ViewDirective option='WorkWeek' allowVirtualScrolling={true} />
-            <ViewDirective option='Month' allowVirtualScrolling={true} eventTemplate={monthEventTemplate} />
-            <ViewDirective option='TimelineMonth' allowVirtualScrolling={true} interval={3} />
-          </ViewsDirective>
-          <ResourcesDirective>
-            <ResourceDirective
-              field='IncaricatoId'
-              title='Attendees'
-              name='Resources'
-              allowMultiple={true}
-              dataSource={getFilteredResources()} // Filtra le risorse
-              textField='Nome'
-              idField='Id'
-              colorField='Colore'
-            />
-            <ResourceDirective
-              field='CommessaName'
-              title='Commessa'
-              name='Commesse'
-              allowMultiple={false}
-              dataSource={getFilteredCommesse()} // Filtra le commesse
-              textField='Descrizione'
-              idField='CommessaName'
-              colorField='Colore'
-            />
-          </ResourcesDirective>
-          <Inject services={[Day, WorkWeek, Month, TimelineViews, TimelineMonth, Resize, DragAndDrop]} />
-        </ScheduleComponent>
-      </div>
+
+
+      <button
+        onClick={handleSaveSelectedCommesse}
+        disabled={selectedCollaboratori.length !== 1}
+      >
+        Memorizza
+      </button>
+
+      {/* Scheduler component */}
+      <ScheduleComponent
+        popupOpen={onPopupOpen}  // Associa `onPopupOpen` al popup
+        actionBegin={actionBegin} // Passa `actionBegin` qui
+        dragStart={onDragStart} // Aggiunto
+        actionComplete={onActionComplete}
+        width="100%"
+        height="650px"
+        selectedDate={new Date()}
+        rowAutoHeight='true'
+        resourceHeaderTemplate={resourceHeaderTemplate}  // Aggiungi il template qui
+
+        eventSettings={{
+          dataSource: events,
+          allowEventOverlap: true, // Consenti eventi sovrapposti
+
+          fields: {
+            subject: { title: 'Task', name: 'Subject' },
+            startTime: { title: 'Start Time', name: 'StartTime' },
+            endTime: { title: 'End Time', name: 'EndTime' },
+            description: { title: 'Summary', name: 'Description' },
+            parentID: { title: 'Parent Task', name: 'parentID' },  // Campo aggiunto
+
+          },
+        }}
+
+        group={{ allowGroupEdit: true, resources: ['Projects', 'Categories'] }}
+        eventRendered={onEventRendered} // Aggiungi qui l'evento per gestire i colori
+      >
+        {/* Resource Definitions */}
+        <ResourcesDirective>
+          <ResourceDirective
+            field="ProjectId"
+            title="Projects"
+            name="Projects"
+            dataSource={filteredProjectResources} // Usa le risorse filtrate
+            textField="text"
+            idField="id"
+            colorField="color"
+          />
+          <ResourceDirective
+            field="CollaboratoreId"
+            title="Collaboratori"
+            name="Categories"
+            allowMultiple={true}
+            dataSource={filteredCategoryResources}
+            textField="text"
+            idField="id"
+            groupIDField="groupId"
+          />
+        </ResourcesDirective>
+
+
+
+        {/* Views */}
+        <ViewsDirective>
+          <ViewDirective displayName="3 Days" option="Day" interval={3} />
+          <ViewDirective displayName="2 Weeks" option="Week" interval={2} />
+          <ViewDirective displayName="4 Months" option="Month" interval={4} isSelected={true} />
+          <ViewDirective option="TimelineWeek" />
+          <ViewDirective option="TimelineMonth" />
+          <ViewDirective option="Agenda" />
+        </ViewsDirective>
+
+        <Inject services={[Day, WorkWeek, Month, Week, TimelineViews, DragAndDrop, Resize, Agenda]} />
+      </ScheduleComponent>
+
     </div>
   );
 };
 
 export default Scheduler;
+
