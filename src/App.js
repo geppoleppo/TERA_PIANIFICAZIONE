@@ -20,6 +20,36 @@ const App = () => {
   const [filteredEventsForGantt, setFilteredEventsForGantt] = useState([]); // Eventi filtrati
   const ganttRef = useRef(null);
 
+
+
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      console.log(`Eliminazione evento con ID: ${eventId}`);
+      
+      // Chiamata alla rotta DELETE del backend
+      const response = await fetch(`http://localhost:3001/api/eventi/${eventId}`, {
+        method: 'DELETE',
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Errore durante l'eliminazione: ${response.statusText}`);
+      }
+  
+      console.log(`Evento con ID ${eventId} eliminato con successo.`);
+  
+      // Aggiorna lo stato locale per riflettere la modifica
+      setEvents((prevEvents) => prevEvents.filter((event) => event.Id !== eventId));
+      setFilteredEventsForGantt((prevEvents) =>
+        prevEvents.filter((event) => event.Id !== eventId)
+      );
+    } catch (error) {
+      console.error("Errore durante l'eliminazione dell'evento:", error);
+    }
+  };
+  
+
+
+
   useEffect(() => {
     console.log("Dati del Gantt:", filteredEventsForGantt);
   }, [filteredEventsForGantt]);
@@ -155,7 +185,7 @@ const App = () => {
         ganttData={filteredEventsForGantt}
         onSaveEvent={(eventData) => console.log("Evento salvato:", eventData)}
         onUpdateEvent={(eventData) => console.log("Evento aggiornato:", eventData)}
-        onDeleteEvent={(eventId) => console.log("Evento eliminato:", eventId)}
+        onDeleteEvent={handleDeleteEvent}
       />
     </div>
   );
