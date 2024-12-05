@@ -167,21 +167,23 @@ app.put('/api/eventi/:id', async (req, res) => {
   const { id } = req.params;
   const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor, Description, parentID } = req.body;
 
+  console.log("Dati ricevuti per l'aggiornamento:", req.body);
+
   try {
     const query = `
       UPDATE Eventi
-      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?, Descrizione = ?,parentID = ?
+      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?, Descrizione = ?, parentID = ?
       WHERE Id = ?
     `;
     await runQuery(query, [
       Subject,
       StartTime,
       EndTime,
-      ProjectId.toString(),
-      CollaboratoreId,  // Passiamo il CollaboratoreId come stringa corretta
+      ProjectId?.toString() || null, // Valore di fallback
+      Array.isArray(CollaboratoreId) ? CollaboratoreId.join(',') : null, // Converte in stringa o null
       CategoryColor,
       Description,
-      parentID,  // Aggiungi il campo Descrizione
+      parentID,
       id
     ]);
     res.json({ message: 'Evento aggiornato con successo!' });
@@ -190,6 +192,7 @@ app.put('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
   }
 });
+
 
 
 

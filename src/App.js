@@ -20,6 +20,46 @@ const App = () => {
   const [filteredEventsForGantt, setFilteredEventsForGantt] = useState([]); // Eventi filtrati
   const ganttRef = useRef(null);
 
+  const handleUpdateEvent = async (updatedEvent) => {
+    try {
+      console.log("Dati inviati per l'aggiornamento:", updatedEvent);
+  
+      const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...updatedEvent,
+          ProjectId: updatedEvent.ProjectId || null, // Valida il ProjectId
+          CollaboratoreId: Array.isArray(updatedEvent.CollaboratoreId) 
+            ? updatedEvent.CollaboratoreId 
+            : [], // Assicura che sia un array
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Errore durante l'aggiornamento: ${response.statusText}`);
+      }
+  
+      console.log(`Evento con ID ${updatedEvent.Id} aggiornato con successo.`);
+      // Aggiorna lo stato locale
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.Id === updatedEvent.Id ? { ...event, ...updatedEvent } : event
+        )
+      );
+      setFilteredEventsForGantt((prevEvents) =>
+        prevEvents.map((event) =>
+          event.Id === updatedEvent.Id ? { ...event, ...updatedEvent } : event
+        )
+      );
+    } catch (error) {
+      console.error("Errore durante l'aggiornamento dell'evento:", error);
+    }
+  };
+  
+  
 
 
   const handleDeleteEvent = async (eventId) => {
@@ -184,7 +224,7 @@ const App = () => {
         ref={ganttRef}
         ganttData={filteredEventsForGantt}
         onSaveEvent={(eventData) => console.log("Evento salvato:", eventData)}
-        onUpdateEvent={(eventData) => console.log("Evento aggiornato:", eventData)}
+        onUpdateEvent={handleUpdateEvent}
         onDeleteEvent={handleDeleteEvent}
       />
     </div>
