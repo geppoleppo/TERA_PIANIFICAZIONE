@@ -13,7 +13,7 @@ import {
   ColumnDirective
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources }) => {
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryResources,projectResources  }) => {
   const ganttRef = useRef(null);
 
   const [parentTaskDataSource, setParentTaskDataSource] = useState([]);
@@ -33,36 +33,32 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
   }, [ganttData]);
   
   
-
   const onActionComplete = (args) => {
     console.log("Dati dell'azione completata nel Gantt:", args);
     console.log("TIPO DI AZIONE:", args.requestType);
-
-    if (!args || !args.data) {
-        console.warn("Dati incompleti per l'azione Gantt:", args);
-        return;
+  
+    if (args.requestType === 'save' && args.data) {
+      const updatedEvent = args.data;
+  
+      // Recupera dati aggiuntivi da taskData o ganttProperties
+      const taskData = updatedEvent.taskData || {};
+      const ganttProps = updatedEvent.ganttProperties || {};
+  
+      const payload = {
+        ...updatedEvent,
+        IncaricatoId: taskData.IncaricatoId || ganttProps.resourceInfo || [], // Recupera IncaricatoId
+        CommessaId: taskData.ProjectId || ganttProps.taskId || null,          // Recupera CommessaId
+        CommessaName: taskData.CommessaName || updatedEvent.CommessaName || "Non assegnata", // Nome della commessa
+      };
+  
+      console.log("Dati completi dell'evento modificato:", payload);
+  
+      // Passa i dati per l'aggiornamento
+      onUpdateEvent(payload);
     }
-
-    if (args.requestType === 'save') {
-        // Gestisce il salvataggio di dati tramite il dialogo
-       // console.log("Salvataggio tramite dialogo con dati:", args.data);
-        onUpdateEvent(args.data); // Passa i dati alla funzione di aggiornamento
-    } else if (args.action === 'TaskbarEditing') {
-        // Gestisce la modifica diretta della barra
-       // console.log("Aggiornamento dal Gantt con dati:", args.data);
-        onUpdateEvent(args.data);
-    } else if (args.action === 'add') {
-        // Gestisce l'aggiunta di nuovi eventi
-        console.log("Aggiunta di un nuovo evento con dati:", args.data);
-        onSaveEvent(args.data);
-    } else if (args.requestType === 'delete') {
-        // Gestisce l'eliminazione di eventi
-        //console.log("Eliminazione di un evento con ID:", args.data[0].Id);
-        onDeleteEvent(args.data[0].Id);
-    } else {
-       // console.log("Azione non gestita:", args.action || args.requestType);
-    }
-};
+  };
+  
+  
 
 
   const taskbarTemplate = (taskData) => {
@@ -87,22 +83,17 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
 
   useEffect(() => {
     if (ganttData && ganttData.length > 0) {
-      // Aggiunge l'opzione "Nessun genitore" come prima voce
       const newParentTaskDataSource = [
-        { Id: null, Subject: 'Nessun genitore' }, // Opzione per impostare parentID a null
+        { Id: null, Subject: 'Nessun genitore' },
         ...ganttData.map((task) => ({
           Id: task.Id,
           Subject: task.Subject,
         })),
       ];
       setParentTaskDataSource(newParentTaskDataSource);
-  
-      // Forza il refresh del GanttComponent per aggiornare il menu a discesa
-      if (ganttRef.current) {
-        ganttRef.current.refresh();
-      }
     }
   }, [ganttData]);
+
   
 
   return (

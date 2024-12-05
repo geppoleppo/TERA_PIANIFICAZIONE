@@ -25,29 +25,12 @@ const App = () => {
     try {
       console.log("Dati inviati per l'aggiornamento:", updatedEvent);
   
-      // Trova CommessaName basandosi sull'ID
-      const commessa = projectResources.find(
-        (project) => project.id === updatedEvent.ProjectId
-      );
-  
-      // Prepara il payload per l'aggiornamento
-      const payload = {
-        ...updatedEvent,
-        IncaricatoId: Array.isArray(updatedEvent.CollaboratoreId)
-          ? updatedEvent.CollaboratoreId
-          : [], // Rinominato in IncaricatoId
-        CommessaName: commessa ? commessa.text : null, // Aggiunge CommessaName
-      };
-  
-      console.log("Payload per l'aggiornamento:", payload);
-  
-      // Effettua la chiamata PUT al server
       const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(updatedEvent),
       });
   
       if (!response.ok) {
@@ -59,18 +42,21 @@ const App = () => {
       // Aggiorna lo stato locale
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
-          event.Id === updatedEvent.Id ? { ...event, ...payload } : event
+          event.Id === updatedEvent.Id ? { ...event, ...updatedEvent } : event
         )
       );
       setFilteredEventsForGantt((prevEvents) =>
         prevEvents.map((event) =>
-          event.Id === updatedEvent.Id ? { ...event, ...payload } : event
+          event.Id === updatedEvent.Id ? { ...event, ...updatedEvent } : event
         )
       );
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
+  
+  
   
   
   
@@ -289,13 +275,14 @@ const App = () => {
         setProjectResources={setProjectResources}
         filteredProjectResources={filteredProjectResources}
       />
-      <Gantt
-        ref={ganttRef}
-        ganttData={filteredEventsForGantt}
-        onSaveEvent={(eventData) => console.log("Evento salvato:", eventData)}
-        onUpdateEvent={handleUpdateEvent}
-        onDeleteEvent={handleDeleteEvent}
-      />
+<Gantt
+  ganttData={filteredEventsForGantt}
+  onSaveEvent={(eventData) => console.log("Evento salvato:", eventData)}
+  onUpdateEvent={handleUpdateEvent}
+  onDeleteEvent={(eventId) => console.log("Evento eliminato:", eventId)}
+  categoryResources={categoryResources}
+  projectResources={projectResources} // Passiamo projectResources qui
+/>
     </div>
   );
 };

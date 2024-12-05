@@ -169,8 +169,9 @@ app.put('/api/eventi/:id', async (req, res) => {
     Subject,
     StartTime,
     EndTime,
+    CommessaId,
     CommessaName,
-    IncaricatoId, // Nome corretto
+    IncaricatoId,
     CategoryColor,
     Description,
     parentID,
@@ -185,8 +186,9 @@ app.put('/api/eventi/:id', async (req, res) => {
         Titolo = ?,
         Inizio = ?,
         Fine = ?,
-        CommessaName = ?,
-        IncaricatoId = ?, -- Nome corretto
+        CommessaId = ?,   -- Salva CommessaId
+        CommessaName = ?, -- Salva CommessaName
+        IncaricatoId = ?, -- Salva IncaricatoId
         Colore = ?,
         Descrizione = ?,
         parentID = ?
@@ -196,8 +198,9 @@ app.put('/api/eventi/:id', async (req, res) => {
       Subject,
       StartTime,
       EndTime,
+      CommessaId || null,
       CommessaName || null,
-      Array.isArray(IncaricatoId) ? IncaricatoId.join(',') : null, // Salva come stringa separata da virgole
+      Array.isArray(IncaricatoId) ? IncaricatoId.join(',') : null,
       CategoryColor,
       Description,
       parentID,
@@ -210,6 +213,10 @@ app.put('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
   }
 });
+
+
+
+
 
 
 
