@@ -169,9 +169,8 @@ app.put('/api/eventi/:id', async (req, res) => {
     Subject,
     StartTime,
     EndTime,
-    ProjectId,
-    CollaboratoreId,
     CommessaName,
+    IncaricatoId, // Nome corretto
     CategoryColor,
     Description,
     parentID,
@@ -186,9 +185,8 @@ app.put('/api/eventi/:id', async (req, res) => {
         Titolo = ?,
         Inizio = ?,
         Fine = ?,
-        ProjectId = ?,
-        CollaboratoreId = ?,
         CommessaName = ?,
+        IncaricatoId = ?, -- Nome corretto
         Colore = ?,
         Descrizione = ?,
         parentID = ?
@@ -198,9 +196,8 @@ app.put('/api/eventi/:id', async (req, res) => {
       Subject,
       StartTime,
       EndTime,
-      ProjectId?.toString() || null,
-      CollaboratoreId ? CollaboratoreId.join(',') : null, // Salva come stringa separata da virgole
       CommessaName || null,
+      Array.isArray(IncaricatoId) ? IncaricatoId.join(',') : null, // Salva come stringa separata da virgole
       CategoryColor,
       Description,
       parentID,

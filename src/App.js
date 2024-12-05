@@ -25,7 +25,7 @@ const App = () => {
     try {
       console.log("Dati inviati per l'aggiornamento:", updatedEvent);
   
-      // Trova i dettagli della commessa per ottenere CommessaName
+      // Trova CommessaName basandosi sull'ID
       const commessa = projectResources.find(
         (project) => project.id === updatedEvent.ProjectId
       );
@@ -33,9 +33,9 @@ const App = () => {
       // Prepara il payload per l'aggiornamento
       const payload = {
         ...updatedEvent,
-        CollaboratoreId: Array.isArray(updatedEvent.CollaboratoreId)
+        IncaricatoId: Array.isArray(updatedEvent.CollaboratoreId)
           ? updatedEvent.CollaboratoreId
-          : [], // Assicura che sia un array
+          : [], // Rinominato in IncaricatoId
         CommessaName: commessa ? commessa.text : null, // Aggiunge CommessaName
       };
   
@@ -71,6 +71,7 @@ const App = () => {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
   
   
   
