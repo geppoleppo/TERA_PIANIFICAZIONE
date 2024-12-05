@@ -165,27 +165,48 @@ app.get('/api/eventi', async (req, res) => {
 
 app.put('/api/eventi/:id', async (req, res) => {
   const { id } = req.params;
-  const { Subject, StartTime, EndTime, ProjectId, CollaboratoreId, CategoryColor, Description, parentID } = req.body;
+  const {
+    Subject,
+    StartTime,
+    EndTime,
+    ProjectId,
+    CollaboratoreId,
+    CommessaName,
+    CategoryColor,
+    Description,
+    parentID,
+  } = req.body;
 
   console.log("Dati ricevuti per l'aggiornamento:", req.body);
 
   try {
     const query = `
       UPDATE Eventi
-      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, IncaricatoId = ?, Colore = ?, Descrizione = ?, parentID = ?
+      SET
+        Titolo = ?,
+        Inizio = ?,
+        Fine = ?,
+        ProjectId = ?,
+        CollaboratoreId = ?,
+        CommessaName = ?,
+        Colore = ?,
+        Descrizione = ?,
+        parentID = ?
       WHERE Id = ?
     `;
     await runQuery(query, [
       Subject,
       StartTime,
       EndTime,
-      ProjectId?.toString() || null, // Valore di fallback
-      Array.isArray(CollaboratoreId) ? CollaboratoreId.join(',') : null, // Converte in stringa o null
+      ProjectId?.toString() || null,
+      CollaboratoreId ? CollaboratoreId.join(',') : null, // Salva come stringa separata da virgole
+      CommessaName || null,
       CategoryColor,
       Description,
       parentID,
-      id
+      id,
     ]);
+
     res.json({ message: 'Evento aggiornato con successo!' });
   } catch (error) {
     console.error('Errore durante l\'aggiornamento dell\'evento:', error);
@@ -441,3 +462,29 @@ app.get('/api/markers', (req, res) => {
       res.status(500).json({ error: "Errore durante il recupero dei marker." });
     });
 });
+
+app.post('/api/memorizza', async (req, res) => {
+  const { collaboratoreId, commesseIds } = req.body;
+
+  if (!collaboratoreId || !Array.isArray(commesseIds)) {
+    return res.status(400).json({ error: 'Dati non validi.' });
+  }
+
+  console.log(`Memorizzazione per Collaboratore ${collaboratoreId} con Commesse: ${commesseIds}`);
+
+  try {
+    // Converti l'array di commesse in una stringa separata da virgole
+    const groupIds = commesseIds.join(',');
+
+    // Aggiorna il campo groupIds del collaboratore
+    const updateQuery = `UPDATE Collaboratori SET groupIds = ? WHERE Id = ?`;
+    await runQuery(updateQuery, [groupIds, collaboratoreId]);
+
+    res.json({ message: 'Associazioni salvate con successo!' });
+  } catch (error) {
+    console.error('Errore durante la memorizzazione:', error);
+    res.status(500).json({ error: 'Errore durante la memorizzazione.' });
+  }
+});
+
+

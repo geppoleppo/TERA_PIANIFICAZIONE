@@ -3,6 +3,7 @@ import './App.css';
 import Gantt from './components/Gantt';
 import Sidebar from './sidebar/Sidebar';
 import Select from 'react-select';
+import Swal from 'sweetalert2'; // Assicurati di installare SweetAlert2 per i popup
 import {
   fetchProjectResources,
   fetchCategoryResources,
@@ -24,18 +25,29 @@ const App = () => {
     try {
       console.log("Dati inviati per l'aggiornamento:", updatedEvent);
   
+      // Trova i dettagli della commessa per ottenere CommessaName
+      const commessa = projectResources.find(
+        (project) => project.id === updatedEvent.ProjectId
+      );
+  
+      // Prepara il payload per l'aggiornamento
+      const payload = {
+        ...updatedEvent,
+        CollaboratoreId: Array.isArray(updatedEvent.CollaboratoreId)
+          ? updatedEvent.CollaboratoreId
+          : [], // Assicura che sia un array
+        CommessaName: commessa ? commessa.text : null, // Aggiunge CommessaName
+      };
+  
+      console.log("Payload per l'aggiornamento:", payload);
+  
+      // Effettua la chiamata PUT al server
       const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...updatedEvent,
-          ProjectId: updatedEvent.ProjectId || null, // Valida il ProjectId
-          CollaboratoreId: Array.isArray(updatedEvent.CollaboratoreId) 
-            ? updatedEvent.CollaboratoreId 
-            : [], // Assicura che sia un array
-        }),
+        body: JSON.stringify(payload),
       });
   
       if (!response.ok) {
@@ -43,21 +55,24 @@ const App = () => {
       }
   
       console.log(`Evento con ID ${updatedEvent.Id} aggiornato con successo.`);
+  
       // Aggiorna lo stato locale
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
-          event.Id === updatedEvent.Id ? { ...event, ...updatedEvent } : event
+          event.Id === updatedEvent.Id ? { ...event, ...payload } : event
         )
       );
       setFilteredEventsForGantt((prevEvents) =>
         prevEvents.map((event) =>
-          event.Id === updatedEvent.Id ? { ...event, ...updatedEvent } : event
+          event.Id === updatedEvent.Id ? { ...event, ...payload } : event
         )
       );
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
+  
   
   
 
@@ -177,6 +192,53 @@ const App = () => {
     setSelectedCommesse(selectedIds);
   };
 
+
+
+  const handleSaveAssociations = () => {
+    if (selectedCollaboratori.length !== 1) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Attenzione!',
+        text: 'Puoi memorizzare le commesse solo per un singolo collaboratore alla volta.',
+      });
+      return;
+    }
+  
+    const collaboratoreId = selectedCollaboratori[0]; // Collaboratore selezionato
+    const commesseIds = selectedCommesse; // Commesse selezionate
+  
+    console.log("Memorizzazione in corso per il collaboratore:", collaboratoreId, "con commesse:", commesseIds);
+  
+    fetch('http://localhost:3001/api/memorizza', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ collaboratoreId, commesseIds }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Errore durante la memorizzazione.');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Memorizzazione riuscita!',
+          text: data.message || 'Le commesse sono state memorizzate con successo.',
+        });
+      })
+      .catch((error) => {
+        console.error('Errore durante la memorizzazione:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Errore!',
+          text: 'Si è verificato un errore durante la memorizzazione. Riprova più tardi.',
+        });
+      });
+  };
+  
   return (
     <div className="App">
       {/* Menu di selezione Collaboratori */}
@@ -195,25 +257,31 @@ const App = () => {
 
       {/* Menu di selezione Commesse */}
       <div>
-        <label>Seleziona Commesse:</label>
-        <Select
-          key={filteredProjectResources.map((res) => res.id).join(",")}
-          options={filteredProjectResources.map((project) => ({
-            value: project.id,
-            label: project.text,
-          }))}
-          isMulti
-          value={filteredProjectResources
-            .filter((project) => selectedCommesse.includes(project.id))
-            .map((project) => ({
-              value: project.id,
-              label: project.text,
-            }))}
-          onChange={handleCommesseSelection}
-          placeholder="Seleziona Commesse"
-          isDisabled={filteredProjectResources.length === 0} // Disabilita il menu se non ci sono commesse
-        />
-      </div>
+  <label>Seleziona Commesse:</label>
+  <Select
+    key={projectResources.map((res) => res.id).join(",")} // Forza il re-render quando le opzioni cambiano
+    options={projectResources.map((project) => ({
+      value: project.id,
+      label: project.text,
+    }))}
+    isMulti
+    value={projectResources
+      .filter((project) => selectedCommesse.includes(project.id))
+      .map((project) => ({
+        value: project.id,
+        label: project.text,
+      }))} // Sincronizza le commesse selezionate
+    onChange={handleCommesseSelection}
+    placeholder="Seleziona Commesse"
+  />
+</div>
+
+      <div>
+  <button onClick={handleSaveAssociations} className="btn btn-primary">
+    Memorizza
+  </button>
+</div>
+
 
       {/* Sidebar e Gantt */}
       <Sidebar
