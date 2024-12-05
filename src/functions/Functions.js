@@ -212,7 +212,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
       const data = await response.json();
       fetchEvents(); // Ricarica gli eventi
     } catch (error) {
-      console.error("Errore durante l'aggiornamento dell'evento:", error);
+      console.error("ErrorRONE durante l'aggiornamento dell'evento:", error);
     }
 };
 

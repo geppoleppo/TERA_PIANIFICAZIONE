@@ -35,29 +35,30 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
   
   const onActionComplete = (args) => {
     console.log("Dati dell'azione completata nel Gantt:", args);
-    console.log("TIPO DI AZIONE:", args.requestType);
-  
+
     if (args.requestType === 'save' && args.data) {
-      const updatedEvent = args.data;
-  
-      // Recupera dati aggiuntivi da taskData o ganttProperties
-      const taskData = updatedEvent.taskData || {};
-      const ganttProps = updatedEvent.ganttProperties || {};
-  
-      const payload = {
-        ...updatedEvent,
-        IncaricatoId: taskData.IncaricatoId || ganttProps.resourceInfo || [], // Recupera IncaricatoId
-        CommessaId: taskData.ProjectId || ganttProps.taskId || null,          // Recupera CommessaId
-        CommessaName: taskData.CommessaName || updatedEvent.CommessaName || "Non assegnata", // Nome della commessa
-      };
-  
-      console.log("Dati completi dell'evento modificato:", payload);
-  
-      // Passa i dati per l'aggiornamento
-      onUpdateEvent(payload);
+        const updatedEvent = args.data;
+
+        // Cerca i dati originali per preservare campi mancanti
+        const originalEvent = ganttData.find((event) => event.Id === updatedEvent.Id) || {};
+
+        const payload = {
+            ...originalEvent, // Mantieni i dati originali
+            ...updatedEvent,  // Sovrascrivi con i nuovi dati
+            CommessaName: originalEvent.CommessaName, // Evita di sovrascrivere CommessaName
+            CommessaId: updatedEvent.ProjectId || originalEvent.ProjectId || null,
+            IncaricatoId: Array.isArray(updatedEvent.CollaboratoreId) 
+                ? updatedEvent.CollaboratoreId 
+                : originalEvent.IncaricatoId || [],
+        };
+
+        console.log("Payload aggiornato per l'evento:", payload);
+
+        // Invia il payload aggiornato ad App.js
+        onUpdateEvent(payload);
     }
-  };
-  
+};
+
   
 
 
@@ -100,7 +101,7 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
     <div>
 
       <GanttComponent
-        ref={ganttRef}
+        //ref={ganttRef}
         dataSource={ganttData}
         allowSelection={true}
         allowSorting={true}

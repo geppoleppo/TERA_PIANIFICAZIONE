@@ -135,8 +135,7 @@ app.delete('/api/eventi/:id', (req, res) => {
     });
 });
 ;
-  
-  
+    
 app.get('/api/eventi', async (req, res) => {
   try {
     const query = 'SELECT * FROM Eventi';
@@ -148,7 +147,7 @@ app.get('/api/eventi', async (req, res) => {
       StartTime: evento.Inizio,
       EndTime: evento.Fine,
       ProjectId: parseInt(evento.CommessaName, 10), // Converti ProjectId in numero
-      CollaboratoreId: evento.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Converti CollaboratoreId in array di numeri
+      IncaricatoId: evento.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Converti CollaboratoreId in array di numeri
       CategoryColor: evento.Colore || "#000000",
       parentID: evento.parentID ? parseInt(evento.parentID, 10) : null, // Aggiungi e converti parentID in numero, se presente
       CommessaName: evento.CommessaName
@@ -156,6 +155,7 @@ app.get('/api/eventi', async (req, res) => {
 
     //console.log('Dati eventi dal database (formattati):', mappedEventi); // Verifica i dati nel formato corretto
     res.json(mappedEventi);
+    console.log('EVENTI MAPPATI',mappedEventi)
   } catch (error) {
     console.error('Errore durante il recupero degli eventi:', error);
     res.status(500).json({ error: 'Errore durante il recupero degli eventi.' });
