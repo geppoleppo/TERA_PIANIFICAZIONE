@@ -170,7 +170,6 @@ app.put('/api/eventi/:id', async (req, res) => {
     StartTime,
     EndTime,
     CommessaId,
-    CommessaName,
     IncaricatoId,
     CategoryColor,
     Description,
@@ -186,7 +185,6 @@ app.put('/api/eventi/:id', async (req, res) => {
         Titolo = ?,
         Inizio = ?,
         Fine = ?,
-        CommessaId = ?,   -- Salva CommessaId
         CommessaName = ?, -- Salva CommessaName
         IncaricatoId = ?, -- Salva IncaricatoId
         Colore = ?,
@@ -199,7 +197,6 @@ app.put('/api/eventi/:id', async (req, res) => {
       StartTime,
       EndTime,
       CommessaId || null,
-      CommessaName || null,
       Array.isArray(IncaricatoId) ? IncaricatoId.join(',') : null,
       CategoryColor,
       Description,
