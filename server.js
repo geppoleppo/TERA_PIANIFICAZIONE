@@ -46,42 +46,41 @@ app.use(express.json());
 // Aggiungi un nuovo evento
 app.post('/api/eventi', (req, res) => {
   const {
-      Subject,
-      StartTime,
-      EndTime,
-      CommessaId,
-      CommessaName,
-      IncaricatoId,
-      CategoryColor,
-      Description,
-      parentID,
+    Subject,       // Titolo dell'evento
+    StartTime,     // Inizio dell'evento
+    EndTime,       // Fine dell'evento
+    ProjectId,     // ID della commessa
+    CollaboratoreId, // ID del collaboratore
+    Description,   // Aggiungi Descrizione per il summary
+    parentID       // ID del task genitore
   } = req.body;
 
+  // Mappa i campi ai nomi usati nella query SQL
+  const Titolo = Subject;
+  const Inizio = StartTime;
+  const Fine = EndTime;
+  const CommessaName = ProjectId;
+  const IncaricatoId = CollaboratoreId;
+  const Colore = '#000000'; // Colore di default o mappa come necessario
+  const Progresso = 0; // Valore di default per il progresso
+  const Dipendenza = ''; // Valore vuoto per la dipendenza
+  const Descrizione = Description; // Mappa il summary nel campo Descrizione
+
   const query = `
-      INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaId, CommessaName, IncaricatoId, Colore, Descrizione, parentID)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione, parentID)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  runQuery(query, [
-      Subject,
-      StartTime,
-      EndTime,
-      CommessaId || null,
-      CommessaName || null,
-      Array.isArray(IncaricatoId) ? IncaricatoId.join(',') : null,
-      CategoryColor || '#000000',
-      Description || '',
-      parentID || null,
-  ])
-      .then((result) => {
-          res.status(201).json({ Id: result.insertId, ...req.body });
-      })
-      .catch((err) => {
-          console.error("Errore durante l'inserimento dell'evento:", err);
-          res.status(500).json({ error: "Errore durante l'inserimento dell'evento." });
-      });
+  runQuery(query, [Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione, parentID])
+    .then(result => {
+      console.log('Evento salvato con successo:', result);
+      res.status(201).json({ message: 'Evento aggiunto con successo.', id: result.id });
+    })
+    .catch(err => {
+      console.error("Errore durante il salvataggio dell'evento:", err);
+      res.status(500).json({ error: "Errore durante il salvataggio dell'evento." });
+    });
 });
-;
 
 
 
@@ -112,6 +111,12 @@ app.put('/api/collaboratori/:id/aggiungi-commesse', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento delle commesse del collaboratore." });
   }
 });
+
+
+
+
+
+
 
 
 
@@ -166,7 +171,7 @@ app.put('/api/eventi/:id', async (req, res) => {
     EndTime,
     CommessaId,
     IncaricatoId,
-    Color,
+    CategoryColor,
     Description,
     parentID,
   } = req.body;
@@ -193,7 +198,7 @@ app.put('/api/eventi/:id', async (req, res) => {
       EndTime,
       CommessaId || null,
       Array.isArray(IncaricatoId) ? IncaricatoId.join(',') : null,
-      Color,
+      CategoryColor,
       Description,
       parentID,
       id,
