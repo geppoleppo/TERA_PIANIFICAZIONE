@@ -39,25 +39,39 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
     if (args.requestType === 'save' && args.data) {
         const updatedEvent = args.data;
 
-        // Cerca i dati originali per preservare campi mancanti
-        const originalEvent = ganttData.find((event) => event.Id === updatedEvent.Id) || {};
+        if (!updatedEvent.Id) {
+            // Nuovo evento creato
+            const newEvent = {
+                ...updatedEvent,
+                CommessaName: projectResources.find((proj) => proj.id === updatedEvent.CommessaId)?.text || "Non assegnata",
+                IncaricatoId: Array.isArray(updatedEvent.IncaricatoId) ? updatedEvent.IncaricatoId : [],
+            };
+            console.log("Nuovo evento da salvare:", newEvent);
+            onSaveEvent(newEvent);
+        } else {
+            // Aggiorna evento esistente
+            const originalEvent = ganttData.find((event) => event.Id === updatedEvent.Id) || {};
 
-        const payload = {
-            ...originalEvent, // Mantieni i dati originali
-            ...updatedEvent,  // Sovrascrivi con i nuovi dati
-            CommessaName: originalEvent.CommessaName, // Evita di sovrascrivere CommessaName
-            CommessaId: updatedEvent.ProjectId || originalEvent.ProjectId || null,
-            IncaricatoId: Array.isArray(updatedEvent.CollaboratoreId) 
-                ? updatedEvent.CollaboratoreId 
-                : originalEvent.IncaricatoId || [],
-        };
+            const payload = {
+                ...originalEvent,
+                ...updatedEvent,
+                CommessaName: originalEvent.CommessaName,
+                CommessaId: updatedEvent.ProjectId || originalEvent.ProjectId || null,
+                IncaricatoId: Array.isArray(updatedEvent.CollaboratoreId)
+                    ? updatedEvent.CollaboratoreId
+                    : originalEvent.IncaricatoId || [],
+            };
 
-        console.log("Payload aggiornato per l'evento:", payload);
+            console.log("Payload aggiornato per l'evento:", payload);
+            onUpdateEvent(payload);
+        }
+    }
 
-        // Invia il payload aggiornato ad App.js
-        onUpdateEvent(payload);
+    if (args.requestType === 'toolbarClick' && args.item.id === 'Add') {
+        console.log("Creazione di un nuovo evento avviata.");
     }
 };
+
 
   
 
@@ -100,65 +114,89 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, categoryR
   return (
     <div>
 
-      <GanttComponent
-        //ref={ganttRef}
-        dataSource={ganttData}
-        allowSelection={true}
-        allowSorting={true}
-        actionComplete={onActionComplete}
-        taskbarTemplate={taskbarTemplate}
-        taskFields={{
-          id: 'Id',
-          name: 'Subject',
-          startDate: 'StartTime',
-          endDate: 'EndTime',
-          parentID: 'parentID',
-          progress: 'Progress',
-          expanded: true
-        }}
-        editSettings={{
-          allowAdding: true,
-          allowEditing: true,
-          allowDeleting: true,
-          allowTaskbarEditing: true,
-          showDeleteConfirmDialog: true
-        }}
-        filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
-        labelSettings={{
-          rightLabel: (props) => getCollaboratorNames(props.taskData?.IncaricatoId, categoryResources),
-        }}
-        toolbar={['Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
-        //height="500px"
-      >
+<GanttComponent
+  ref={ganttRef}
+  dataSource={ganttData}
+  allowSelection={true}
+  allowSorting={true}
+  actionComplete={onActionComplete}
+  taskbarTemplate={taskbarTemplate}
+  taskFields={{
+    id: 'Id',
+    name: 'Subject',
+    startDate: 'StartTime',
+    endDate: 'EndTime',
+    parentID: 'parentID',
+    progress: 'Progress',
+    expanded: true
+  }}
+  editSettings={{
+    allowAdding: true, // Abilita l'aggiunta
+    allowEditing: true,
+    allowDeleting: true,
+    allowTaskbarEditing: true,
+    showDeleteConfirmDialog: true
+  }}
+  filterSettings={{ type: 'Menu', hierarchyMode: 'Parent' }}
+  labelSettings={{
+    rightLabel: (props) => getCollaboratorNames(props.taskData?.IncaricatoId, categoryResources),
+  }}
+  toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Indent', 'Outdent']}
+>
 <ColumnsDirective>
-  <ColumnDirective field="Subject" headerText="Titolo" isPrimaryKey={true} width="150" />
-  <ColumnDirective field="CommessaName" headerText="Commessa" width="150" />
-  <ColumnDirective field="Id" headerText="ID" width="150" />
+  <ColumnDirective field="Subject" headerText="Titolo" width="150" />
+  <ColumnDirective field="StartTime" headerText="Data Inizio" editType="datepickeredit" width="150" />
+  <ColumnDirective field="EndTime" headerText="Data Fine" editType="datepickeredit" width="150" />
   <ColumnDirective
-    field="parentID"
-    headerText="Parent Task"
-    editType="dropdownedit"
-    width="150"
-    edit={{
-      params: {
-        dataSource: new DataManager(parentTaskDataSource), // Usa DataManager per Syncfusion
-        query: new Query(), // Crea una query vuota per inizializzare
-        fields: { text: 'Subject', value: 'Id' },
-        placeholder: 'Seleziona Parent Task',
-      },
-      create: () => document.createElement('input'), // Crea l'elemento input del dropdown
-      read: (args) => args.value || null, // Legge il valore e assegna null per "Nessun genitore"
-      actionComplete: (args) => {
-        // Filtra per escludere l'ID del task corrente
-        const currentTaskId = ganttRef.current?.getSelectedRecord()?.Id;
-        args.result = args.result.filter((task) => task.Id !== currentTaskId);
-      },
-    }}
-  />
+  field="CommessaName"
+  headerText="Commessa"
+  editType="dropdownedit"
+  width="150"
+  edit={{
+    params: {
+      dataSource: new DataManager(projectResources), // Commesse attuali
+      query: new Query(),
+      fields: { text: 'text', value: 'id' },
+      placeholder: 'Seleziona Commessa',
+    },
+  }}
+/>
+<ColumnDirective
+  field="IncaricatoId"
+  headerText="Collaboratore"
+  editType="dropdownedit"
+  width="150"
+  edit={{
+    params: {
+      dataSource: new DataManager(categoryResources), // Collaboratori
+      query: new Query(),
+      fields: { text: 'text', value: 'id' },
+      placeholder: 'Seleziona Collaboratore',
+    },
+  }}
+/>
+<ColumnDirective
+  field="parentID"
+  headerText="Parent Task"
+  editType="dropdownedit"
+  width="150"
+  edit={{
+    params: {
+      dataSource: new DataManager(ganttData), // Tutti gli eventi
+      query: new Query(),
+      fields: { text: 'Subject', value: 'Id' },
+      placeholder: 'Seleziona Parent Task',
+    },
+  }}
+/>
+
 </ColumnsDirective>
 
-        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
-      </GanttComponent>
+
+
+  <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
+</GanttComponent>
+
     </div>
   );
 };

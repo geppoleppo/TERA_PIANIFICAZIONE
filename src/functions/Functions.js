@@ -1,7 +1,4 @@
 
-
-
-// Functions.js
 // Functions.js
 export const handleCollaboratoreChange = (selectedOptions, setSelectedCollaboratori, categoryResources, setFilteredProjectResources, projectResources) => {
   const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
@@ -187,9 +184,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
     }
   };
   
-  
-
-
+ 
   
   // Funzione per aggiornare un evento
 
@@ -209,6 +204,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
           Description: eventData.Description 
         })
       });
+      console.log('COLORE',response)
       const data = await response.json();
       fetchEvents(); // Ricarica gli eventi
     } catch (error) {
@@ -221,8 +217,10 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
 // Funzione per caricare le commesse dal database
 export const fetchProjectResources = async () => {
   try {
+    
     const response = await fetch('http://localhost:3001/api/commesse');
     const data = await response.json();
+    
     return data.map((commessa) => ({
       text: commessa.text,
       id: commessa.Id,

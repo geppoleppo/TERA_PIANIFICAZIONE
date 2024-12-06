@@ -63,6 +63,33 @@ const App = () => {
     }
 };
 
+const handleSaveEvent = async (newEvent) => {
+  try {
+      console.log("Dati inviati per il salvataggio:", newEvent);
+
+      const response = await fetch('http://localhost:3001/api/eventi', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newEvent),
+      });
+
+      if (!response.ok) {
+          throw new Error(`Errore durante il salvataggio: ${response.statusText}`);
+      }
+
+      const savedEvent = await response.json();
+      console.log("Evento salvato con successo:", savedEvent);
+
+      // Aggiorna lo stato locale con il nuovo evento
+      setEvents((prevEvents) => [...prevEvents, savedEvent]);
+      setFilteredEventsForGantt((prevEvents) => [...prevEvents, savedEvent]);
+  } catch (error) {
+      console.error("Errore durante il salvataggio dell'evento:", error);
+  }
+};
+
 
 
 
