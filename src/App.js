@@ -98,12 +98,9 @@ const App = () => {
     }
   };
 
-  //useEffect(() => {
-    //console.log("Dati del Gantt:", filteredEventsForGantt);
-  //}, [filteredEventsForGantt]);
 
   useEffect(() => {
-    //console.log('EVENTONE', events)
+    console.log('USE EFFECT 1',events)
     const enrichedEvents = events.map((event) => {
       const commessa = filteredProjectResources.find((res) => res.id === event.ProjectId);
       return {
@@ -117,6 +114,7 @@ const App = () => {
   }, [events, filteredProjectResources]);
 
   useEffect(() => {
+    console.log('USE EFFECT 2')
     const loadData = async () => {
       try {
         const projects = await fetchProjectResources(); // Carica le commesse
@@ -150,6 +148,7 @@ const App = () => {
   };
 
   useEffect(() => {
+    console.log('USE EFFECT 3')
     if (selectedCollaboratori.length === 0) {
       setFilteredProjectResources([]); // Nessuna commessa mostrata
       setSelectedCommesse([]); // Nessuna commessa selezionata
@@ -169,10 +168,11 @@ const App = () => {
   }, [selectedCollaboratori, projectResources, categoryResources]);
 
   useEffect(() => {
+    console.log('USE EFFECT 4',events)
     const filteredEvents = events.filter((event) => {
       const isCollaboratorMatch =
         selectedCollaboratori.length === 0 ||
-        event.CollaboratoreId.some((id) => selectedCollaboratori.includes(id));
+        event.IncaricatoId.some((id) => selectedCollaboratori.includes(id));
       const isCommessaMatch =
         selectedCommesse.length === 0 || selectedCommesse.includes(event.ProjectId);
       return isCollaboratorMatch && isCommessaMatch;
