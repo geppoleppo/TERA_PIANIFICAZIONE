@@ -64,15 +64,6 @@ const App = () => {
 };
 
 
-
-
-
-
-
-
-
-
-
   const handleDeleteEvent = async (eventId) => {
     try {
       console.log(`Eliminazione evento con ID: ${eventId}`);
