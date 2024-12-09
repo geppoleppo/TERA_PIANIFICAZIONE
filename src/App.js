@@ -130,7 +130,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    console.log('USE EFFECT 3')
+    //console.log('USE EFFECT 3')
     if (selectedCollaboratori.length === 0) {
       setFilteredProjectResources([]); // Nessuna commessa mostrata
       setSelectedCommesse([]); // Nessuna commessa selezionata
@@ -167,7 +167,32 @@ const App = () => {
     setSelectedCommesse(selectedIds);
   };
 
-
+  const handleSaveEvent = async (newEvent) => {
+    try {
+      console.log("Salvataggio del nuovo evento:", newEvent);
+  
+      const response = await fetch('http://localhost:3001/api/eventi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newEvent),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Errore durante il salvataggio del nuovo evento.');
+      }
+  
+      const savedEvent = await response.json();
+      console.log("Nuovo evento salvato:", savedEvent);
+  
+      // Aggiungi il nuovo evento allo stato locale
+      setEvents((prevEvents) => [...prevEvents, { ...newEvent, Id: savedEvent.Id }]);
+    } catch (error) {
+      console.error('Errore durante il salvataggio del nuovo evento:', error);
+    }
+  };
+  
 
   const handleSaveAssociations = () => {
     if (selectedCollaboratori.length !== 1) {
@@ -263,14 +288,16 @@ const App = () => {
         setProjectResources={setProjectResources}
         filteredProjectResources={filteredProjectResources}
       />
-      <Gantt
-        ganttData={filteredEventsForGantt}
-        onSaveEvent={(eventData) => console.log("Evento salvato:", eventData)}
-        onUpdateEvent={handleUpdateEvent}
-        onDeleteEvent={handleDeleteEvent}
-        categoryResources={categoryResources}
-        projectResources={projectResources} // Passiamo projectResources qui
-      />
+<Gantt
+  ganttData={filteredEventsForGantt}
+  projectResources={projectResources} // Per il menu delle commesse
+  selectedCommesse={selectedCommesse} // Per gli ID delle commesse selezionabili
+  categoryResources={categoryResources} // Per il menu collaboratori
+  onSaveEvent={handleSaveEvent}
+  onUpdateEvent={handleUpdateEvent}
+  onDeleteEvent={handleDeleteEvent}
+/>
+      
     </div>
   );
 };

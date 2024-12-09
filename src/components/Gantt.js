@@ -12,55 +12,42 @@ import {
   ColumnDirective,
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, }) => {
-  const [dropdownData, setDropdownData] = useState([]);
-  const [refreshKey, setRefreshKey] = useState(0); // Chiave per forzare il ri-rendering
+const Gantt = ({
+  ganttData,
+  projectResources,
+  selectedCommesse,
+  categoryResources,
+  onSaveEvent,
+  onUpdateEvent,
+  onDeleteEvent,
+}) => {
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Aggiorna `dropdownData` quando `ganttData` cambia
+  // Forza il ri-rendering del componente quando i dati cambiano
   useEffect(() => {
-    if (ganttData && ganttData.length > 0) {
-      const uniqueData = ganttData
-        .map((item) => ({
-          text: item.CommessaName || 'Non specificata',
-          id: item.ProjectId,
-        }))
-        .filter(
-          (value, index, self) =>
-            index === self.findIndex((t) => t.id === value.id)
-        );
-
-      setDropdownData(uniqueData);
-      setRefreshKey((prevKey) => prevKey + 1); // Forza il ri-rendering del componente
-      console.log('[Dropdown] Dati aggiornati con ganttData:', uniqueData);
-    }
-  }, [ganttData]);
-
+    setRefreshKey((prevKey) => prevKey + 1);
+  }, [ganttData, projectResources, categoryResources, selectedCommesse]);
 
   const handleActionComplete = (args) => {
     if (args.requestType === 'save') {
-      console.log('[Gantt] Evento aggiornato:', args.data);
-      // Chiama la funzione onUpdateEvent passando i dati aggiornati
-      if (onUpdateEvent) {
-        onUpdateEvent(args.data);
+      if (!args.data.Id) {
+        onSaveEvent(args.data); // Nuovo evento
+      } else {
+        onUpdateEvent(args.data); // Aggiorna evento esistente
       }
     }
 
     if (args.requestType === 'delete') {
-      console.log('[Gantt] Evento eliminato:', args.data);
-      // Chiama la funzione onDeleteEvent per ogni evento eliminato
       if (onDeleteEvent) {
-        args.data.forEach((event) => {
-          onDeleteEvent(event.Id);
-        });
+        args.data.forEach((event) => onDeleteEvent(event.Id));
       }
     }
   };
 
-
   return (
     <div key={refreshKey}>
       <GanttComponent
-       actionComplete={handleActionComplete}
+        actionComplete={handleActionComplete}
         dataSource={ganttData}
         allowSelection={true}
         allowSorting={true}
@@ -82,33 +69,65 @@ const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, }) => {
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel']}
       >
         <ColumnsDirective>
-          {/* Definisci la colonna ID con isPrimaryKey: true */}
           <ColumnDirective
             field="Id"
             headerText="ID"
-            width="100"
-            visible={false} // Puoi nascondere la colonna se non vuoi mostrarla
-            isPrimaryKey={true} // Imposta questa colonna come chiave primaria
+            isPrimaryKey={true}
+            visible={false}
           />
+          <ColumnDirective field="Subject" headerText="Titolo" width="150" />
           <ColumnDirective
-            field="Subject"
-            headerText="Titolo"
-            width="150"
-          />
+  field="CommessaName"
+  headerText="Commessa"
+  editType="dropdownedit"
+  width="150"
+  edit={{
+    params: {
+      dataSource: projectResources.filter((commessa) =>
+        selectedCommesse.includes(commessa.id)
+      ), // Filtra commesse che matchano con selectedCommesse
+      fields: { text: 'text', value: 'id' },
+      placeholder: 'Seleziona Commessa',
+    },
+  }}
+/>
+
           <ColumnDirective
-            field="CommessaName"
-            headerText="Commessa"
+            field="parentID"
+            headerText="Parent"
             editType="dropdownedit"
             width="150"
             edit={{
               params: {
-                dataSource: dropdownData,
-                fields: { text: 'text', value: 'id' },
-                placeholder: 'Seleziona Commessa',
+                dataSource: [
+                  { text: 'Nessuno', value: null },
+                  ...ganttData.map((event) => ({
+                    text: event.Subject,
+                    value: event.Id,
+                  })),
+                ],
+                fields: { text: 'text', value: 'value' },
+                placeholder: 'Seleziona Parent',
               },
             }}
           />
-          {/* Puoi aggiungere altre colonne se necessario */}
+          <ColumnDirective
+            field="CollaboratoreId"
+            headerText="Collaboratori"
+            editType="dropdownedit"
+            width="150"
+            edit={{
+              params: {
+                dataSource: categoryResources.map((collab) => ({
+                  text: collab.text,
+                  value: collab.id,
+                })),
+                fields: { text: 'text', value: 'value' },
+                placeholder: 'Seleziona Collaboratori',
+                mode: 'CheckBox', // Abilita multi-selezione
+              },
+            }}
+          />
           <ColumnDirective
             field="StartTime"
             headerText="Data Inizio"

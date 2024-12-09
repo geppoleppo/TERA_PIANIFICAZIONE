@@ -44,43 +44,45 @@ app.use(express.json());
 
 
 // Aggiungi un nuovo evento
-app.post('/api/eventi', (req, res) => {
+app.post('/api/eventi', async (req, res) => {
   const {
-    Subject,       // Titolo dell'evento
-    StartTime,     // Inizio dell'evento
-    EndTime,       // Fine dell'evento
-    ProjectId,     // ID della commessa
-    CollaboratoreId, // ID del collaboratore
-    Description,   // Aggiungi Descrizione per il summary
-    parentID       // ID del task genitore
+    Subject,
+    StartTime,
+    EndTime,
+    ProjectId,
+    CollaboratoreId,
+    CategoryColor,
+    Description,
+    parentID,
   } = req.body;
 
-  // Mappa i campi ai nomi usati nella query SQL
-  const Titolo = Subject;
-  const Inizio = StartTime;
-  const Fine = EndTime;
-  const CommessaName = ProjectId;
-  const IncaricatoId = CollaboratoreId;
-  const Colore = '#000000'; // Colore di default o mappa come necessario
-  const Progresso = 0; // Valore di default per il progresso
-  const Dipendenza = ''; // Valore vuoto per la dipendenza
-  const Descrizione = Description; // Mappa il summary nel campo Descrizione
+console.log('SALVATAGGIO',req.body)
 
-  const query = `
-    INSERT INTO Eventi (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione, parentID)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+  try {
+    const query = `
+      INSERT INTO Eventi 
+      (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Descrizione, parentID)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-  runQuery(query, [Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, Descrizione, parentID])
-    .then(result => {
-      console.log('Evento salvato con successo:', result);
-      res.status(201).json({ message: 'Evento aggiunto con successo.', id: result.id });
-    })
-    .catch(err => {
-      console.error("Errore durante il salvataggio dell'evento:", err);
-      res.status(500).json({ error: "Errore durante il salvataggio dell'evento." });
-    });
+    const result = await runQuery(query, [
+      Subject,
+      StartTime,
+      EndTime,
+      ProjectId || null,
+      Array.isArray(CollaboratoreId) ? CollaboratoreId.join(',') : null,
+      CategoryColor || '#000000',
+      Description || '',
+      parentID || null,
+    ]);
+
+    res.json({ message: 'Evento salvato con successo!', Id: result.insertId });
+  } catch (error) {
+    console.error('Errore durante il salvataggio del nuovo evento:', error);
+    res.status(500).json({ error: 'Errore durante il salvataggio del nuovo evento.' });
+  }
 });
+
 
 
 
