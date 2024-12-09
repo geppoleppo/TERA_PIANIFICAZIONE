@@ -11,29 +11,29 @@ import {
   ColumnsDirective,
   ColumnDirective,
 } from '@syncfusion/ej2-react-gantt';
+import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 
 const Gantt = ({
   ganttData,
-  projectResources,
-  selectedCommesse,
-  categoryResources,
   onSaveEvent,
   onUpdateEvent,
   onDeleteEvent,
+  projectResources,
+  selectedCommesse,
+  categoryResources,
 }) => {
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0); // Chiave per forzare il ri-rendering
 
-  // Forza il ri-rendering del componente quando i dati cambiano
   useEffect(() => {
-    setRefreshKey((prevKey) => prevKey + 1);
-  }, [ganttData, projectResources, categoryResources, selectedCommesse]);
+    setRefreshKey((prevKey) => prevKey + 1); // Forza il ri-rendering quando cambia ganttData
+  }, [ganttData]);
 
   const handleActionComplete = (args) => {
     if (args.requestType === 'save') {
       if (!args.data.Id) {
-        onSaveEvent(args.data); // Nuovo evento
+        onSaveEvent(args.data);
       } else {
-        onUpdateEvent(args.data); // Aggiorna evento esistente
+        onUpdateEvent(args.data);
       }
     }
 
@@ -42,6 +42,38 @@ const Gantt = ({
         args.data.forEach((event) => onDeleteEvent(event.Id));
       }
     }
+  };
+
+  const collaboratorEditTemplate = {
+    create: () => {
+      const input = document.createElement('input');
+      input.className = 'collaborator-multi-select';
+      return input;
+    },
+    write: (args) => {
+      const multiSelect = new MultiSelectComponent({
+        dataSource: categoryResources.map((collab) => ({
+          text: collab.text,
+          value: collab.id,
+        })),
+        fields: { text: 'text', value: 'value' },
+        value: args.rowData?.CollaboratoreId || [],
+        mode: 'CheckBox',
+        showDropDownIcon: true,
+        placeholder: 'Seleziona Collaboratori',
+        popupHeight: '250px',
+        change: (e) => {
+          args.rowData.CollaboratoreId = e.value;
+        },
+      });
+      multiSelect.appendTo('.collaborator-multi-select');
+    },
+    destroy: () => {
+      const multiSelect = document.querySelector('.collaborator-multi-select');
+      if (multiSelect && multiSelect.ej2_instances) {
+        multiSelect.ej2_instances[0].destroy();
+      }
+    },
   };
 
   return (
@@ -58,6 +90,7 @@ const Gantt = ({
           endDate: 'EndTime',
           parentID: 'parentID',
           progress: 'Progress',
+          resourceInfo: 'CollaboratoreId', // Collegamento ai collaboratori
         }}
         editSettings={{
           allowAdding: true,
@@ -72,61 +105,31 @@ const Gantt = ({
           <ColumnDirective
             field="Id"
             headerText="ID"
-            isPrimaryKey={true}
+            width="100"
             visible={false}
+            isPrimaryKey={true}
           />
           <ColumnDirective field="Subject" headerText="Titolo" width="150" />
           <ColumnDirective
-  field="CommessaName"
-  headerText="Commessa"
-  editType="dropdownedit"
-  width="150"
-  edit={{
-    params: {
-      dataSource: projectResources.filter((commessa) =>
-        selectedCommesse.includes(commessa.id)
-      ), // Filtra commesse che matchano con selectedCommesse
-      fields: { text: 'text', value: 'id' },
-      placeholder: 'Seleziona Commessa',
-    },
-  }}
-/>
-
-          <ColumnDirective
-            field="parentID"
-            headerText="Parent"
+            field="CommessaName"
+            headerText="Commessa"
             editType="dropdownedit"
             width="150"
             edit={{
               params: {
-                dataSource: [
-                  { text: 'Nessuno', value: null },
-                  ...ganttData.map((event) => ({
-                    text: event.Subject,
-                    value: event.Id,
-                  })),
-                ],
-                fields: { text: 'text', value: 'value' },
-                placeholder: 'Seleziona Parent',
+                dataSource: projectResources.filter((commessa) =>
+                  selectedCommesse.includes(commessa.id)
+                ),
+                fields: { text: 'text', value: 'id' },
+                placeholder: 'Seleziona Commessa',
               },
             }}
           />
           <ColumnDirective
             field="CollaboratoreId"
             headerText="Collaboratori"
-            editType="dropdownedit"
-            width="150"
-            edit={{
-              params: {
-                dataSource: categoryResources.map((collab) => ({
-                  text: collab.text,
-                  value: collab.id,
-                })),
-                fields: { text: 'text', value: 'value' },
-                placeholder: 'Seleziona Collaboratori',
-                mode: 'CheckBox', // Abilita multi-selezione
-              },
-            }}
+            width="200"
+            edit={collaboratorEditTemplate} // Configurazione per selezione multipla
           />
           <ColumnDirective
             field="StartTime"
