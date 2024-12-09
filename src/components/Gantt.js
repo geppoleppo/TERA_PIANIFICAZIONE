@@ -12,7 +12,7 @@ import {
   ColumnDirective,
 } from '@syncfusion/ej2-react-gantt';
 
-const Gantt = ({ ganttData }) => {
+const Gantt = ({ ganttData, onSaveEvent, onUpdateEvent, onDeleteEvent, }) => {
   const [dropdownData, setDropdownData] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0); // Chiave per forzare il ri-rendering
 
@@ -35,9 +35,32 @@ const Gantt = ({ ganttData }) => {
     }
   }, [ganttData]);
 
+
+  const handleActionComplete = (args) => {
+    if (args.requestType === 'save') {
+      console.log('[Gantt] Evento aggiornato:', args.data);
+      // Chiama la funzione onUpdateEvent passando i dati aggiornati
+      if (onUpdateEvent) {
+        onUpdateEvent(args.data);
+      }
+    }
+
+    if (args.requestType === 'delete') {
+      console.log('[Gantt] Evento eliminato:', args.data);
+      // Chiama la funzione onDeleteEvent per ogni evento eliminato
+      if (onDeleteEvent) {
+        args.data.forEach((event) => {
+          onDeleteEvent(event.Id);
+        });
+      }
+    }
+  };
+
+
   return (
     <div key={refreshKey}>
       <GanttComponent
+       actionComplete={handleActionComplete}
         dataSource={ganttData}
         allowSelection={true}
         allowSorting={true}

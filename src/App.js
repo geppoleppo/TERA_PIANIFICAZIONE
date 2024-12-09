@@ -20,48 +20,39 @@ const App = () => {
   const [events, setEvents] = useState([]); // Eventi originali
   const [filteredEventsForGantt, setFilteredEventsForGantt] = useState([]); // Eventi filtrati
   const ganttRef = useRef(null);
-
+  
+  
+  
   const handleUpdateEvent = async (updatedEvent) => {
     try {
-        console.log("Dati inviati per l'aggiornamento:", updatedEvent);
-
-        // Prepara il payload con i dati corretti
-        const commessa = projectResources.find((proj) => proj.id === updatedEvent.CommessaId);
-        const payload = {
-            ...updatedEvent,
-            CommessaName: commessa ? commessa.text : updatedEvent.CommessaName || null,
-            IncaricatoId: Array.isArray(updatedEvent.IncaricatoId)
-                ? updatedEvent.IncaricatoId
-                : [],
-        };
-
-        console.log("Payload per aggiornamento PUT:", payload);
-
-        const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Errore durante l'aggiornamento: ${response.statusText}`);
-        }
-
-        console.log(`Evento con ID ${updatedEvent.Id} aggiornato con successo.`);
-        
-        // Aggiorna lo stato locale
-        setEvents((prev) =>
-            prev.map((event) => (event.Id === updatedEvent.Id ? { ...event, ...payload } : event))
-        );
-        setFilteredEventsForGantt((prev) =>
-            prev.map((event) => (event.Id === updatedEvent.Id ? { ...event, ...payload } : event))
-        );
+      console.log("Dati inviati per l'aggiornamento:", updatedEvent);
+  
+      const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedEvent),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Errore durante l'aggiornamento: ${response.statusText}`);
+      }
+  
+      const updatedData = await response.json();
+      console.log("Evento aggiornato ricevuto dal server:", updatedData);
+  
+      // Aggiorna lo stato locale
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.Id === updatedData.Id ? { ...event, ...updatedData } : event
+        )
+      );
     } catch (error) {
-        console.error("Errore durante l'aggiornamento dell'evento:", error);
+      console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
-};
+  };
+  
 
 
   const handleDeleteEvent = async (eventId) => {

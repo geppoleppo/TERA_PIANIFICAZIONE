@@ -169,7 +169,7 @@ app.put('/api/eventi/:id', async (req, res) => {
     Subject,
     StartTime,
     EndTime,
-    CommessaId,
+    taskData,
     IncaricatoId,
     CategoryColor,
     Description,
@@ -185,8 +185,8 @@ app.put('/api/eventi/:id', async (req, res) => {
         Titolo = ?,
         Inizio = ?,
         Fine = ?,
-        CommessaName = ?, -- Salva CommessaName
-        IncaricatoId = ?, -- Salva IncaricatoId
+        CommessaName = ?,
+        IncaricatoId = ?,
         Colore = ?,
         Descrizione = ?,
         parentID = ?
@@ -196,18 +196,21 @@ app.put('/api/eventi/:id', async (req, res) => {
       Subject,
       StartTime,
       EndTime,
-      CommessaId || null,
-      Array.isArray(IncaricatoId) ? IncaricatoId.join(',') : null,
+      taskData.ProjectId || null,
+      Array.isArray(taskData.IncaricatoId) ? taskData.IncaricatoId.join(',') : null,
       CategoryColor,
       Description,
       parentID,
       id,
     ]);
 
-    res.json({ message: 'Evento aggiornato con successo!' });
+    // Recupera i dati aggiornati dal database
+    const updatedEvent = await runQuery('SELECT * FROM Eventi WHERE Id = ?', [id]);
+
+    res.json(updatedEvent[0]); // Restituisci l'evento aggiornato al frontend
   } catch (error) {
-    console.error('Errore durante l\'aggiornamento dell\'evento:', error);
-    res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
+    console.error("Errore durante l'aggiornamento dell'evento:", error);
+    res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
 
