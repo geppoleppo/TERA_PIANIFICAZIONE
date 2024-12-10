@@ -239,6 +239,10 @@ const App = () => {
       });
   };
 
+  const filteredCategoryResources = categoryResources.filter((collab) =>
+    selectedCollaboratori.includes(collab.id)
+  );
+
   return (
     <div className="App">
       {/* Menu di selezione Collaboratori */}
@@ -292,7 +296,9 @@ const App = () => {
   ganttData={filteredEventsForGantt}
   projectResources={projectResources} // Per il menu delle commesse
   selectedCommesse={selectedCommesse} // Per gli ID delle commesse selezionabili
-  categoryResources={categoryResources} // Per il menu collaboratori
+  //categoryResources={categoryResources} // Per il menu collaboratori
+  selectedCollaboratori={selectedCollaboratori}
+  categoryResources={filteredCategoryResources}
   onSaveEvent={handleSaveEvent}
   onUpdateEvent={handleUpdateEvent}
   onDeleteEvent={handleDeleteEvent}

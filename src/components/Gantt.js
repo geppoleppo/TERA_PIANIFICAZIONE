@@ -10,6 +10,7 @@ import {
   Sort,
   ColumnsDirective,
   ColumnDirective,
+   
 } from '@syncfusion/ej2-react-gantt';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 
@@ -21,6 +22,7 @@ const Gantt = ({
   projectResources,
   selectedCommesse,
   categoryResources,
+  selectedCollaboratori
 }) => {
   const [refreshKey, setRefreshKey] = useState(0); // Chiave per forzare il ri-rendering
 
@@ -51,21 +53,26 @@ const Gantt = ({
       return input;
     },
     write: (args) => {
+      console.log("[Collaboratori] Inizializzazione del MultiSelect.");
+      console.log("[Collaboratori] Dati della riga:", args.rowData);
+  
       const multiSelect = new MultiSelectComponent({
         dataSource: categoryResources.map((collab) => ({
           text: collab.text,
           value: collab.id,
-        })),
+        })), // Usa collaboratori già filtrati
         fields: { text: 'text', value: 'value' },
-        value: args.rowData?.CollaboratoreId || [],
-        mode: 'CheckBox',
+        value: args.rowData?.CollaboratoreId || [], // Valori selezionati
+        mode: 'CheckBox', // Permette selezione multipla
         showDropDownIcon: true,
         placeholder: 'Seleziona Collaboratori',
         popupHeight: '250px',
         change: (e) => {
-          args.rowData.CollaboratoreId = e.value;
+          console.log("[Collaboratori] Valori selezionati:", e.value);
+          args.rowData.CollaboratoreId = e.value; // Aggiorna i dati della riga
         },
       });
+  
       multiSelect.appendTo('.collaborator-multi-select');
     },
     destroy: () => {
@@ -75,10 +82,17 @@ const Gantt = ({
       }
     },
   };
-
+  
+  
+console.log('RRRRRRRRRRRRRRRRRRRRRR',selectedCollaboratori)
   return (
     <div key={refreshKey}>
       <GanttComponent
+        resources={categoryResources} // Dati dei collaboratori
+        resourceFields={{
+          id: 'id',
+          name: 'text',
+        }}
         actionComplete={handleActionComplete}
         dataSource={ganttData}
         allowSelection={true}
@@ -125,12 +139,16 @@ const Gantt = ({
               },
             }}
           />
-          <ColumnDirective
-            field="CollaboratoreId"
-            headerText="Collaboratori"
-            width="200"
-            edit={collaboratorEditTemplate} // Configurazione per selezione multipla
-          />
+<ColumnDirective
+  field="CollaboratoreId"
+  headerText="Collaboratori"
+  width="200"
+  edit={{
+    create: collaboratorEditTemplate.create,
+    write: collaboratorEditTemplate.write,
+    destroy: collaboratorEditTemplate.destroy,
+  }}
+/>
           <ColumnDirective
             field="StartTime"
             headerText="Data Inizio"
