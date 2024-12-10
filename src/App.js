@@ -243,6 +243,13 @@ const App = () => {
     selectedCollaboratori.includes(collab.id)
   );
 
+  const parentOptions = filteredEventsForGantt.map((event) => ({
+    text: event.Subject, // Nome dell'evento
+    value: event.Id, // ID dell'evento
+  }));
+  parentOptions.unshift({ text: "Nessun Parent", value: null }); // Opzione per nessun parent
+  
+
   return (
     <div className="App">
       {/* Menu di selezione Collaboratori */}
@@ -298,6 +305,7 @@ const App = () => {
   selectedCommesse={selectedCommesse} // Per gli ID delle commesse selezionabili
   //categoryResources={categoryResources} // Per il menu collaboratori
   selectedCollaboratori={selectedCollaboratori}
+  parentOptions={parentOptions} // Opzioni dei parent
   categoryResources={filteredCategoryResources}
   onSaveEvent={handleSaveEvent}
   onUpdateEvent={handleUpdateEvent}

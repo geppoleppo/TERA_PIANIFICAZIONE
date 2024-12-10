@@ -22,7 +22,8 @@ const Gantt = ({
   projectResources,
   selectedCommesse,
   categoryResources,
-  selectedCollaboratori
+  selectedCollaboratori,
+  parentOptions, // Nuovo parametro
 }) => {
   const [refreshKey, setRefreshKey] = useState(0); // Chiave per forzare il ri-rendering
 
@@ -139,6 +140,20 @@ console.log('RRRRRRRRRRRRRRRRRRRRRR',selectedCollaboratori)
               },
             }}
           />
+
+<ColumnDirective
+  field="parentID"
+  headerText="Parent"
+  width="150"
+  editType="dropdownedit"
+  edit={{
+    params: {
+      dataSource: parentOptions, // Dati dei parent passati da App.js
+      fields: { text: "text", value: "value" },
+      placeholder: "Seleziona Parent",
+    },
+  }}
+/>
 <ColumnDirective
   field="CollaboratoreId"
   headerText="Collaboratori"
