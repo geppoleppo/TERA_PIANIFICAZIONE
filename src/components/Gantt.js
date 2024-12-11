@@ -10,7 +10,7 @@ import {
   Sort,
   ColumnsDirective,
   ColumnDirective,
-   
+
 } from '@syncfusion/ej2-react-gantt';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 
@@ -49,144 +49,179 @@ const Gantt = ({
 
   const collaboratorEditTemplate = {
     create: () => {
-      const input = document.createElement('input');
-      input.className = 'collaborator-multi-select';
+      const input = document.createElement("input");
+      input.className = "collaborator-multi-select";
       return input;
     },
+
     write: (args) => {
-      console.log("[Collaboratori] Inizializzazione del MultiSelect.");
-      console.log("[Collaboratori] Dati della riga:", args.rowData);
-  
+      console.log("[Collaboratori] Dati dell'evento:", args.rowData);
+
       const multiSelect = new MultiSelectComponent({
         dataSource: categoryResources.map((collab) => ({
           text: collab.text,
           value: collab.id,
-        })), // Usa collaboratori già filtrati
-        fields: { text: 'text', value: 'value' },
-        value: args.rowData?.CollaboratoreId || [], // Valori selezionati
-        mode: 'CheckBox', // Permette selezione multipla
+        })),
+        fields: { text: "text", value: "value" },
+        value: args.rowData?.CollaboratoreId || [], // Precarica i collaboratori associati
+        mode: "CheckBox",
         showDropDownIcon: true,
-        placeholder: 'Seleziona Collaboratori',
-        popupHeight: '250px',
+        placeholder: "Seleziona Collaboratori",
+        popupHeight: "250px",
         change: (e) => {
+          args.rowData.CollaboratoreId = e.value; // Aggiorna i dati dell'evento
           console.log("[Collaboratori] Valori selezionati:", e.value);
-          args.rowData.CollaboratoreId = e.value; // Aggiorna i dati della riga
         },
       });
-  
-      multiSelect.appendTo('.collaborator-multi-select');
+
+      multiSelect.appendTo(".collaborator-multi-select");
     },
+
     destroy: () => {
-      const multiSelect = document.querySelector('.collaborator-multi-select');
+      const multiSelect = document.querySelector(".collaborator-multi-select");
       if (multiSelect && multiSelect.ej2_instances) {
         multiSelect.ej2_instances[0].destroy();
       }
     },
   };
-  
-  
-console.log('RRRRRRRRRRRRRRRRRRRRRR',selectedCollaboratori)
+
+  console.log("[DEBUG] Configurazione del menu Commessa:", {
+    dataSource: projectResources.filter((commessa) =>
+      selectedCommesse.includes(commessa.id)
+    ),
+    fields: { text: "text", value: "id" },
+  });
+
+
   return (
     <div key={refreshKey}>
-      <GanttComponent
-        resources={categoryResources} // Dati dei collaboratori
-        resourceFields={{
-          id: 'id',
-          name: 'text',
-        }}
-        actionComplete={handleActionComplete}
-        dataSource={ganttData}
-        allowSelection={true}
-        allowSorting={true}
-        taskFields={{
-          id: 'Id',
-          name: 'Subject',
-          startDate: 'StartTime',
-          endDate: 'EndTime',
-          parentID: 'parentID',
-          progress: 'Progress',
-          resourceInfo: 'CollaboratoreId', // Collegamento ai collaboratori
-        }}
-        editSettings={{
-          allowAdding: true,
-          allowEditing: true,
-          allowDeleting: true,
-          allowTaskbarEditing: true,
-          showDeleteConfirmDialog: true,
-        }}
-        toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel']}
-      >
-        <ColumnsDirective>
-          <ColumnDirective
-            field="Id"
-            headerText="ID"
-            width="100"
-            visible={false}
-            isPrimaryKey={true}
-          />
-          <ColumnDirective field="Subject" headerText="Titolo" width="150" />
-          <ColumnDirective
-            field="CommessaName"
-            headerText="Commessa"
-            editType="dropdownedit"
-            width="150"
-            edit={{
-              params: {
-                dataSource: projectResources.filter((commessa) =>
-                  selectedCommesse.includes(commessa.id)
-                ),
-                fields: { text: 'text', value: 'id' },
-                placeholder: 'Seleziona Commessa',
-              },
-            }}
-          />
+<GanttComponent
+  actionBegin={(args) => {
+    if (
+      args.requestType === "beforeOpenEditDialog" ||
+      args.requestType === "beforeOpenAddDialog"
+    ) {
+      console.log("[DEBUG] Apertura scheda evento:", args.rowData);
 
-<ColumnDirective
-  field="parentID"
-  headerText="Parent"
-  width="150"
-  editType="dropdownedit"
-  edit={{
-    params: {
-      dataSource: parentOptions, // Dati dei parent passati da App.js
-      fields: { text: "text", value: "value" },
-      placeholder: "Seleziona Parent",
-    },
+      // Recupera i dati dall'evento selezionato
+      const { rowData } = args;
+
+      // Configura la commessa selezionata
+      rowData.CommessaName =  args.rowData.taskData?.CommessaName || 'non specificataaa';
+
+      // Configura i collaboratori associati
+      rowData.CollaboratoreId = args.rowData.taskData?.IncaricatoId || [];
+
+      // Configura il parent associato
+      rowData.parentID = args.rowData.taskData?.parentID || null;
+
+      console.log("[DEBUG] Dati configurati per la scheda:", rowData);
+    }
   }}
-/>
-<ColumnDirective
-  field="CollaboratoreId"
-  headerText="Collaboratori"
-  width="200"
-  edit={{
-    create: collaboratorEditTemplate.create,
-    write: collaboratorEditTemplate.write,
-    destroy: collaboratorEditTemplate.destroy,
+  resources={categoryResources} // Dati dei collaboratori
+  resourceFields={{
+    id: "id",
+    name: "text",
   }}
-/>
-          <ColumnDirective
-            field="StartTime"
-            headerText="Data Inizio"
-            editType="datepickeredit"
-            format="dd/MM/yyyy"
-            width="150"
-          />
-          <ColumnDirective
-            field="EndTime"
-            headerText="Data Fine"
-            editType="datepickeredit"
-            format="dd/MM/yyyy"
-            width="150"
-          />
-          <ColumnDirective
-            field="Progress"
-            headerText="Avanzamento (%)"
-            editType="numericedit"
-            width="100"
-          />
-        </ColumnsDirective>
-        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
-      </GanttComponent>
+  actionComplete={handleActionComplete}
+  dataSource={ganttData}
+  allowSelection={true}
+  allowSorting={true}
+  taskFields={{
+    id: "Id",
+    name: "Subject",
+    startDate: "StartTime",
+    endDate: "EndTime",
+    parentID: "parentID",
+    progress: "Progress",
+    resourceInfo: "CollaboratoreId", // Collegamento ai collaboratori
+  }}
+  editSettings={{
+    allowAdding: true,
+    allowEditing: true,
+    allowDeleting: true,
+    allowTaskbarEditing: true,
+    showDeleteConfirmDialog: true,
+  }}
+  toolbar={["Add", "Edit", "Update", "Delete", "Cancel"]}
+>
+  <ColumnsDirective>
+    {/* Menu Commessa */}
+    <ColumnDirective
+      field="CommessaName"
+      headerText="Commessa"
+      editType="dropdownedit"
+      width="150"
+      edit={{
+        params: {
+          dataSource: projectResources.filter((commessa) =>
+            selectedCommesse.includes(commessa.id)
+          ),
+          fields: { text: "text", value: "id" },
+          placeholder: "Seleziona Commessa",
+        },
+      }}
+    />
+    {/* Menu Parent */}
+    <ColumnDirective
+      field="parentID"
+      headerText="Parent Evento"
+      editType="dropdownedit"
+      width="150"
+      edit={{
+        params: {
+          dataSource: [
+            { text: "Nessuno", value: null },
+            ...ganttData.map((event) => ({
+              text: event.Subject,
+              value: event.Id,
+            })),
+          ],
+          fields: { text: "text", value: "value" },
+          placeholder: "Seleziona Parent",
+        },
+      }}
+    />
+  </ColumnsDirective>
+
+    {/* Menu Collaboratori */}
+    <ColumnDirective
+      field="CollaboratoreId"
+      headerText="Collaboratori"
+      width="200"
+      edit={{
+        create: () => {
+          const input = document.createElement("input");
+          input.className = "collaborator-multi-select";
+          return input;
+        },
+        write: (args) => {
+          console.log("[DEBUG] Collaboratori associati:", args.rowData.CollaboratoreId);
+          const multiSelect = new MultiSelectComponent({
+            dataSource: categoryResources.map((collab) => ({
+              text: collab.text,
+              value: collab.id,
+            })),
+            fields: { text: "text", value: "value" },
+            value: args.rowData?.CollaboratoreId || [],
+            mode: "CheckBox",
+            showDropDownIcon: true,
+            placeholder: "Seleziona Collaboratori",
+            popupHeight: "250px",
+            change: (e) => {
+              args.rowData.CollaboratoreId = e.value;
+              console.log("[DEBUG] Nuovi collaboratori selezionati:", e.value);
+            },
+          });
+          multiSelect.appendTo(".collaborator-multi-select");
+        },
+      }}
+    />
+
+
+  <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
+</GanttComponent>;
+
     </div>
   );
 };
