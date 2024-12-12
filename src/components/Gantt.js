@@ -101,13 +101,19 @@ const Gantt = ({
       args.requestType === "beforeOpenEditDialog" ||
       args.requestType === "beforeOpenAddDialog"
     ) {
-      console.log("[DEBUG] Apertura scheda evento:", args.rowData);
+      console.log("[DEBUG] Apertura scheda evento:", args.rowData.taskData.ProjectId);
 
       // Recupera i dati dall'evento selezionato
       const { rowData } = args;
 
-      // Configura la commessa selezionata
-      rowData.CommessaName =  args.rowData.taskData?.CommessaName || 'non specificataaa';
+    // Associa `ProjectId` all'ID della commessa
+    const project = args.rowData.taskData.ProjectId
+    console.log("[DEBUG PROJECT]:", project);
+    
+    args.rowData.ProjectId = project || null;
+
+    console.log("[DEBUG] ProjectId configurato:", args.rowData.ProjectId);
+  
 
       // Configura i collaboratori associati
       rowData.CollaboratoreId = args.rowData.taskData?.IncaricatoId || [];
@@ -116,6 +122,9 @@ const Gantt = ({
       rowData.parentID = args.rowData.taskData?.parentID || null;
 
       console.log("[DEBUG] Dati configurati per la scheda:", rowData);
+      console.log("DATASOURCE:",  projectResources.filter((commessa) =>
+        selectedCommesse.includes(commessa.id)
+      ))
     }
   }}
   resources={categoryResources} // Dati dei collaboratori
@@ -148,20 +157,21 @@ const Gantt = ({
   <ColumnsDirective>
     {/* Menu Commessa */}
     <ColumnDirective
-      field="CommessaName"
-      headerText="Commessa"
-      editType="dropdownedit"
-      width="150"
-      edit={{
-        params: {
-          dataSource: projectResources.filter((commessa) =>
-            selectedCommesse.includes(commessa.id)
-          ),
-          fields: { text: "text", value: "id" },
-          placeholder: "Seleziona Commessa",
-        },
-      }}
-    />
+  field="ProjectId" // Usa il campo che corrisponde a `value` nel dataSource
+  headerText="Commessa"
+  editType="dropdownedit"
+  width="150"
+  edit={{
+    params: {
+      dataSource: projectResources.filter((commessa) =>
+        selectedCommesse.includes(commessa.id)
+      ),
+      fields: { text: "text", value: "id" }, // Collega `value` a `ProjectId`
+      placeholder: "Seleziona Commessa",
+    },
+  }}
+/>
+
     {/* Menu Parent */}
     <ColumnDirective
       field="parentID"
