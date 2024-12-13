@@ -101,33 +101,15 @@ const Gantt = ({
       args.requestType === "beforeOpenEditDialog" ||
       args.requestType === "beforeOpenAddDialog"
     ) {
-      console.log("[DEBUG] Apertura scheda evento:", args.rowData.taskData.ProjectId);
-
-      // Recupera i dati dall'evento selezionato
       const { rowData } = args;
 
-    // Associa `ProjectId` all'ID della commessa
-    const project = args.rowData.taskData.ProjectId
-    console.log("[DEBUG PROJECT]:", project);
-    
-    args.rowData.ProjectId = project || null;
-
-    console.log("[DEBUG] ProjectId configurato:", args.rowData.ProjectId);
-  
-
-      // Configura i collaboratori associati
-      rowData.CollaboratoreId = args.rowData.taskData?.IncaricatoId || [];
-
-      // Configura il parent associato
-      rowData.parentID = args.rowData.taskData?.parentID || null;
-
-      console.log("[DEBUG] Dati configurati per la scheda:", rowData);
-      console.log("DATASOURCE:",  projectResources.filter((commessa) =>
-        selectedCommesse.includes(commessa.id)
-      ))
+      // Configura i valori predefiniti
+      rowData.ProjectId = rowData.taskData?.ProjectId || null;
+      rowData.CollaboratoreId = rowData.taskData?.IncaricatoId || [];
+      rowData.parentID = rowData.taskData?.parentID || null;
     }
   }}
-  resources={categoryResources} // Dati dei collaboratori
+  resources={categoryResources}
   resourceFields={{
     id: "id",
     name: "text",
@@ -143,7 +125,7 @@ const Gantt = ({
     endDate: "EndTime",
     parentID: "parentID",
     progress: "Progress",
-    resourceInfo: "CollaboratoreId", // Collegamento ai collaboratori
+    resourceInfo: "CollaboratoreId",
   }}
   editSettings={{
     allowAdding: true,
@@ -155,29 +137,34 @@ const Gantt = ({
   toolbar={["Add", "Edit", "Update", "Delete", "Cancel"]}
 >
   <ColumnsDirective>
-    {/* Menu Commessa */}
     <ColumnDirective
-  field="ProjectId" // Usa il campo che corrisponde a `value` nel dataSource
-  headerText="Commessa"
-  editType="dropdownedit"
-  width="150"
-  edit={{
-    params: {
-      dataSource: projectResources.filter((commessa) =>
-        selectedCommesse.includes(commessa.id)
-      ),
-      fields: { text: "text", value: "id" }, // Collega `value` a `ProjectId`
-      placeholder: "Seleziona Commessa",
-    },
-  }}
-/>
-
-    {/* Menu Parent */}
+      field="ProjectId"
+      headerText="Commessa"
+      width="200"
+      template={(props) => {
+        const commessa = projectResources.find((item) => item.id === props.ProjectId);
+        return <span>{commessa ? commessa.text : 'Non assegnata'}</span>;
+      }}
+      editType="dropdownedit"
+      edit={{
+        params: {
+          dataSource: projectResources.filter((commessa) =>
+            selectedCommesse.includes(commessa.id)
+          ),
+          fields: { text: "text", value: "id" },
+          placeholder: "Seleziona Commessa",
+        },
+      }}
+    />
     <ColumnDirective
       field="parentID"
       headerText="Parent Evento"
+      width="200"
+      template={(props) => {
+        const parentTask = ganttData.find((task) => task.Id === props.parentID);
+        return <span>{parentTask ? parentTask.Subject : 'Nessuno'}</span>;
+      }}
       editType="dropdownedit"
-      width="150"
       edit={{
         params: {
           dataSource: [
@@ -192,45 +179,54 @@ const Gantt = ({
         },
       }}
     />
+<ColumnDirective
+  field="CollaboratoreId"
+  headerText="Collaboratori"
+  width="300"
+  template={(props) => {
+    // Mappa gli ID dei collaboratori nei rispettivi nomi
+    const collaboratorNames = props.CollaboratoreId
+      ? props.CollaboratoreId.map((id) => {
+          const collaborator = categoryResources.find((item) => item.id === id);
+          return collaborator ? collaborator.text : null;
+        }).filter(Boolean) // Filtra eventuali valori null
+      : [];
+    return <span>{collaboratorNames.length > 0 ? collaboratorNames.join(', ') : 'Nessuno'}</span>;
+  }}
+  edit={{
+    create: () => {
+      const input = document.createElement("input");
+      input.className = "collaborator-multi-select";
+      return input;
+    },
+    write: (args) => {
+      console.log("[DEBUG] Collaboratori associati:", args.rowData.CollaboratoreId);
+      const multiSelect = new MultiSelectComponent({
+        dataSource: categoryResources.map((collab) => ({
+          text: collab.text,
+          value: collab.id,
+        })),
+        fields: { text: "text", value: "value" },
+        value: args.rowData?.CollaboratoreId || [],
+        mode: "CheckBox",
+        showDropDownIcon: true,
+        placeholder: "Seleziona Collaboratori",
+        popupHeight: "250px",
+        change: (e) => {
+          args.rowData.CollaboratoreId = e.value;
+          console.log("[DEBUG] Nuovi collaboratori selezionati:", e.value);
+        },
+      });
+      multiSelect.appendTo(".collaborator-multi-select");
+    },
+  }}
+/>
+
+
   </ColumnsDirective>
-
-    {/* Menu Collaboratori */}
-    <ColumnDirective
-      field="CollaboratoreId"
-      headerText="Collaboratori"
-      width="200"
-      edit={{
-        create: () => {
-          const input = document.createElement("input");
-          input.className = "collaborator-multi-select";
-          return input;
-        },
-        write: (args) => {
-          console.log("[DEBUG] Collaboratori associati:", args.rowData.CollaboratoreId);
-          const multiSelect = new MultiSelectComponent({
-            dataSource: categoryResources.map((collab) => ({
-              text: collab.text,
-              value: collab.id,
-            })),
-            fields: { text: "text", value: "value" },
-            value: args.rowData?.CollaboratoreId || [],
-            mode: "CheckBox",
-            showDropDownIcon: true,
-            placeholder: "Seleziona Collaboratori",
-            popupHeight: "250px",
-            change: (e) => {
-              args.rowData.CollaboratoreId = e.value;
-              console.log("[DEBUG] Nuovi collaboratori selezionati:", e.value);
-            },
-          });
-          multiSelect.appendTo(".collaborator-multi-select");
-        },
-      }}
-    />
-
-
   <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
-</GanttComponent>;
+</GanttComponent>
+
 
     </div>
   );
