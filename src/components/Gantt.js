@@ -191,16 +191,15 @@ const Gantt = ({
 <ColumnDirective
   field="CollaboratoreId"
   headerText="Collaboratori"
-  width="300"
+  width="200"
   template={(props) => {
-    // Mappa gli ID dei collaboratori nei rispettivi nomi
-    const collaboratorNames = props.CollaboratoreId
-      ? props.CollaboratoreId.map((id) => {
-          const collaborator = categoryResources.find((item) => item.id === id);
-          return collaborator ? collaborator.text : null;
-        }).filter(Boolean) // Filtra eventuali valori null
-      : [];
-    return <span>{collaboratorNames.length > 0 ? collaboratorNames.join(', ') : 'Nessuno'}</span>;
+    // Mappa gli ID ai nomi usando `categoryResources`
+    console.log("[DEBUG] props.CollaboratoreId:", props.taskData.IncaricatoId);
+    const collaboratorNames = (props.taskData.IncaricatoId || [])
+      .map((id) => categoryResources.find((collab) => collab.id === id)?.text)
+      .filter(Boolean) // Rimuove eventuali valori null o undefined
+      .join(", "); // Concatena i nomi con una virgola
+    return <span>{collaboratorNames || "Nessuno"}</span>;
   }}
   edit={{
     create: () => {
@@ -209,7 +208,6 @@ const Gantt = ({
       return input;
     },
     write: (args) => {
-      console.log("[DEBUG] Collaboratori associati:", args.rowData.CollaboratoreId);
       const multiSelect = new MultiSelectComponent({
         dataSource: categoryResources.map((collab) => ({
           text: collab.text,
@@ -223,13 +221,13 @@ const Gantt = ({
         popupHeight: "250px",
         change: (e) => {
           args.rowData.CollaboratoreId = e.value;
-          console.log("[DEBUG] Nuovi collaboratori selezionati:", e.value);
         },
       });
       multiSelect.appendTo(".collaborator-multi-select");
     },
   }}
 />
+
 
 
   </ColumnsDirective>
