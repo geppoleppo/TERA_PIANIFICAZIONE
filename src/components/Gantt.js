@@ -137,10 +137,19 @@ const Gantt = ({
   toolbar={["Add", "Edit", "Update", "Delete", "Cancel"]}
 >
   <ColumnsDirective>
+  <ColumnDirective
+    field="Id"
+    headerText="ID"
+    visible={false} // Nascondi la colonna
+    isPrimaryKey={true} // Identifica questa colonna come la chiave primaria
+  />
+
     <ColumnDirective
       field="ProjectId"
       headerText="Commessa"
       width="200"
+      visible={true} // Puoi nasconderlo se non vuoi mostrarlo nell'interfaccia
+      isPrimaryKey={false}
       template={(props) => {
         const commessa = projectResources.find((item) => item.id === props.ProjectId);
         return <span>{commessa ? commessa.text : 'Non assegnata'}</span>;
