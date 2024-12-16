@@ -143,6 +143,11 @@ const Gantt = ({
     visible={false} // Nascondi la colonna
     isPrimaryKey={true} // Identifica questa colonna come la chiave primaria
   />
+<ColumnDirective
+  field="Subject" // Campo del nome del task
+  headerText="Task"
+  width="200"
+/>
 
     <ColumnDirective
       field="ProjectId"
