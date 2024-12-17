@@ -27,17 +27,19 @@ function getRecords(query, params = []) {
 }
 
 // Funzione per eseguire una query di inserimento/aggiornamento/eliminazione
-function runQuery(query, params = []) {
+function runQuery(query, params) {
   return new Promise((resolve, reject) => {
-    db.run(query, params, function (err) {
+    db.all(query, params, (err, rows) => {
       if (err) {
         reject(err);
       } else {
-        resolve({ id: this.lastID });
+        resolve(rows);
       }
     });
   });
 }
+
+
 
 module.exports = {
     db,         // Esporta la connessione al database

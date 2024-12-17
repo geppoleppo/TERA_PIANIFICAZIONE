@@ -56,8 +56,6 @@ app.post('/api/eventi', async (req, res) => {
     parentID,
   } = req.body;
 
-console.log('SALVATAGGIO',req.body)
-
   try {
     const query = `
       INSERT INTO Eventi 
@@ -140,24 +138,48 @@ app.delete('/api/eventi/:id', (req, res) => {
     
 app.get('/api/eventi', async (req, res) => {
   try {
-    const query = 'SELECT * FROM Eventi';
-    const eventi = await getRecords(query);
+    // Query per recuperare gli eventi
+    const eventiQuery = 'SELECT * FROM Eventi';
+    const eventi = await getRecords(eventiQuery);
 
-    const mappedEventi = eventi.map(evento => ({
-      Id: evento.Id,
-      Subject: evento.Titolo,
-      StartTime: evento.Inizio,
-      EndTime: evento.Fine,
-      ProjectId: parseInt(evento.CommessaName, 10), // Converti ProjectId in numero
-      IncaricatoId: evento.IncaricatoId.split(',').map(id => parseInt(id, 10)), // Converti CollaboratoreId in array di numeri
-      CategoryColor: evento.Colore || "#000000",
-      parentID: evento.parentID ? parseInt(evento.parentID, 10) : null, // Aggiungi e converti parentID in numero, se presente
-      CommessaName: evento.CommessaName
-    }));
+    // Query per recuperare i collaboratori
+    const collaboratoriQuery = 'SELECT Id, Nome FROM Collaboratori';
+    const collaboratori = await getRecords(collaboratoriQuery);
 
-    //console.log('Dati eventi dal database (formattati):', mappedEventi); // Verifica i dati nel formato corretto
+    console.log("Collaboratori caricati:", collaboratori);
+
+    // Mappatura degli eventi
+    const mappedEventi = eventi.map(evento => {
+      // Converti IncaricatoId in array di numeri
+      const incaricatoIds = evento.IncaricatoId
+        ? evento.IncaricatoId.split(',').map(id => parseInt(id.trim(), 10))
+        : [];
+
+      // Mappa gli ID ai nomi usando i collaboratori dal database
+      const incaricatoNames = incaricatoIds
+        .map(id => {
+          const collaboratore = collaboratori.find(collab => collab.Id === id);
+          return collaboratore ? collaboratore.Nome : null;
+        })
+        .filter(Boolean) // Rimuove eventuali valori null o undefined
+        .join(", "); // Concatena i nomi con virgole
+
+      return {
+        Id: evento.Id,
+        Subject: evento.Titolo,
+        StartTime: evento.Inizio,
+        EndTime: evento.Fine,
+        ProjectId: parseInt(evento.CommessaName, 10) || null,
+        IncaricatoId: incaricatoIds, // Array di ID
+        IncaricatoName: incaricatoNames || "Nessuno", // Stringa con nomi
+        CategoryColor: evento.Colore || "#000000",
+        parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
+        CommessaName: evento.CommessaName
+      };
+    });
+
+    console.log("EVENTI MAPPATI:", mappedEventi);
     res.json(mappedEventi);
-    console.log('EVENTI MAPPATI',mappedEventi)
   } catch (error) {
     console.error('Errore durante il recupero degli eventi:', error);
     res.status(500).json({ error: 'Errore durante il recupero degli eventi.' });
@@ -166,57 +188,68 @@ app.get('/api/eventi', async (req, res) => {
 
 
 app.put('/api/eventi/:id', async (req, res) => {
-  const { id } = req.params;
-  const {
-    Subject,
-    StartTime,
-    EndTime,
-    taskData,
-    IncaricatoId,
-    CategoryColor,
-    Description,
-    parentID,
-  } = req.body;
+  const { Subject, StartTime, EndTime, taskData, CategoryColor, Description, parentID } = req.body;
 
   console.log("Dati ricevuti per l'aggiornamento:", req.body);
 
   try {
+    const collaboratorIds = taskData.IncaricatoId || [];
+    const collaboratorNames = taskData.IncaricatoName || "Nessuno";
+    const id = taskData.Id;
+
+    console.log("ID ricevuto per l'aggiornamento:", id);
+
     const query = `
       UPDATE Eventi
-      SET
-        Titolo = ?,
-        Inizio = ?,
-        Fine = ?,
-        CommessaName = ?,
-        IncaricatoId = ?,
-        Colore = ?,
-        Descrizione = ?,
-        parentID = ?
+      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?,
+          IncaricatoId = ?, IncaricatoName = ?, Colore = ?, Descrizione = ?, parentID = ?
       WHERE Id = ?
     `;
-    await runQuery(query, [
+
+    const params = [
       Subject,
       StartTime,
       EndTime,
       taskData.ProjectId || null,
-      Array.isArray(taskData.IncaricatoId) ? taskData.IncaricatoId.join(',') : null,
-      CategoryColor,
-      Description,
+      collaboratorIds.join(','),
+      collaboratorNames,
+      CategoryColor || "#000000",
+      Description || "",
       parentID,
       id,
-    ]);
+    ];
 
-    // Recupera i dati aggiornati dal database
-    const updatedEvent = await runQuery('SELECT * FROM Eventi WHERE Id = ?', [id]);
+    console.log("Query UPDATE:", query);
+    console.log("Parametri:", params);
 
-    res.json(updatedEvent[0]); // Restituisci l'evento aggiornato al frontend
+    const result = await runQuery(query, params);
+    console.log("Righe aggiornate:", result.changes);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: "Evento non trovato per l'aggiornamento." });
+    }
+
+    // Recupera l'evento aggiornato
+    console.log("Tipo di ID prima della SELECT:", typeof id, id);
+    const updatedEvent = await runQuery('SELECT * FROM Eventi WHERE Id = ?', [Number(id)]);
+
+    console.log("Evento aggiornato:", updatedEvent);
+   
+
+    if (updatedEvent.length > 0) {
+      res.json(updatedEvent[0]);
+    } else {
+      console.error("Nessun evento trovato con ID:", id);
+      res.status(404).json({ error: "Evento non trovato dopo l'aggiornamento." });
+    }
   } catch (error) {
     console.error("Errore durante l'aggiornamento dell'evento:", error);
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
-});
+}
 
 
+);
 
 
 

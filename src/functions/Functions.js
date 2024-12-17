@@ -256,18 +256,20 @@ export const fetchEvents = async (projectResources) => {
   try {
     const response = await fetch('http://localhost:3001/api/eventi');
     const data = await response.json();
+    console.log("DATA", data);
 
-    // Associare CommessaName usando ProjectId
     return data.map((event) => {
       const commessa = projectResources.find((res) => res.id === event.ProjectId);
       return {
         ...event,
-        ProjectId: parseInt(event.ProjectId),
-        CollaboratoreId: Array.isArray(event.CollaboratoreId)
-          ? event.CollaboratoreId.map((id) => parseInt(id))
-          : [],
-        Color: event.Color || '#FF0000', // Colore di default
-        CommessaName: commessa ? commessa.text : "Non assegnata", // Mappare il nome
+        ProjectId: parseInt(event.ProjectId, 10),
+        // Controlla se IncaricatoId è già un array, altrimenti convertilo
+        CollaboratoreId: Array.isArray(event.IncaricatoId)
+          ? event.IncaricatoId
+          : event.IncaricatoId.split(',').map(Number),
+        IncaricatoName: event.IncaricatoName || "Nessuno", // Mostra i nomi
+        Color: event.Colore || '#FF0000',
+        CommessaName: commessa ? commessa.text : "Non assegnata",
       };
     });
   } catch (error) {
@@ -275,6 +277,9 @@ export const fetchEvents = async (projectResources) => {
     return [];
   }
 };
+
+
+
 
 
 

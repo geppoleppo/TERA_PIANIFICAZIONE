@@ -29,9 +29,7 @@ const App = () => {
   
       const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedEvent),
       });
   
@@ -39,6 +37,7 @@ const App = () => {
         throw new Error(`Errore durante l'aggiornamento: ${response.statusText}`);
       }
   
+      // Leggi la risposta una sola volta
       const updatedData = await response.json();
       console.log("Evento aggiornato ricevuto dal server:", updatedData);
   
@@ -52,6 +51,7 @@ const App = () => {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
   
 
 
@@ -150,17 +150,28 @@ const App = () => {
   }, [selectedCollaboratori, projectResources, categoryResources]);
 
   useEffect(() => {
-    console.log('USE EFFECT 4',events)
+    console.log('USE EFFECT 4', events);
+  
     const filteredEvents = events.filter((event) => {
+      const incaricatoIdArray = Array.isArray(event.IncaricatoId)
+        ? event.IncaricatoId
+        : typeof event.IncaricatoId === "string"
+        ? event.IncaricatoId.split(',').map(Number)
+        : []; // Converte stringhe in array e gestisce null/undefined
+  
       const isCollaboratorMatch =
         selectedCollaboratori.length === 0 ||
-        event.IncaricatoId.some((id) => selectedCollaboratori.includes(id));
+        incaricatoIdArray.some((id) => selectedCollaboratori.includes(id));
+  
       const isCommessaMatch =
         selectedCommesse.length === 0 || selectedCommesse.includes(event.ProjectId);
+  
       return isCollaboratorMatch && isCommessaMatch;
     });
+  
     setFilteredEventsForGantt(filteredEvents);
   }, [selectedCollaboratori, selectedCommesse, events]);
+  
 
   const handleCommesseSelection = (selectedOptions) => {
     const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];

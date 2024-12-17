@@ -33,19 +33,41 @@ const Gantt = ({
 
   const handleActionComplete = (args) => {
     if (args.requestType === 'save') {
+      // Assicurati che `CollaboratoreId` sia un array
+      const collaboratorIds = Array.isArray(args.data.CollaboratoreId)
+        ? args.data.CollaboratoreId
+        : typeof args.data.CollaboratoreId === 'string'
+        ? args.data.CollaboratoreId.split(',').map((id) => parseInt(id, 10)) // Converte una stringa separata da virgole in array
+        : [];
+  
+      // Mappare CollaboratoreId a resourceNames
+      const collaboratorNames = collaboratorIds
+        .map((id) => {
+          const collaborator = categoryResources.find((collab) => collab.id === id);
+          return collaborator ? collaborator.text : null;
+        })
+        .filter(Boolean)
+        .join(', '); // Concatena i nomi separati da virgole
+  
+      // Aggiungi i nomi al dato salvato
+      args.data.resourceNames = collaboratorNames;
+      args.data.CollaboratoreId = collaboratorIds; // Assicura che rimanga un array
+  
       if (!args.data.Id) {
         onSaveEvent(args.data);
       } else {
         onUpdateEvent(args.data);
       }
     }
-
+  
     if (args.requestType === 'delete') {
       if (onDeleteEvent) {
         args.data.forEach((event) => onDeleteEvent(event.Id));
       }
     }
   };
+  
+  
 
   const collaboratorEditTemplate = {
     create: () => {
@@ -138,6 +160,26 @@ const Gantt = ({
 >
   <ColumnsDirective>
   <ColumnDirective
+  field="IncaricatoId"
+  headerText="ID Collaboratori"
+  width="150"
+  template={(props) => {
+    return <span>{props.IncaricatoId || "Nessuno"}</span>;
+  }}
+/>
+
+<ColumnDirective
+  field="IncaricatoName"
+  headerText="Collaboratori"
+  width="300"
+  template={(props) => {
+    return <span>{props.IncaricatoName || "Nessuno"}</span>;
+  }}
+  edit={collaboratorEditTemplate} // Usa il MultiSelect
+/>
+
+
+  <ColumnDirective
     field="Id"
     headerText="ID"
     visible={false} // Nascondi la colonna
@@ -196,15 +238,26 @@ const Gantt = ({
 <ColumnDirective
   field="CollaboratoreId"
   headerText="Collaboratori"
-  width="200"
+  width="300"
   template={(props) => {
+    // Assicurati che props.CollaboratoreId sia un array
+    const collaboratorIds = Array.isArray(props.CollaboratoreId)
+      ? props.CollaboratoreId
+      : typeof props.CollaboratoreId === "string"
+      ? props.CollaboratoreId.split(",").map(Number)
+      : [];
+
     // Mappa gli ID ai nomi usando `categoryResources`
-    console.log("[DEBUG] props.CollaboratoreId:", props.taskData.IncaricatoId);
-    const collaboratorNames = (props.taskData.IncaricatoId || [])
-      .map((id) => categoryResources.find((collab) => collab.id === id)?.text)
-      .filter(Boolean) // Rimuove eventuali valori null o undefined
-      .join(", "); // Concatena i nomi con una virgola
-    return <span>{collaboratorNames || "Nessuno"}</span>;
+    const collaboratorData = collaboratorIds.map((id) => {
+      const collaborator = categoryResources.find((collab) => collab.id === id);
+      return collaborator ? `${collaborator.id} - ${collaborator.text}` : null;
+    }).filter(Boolean);
+
+    return (
+      <span>
+        {collaboratorData.length > 0 ? collaboratorData.join(", ") : "Nessuno"}
+      </span>
+    );
   }}
   edit={{
     create: () => {
@@ -215,11 +268,13 @@ const Gantt = ({
     write: (args) => {
       const multiSelect = new MultiSelectComponent({
         dataSource: categoryResources.map((collab) => ({
-          text: collab.text,
+          text: `${collab.id} - ${collab.text}`, // Mostra ID e Nome
           value: collab.id,
         })),
         fields: { text: "text", value: "value" },
-        value: args.rowData?.CollaboratoreId || [],
+        value: Array.isArray(args.rowData?.CollaboratoreId)
+          ? args.rowData.CollaboratoreId
+          : args.rowData?.CollaboratoreId?.split(",").map(Number) || [],
         mode: "CheckBox",
         showDropDownIcon: true,
         placeholder: "Seleziona Collaboratori",
@@ -232,6 +287,8 @@ const Gantt = ({
     },
   }}
 />
+
+
 
 
 
