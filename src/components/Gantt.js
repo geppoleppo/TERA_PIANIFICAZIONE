@@ -37,9 +37,9 @@ const Gantt = ({
       const collaboratorIds = Array.isArray(args.data.CollaboratoreId)
         ? args.data.CollaboratoreId
         : typeof args.data.CollaboratoreId === 'string'
-        ? args.data.CollaboratoreId.split(',').map((id) => parseInt(id, 10)) // Converte una stringa separata da virgole in array
-        : [];
-  
+          ? args.data.CollaboratoreId.split(',').map((id) => parseInt(id, 10)) // Converte una stringa separata da virgole in array
+          : [];
+
       // Mappare CollaboratoreId a resourceNames
       const collaboratorNames = collaboratorIds
         .map((id) => {
@@ -48,26 +48,26 @@ const Gantt = ({
         })
         .filter(Boolean)
         .join(', '); // Concatena i nomi separati da virgole
-  
+
       // Aggiungi i nomi al dato salvato
       args.data.resourceNames = collaboratorNames;
       args.data.CollaboratoreId = collaboratorIds; // Assicura che rimanga un array
-  
+
       if (!args.data.Id) {
         onSaveEvent(args.data);
       } else {
         onUpdateEvent(args.data);
       }
     }
-  
+
     if (args.requestType === 'delete') {
       if (onDeleteEvent) {
         args.data.forEach((event) => onDeleteEvent(event.Id));
       }
     }
   };
-  
-  
+
+
 
   const collaboratorEditTemplate = {
     create: () => {
@@ -117,148 +117,96 @@ const Gantt = ({
 
   return (
     <div key={refreshKey}>
-<GanttComponent
-  actionBegin={(args) => {
-    if (
-      args.requestType === "beforeOpenEditDialog" ||
-      args.requestType === "beforeOpenAddDialog"
-    ) {
-      const { rowData } = args;
+      <GanttComponent
+        actionBegin={(args) => {
+          console.log("[DEBUG] Intera struttura args:", args);
 
-      // Configura i valori predefiniti
-      rowData.ProjectId = rowData.taskData?.ProjectId || null;
-      rowData.CollaboratoreId = rowData.taskData?.IncaricatoId || [];
-      rowData.parentID = rowData.taskData?.parentID || null;
-    }
-  }}
-  resources={categoryResources}
-  resourceFields={{
-    id: "id",
-    name: "text",
-  }}
-  actionComplete={handleActionComplete}
-  dataSource={ganttData}
-  allowSelection={true}
-  allowSorting={true}
-  taskFields={{
-    id: "Id",
-    name: "Subject",
-    startDate: "StartTime",
-    endDate: "EndTime",
-    parentID: "parentID",
-    progress: "Progress",
-    resourceInfo: "CollaboratoreId",
-  }}
-  editSettings={{
-    allowAdding: true,
-    allowEditing: true,
-    allowDeleting: true,
-    allowTaskbarEditing: true,
-    showDeleteConfirmDialog: true,
-  }}
-  toolbar={["Add", "Edit", "Update", "Delete", "Cancel"]}
->
-  <ColumnsDirective>
-  <ColumnDirective
-  field="IncaricatoId"
-  headerText="ID Collaboratori"
-  width="150"
-  template={(props) => {
-    return <span>{props.IncaricatoId || "Nessuno"}</span>;
-  }}
-/>
+          if (args.requestType === "beforeOpenEditDialog") {
+            console.log("[DEBUG] Dati rowData prima della modifica:", args.rowData);
 
+            const { rowData } = args;
+
+            // Assicurati che CollaboratoreId sia un array valido
+            if (!Array.isArray(rowData.CollaboratoreId)) {
+              console.log("[DEBUG] Correzione CollaboratoreId, valore originale:", rowData.CollaboratoreId);
+              rowData.CollaboratoreId = rowData.CollaboratoreId
+                ? rowData.CollaboratoreId.split(',').map(Number)
+                : [];
+            }
+
+            console.log("[DEBUG] Dati rowData dopo la correzione:", rowData);
+          }
+
+          if (args.requestType === "save") {
+            console.log("[DEBUG] Salvataggio in corso. Dati inviati:", args.data);
+          }
+        }}
+        resources={categoryResources}
+        resourceFields={{
+          id: "id",
+          name: "text",
+        }}
+        actionComplete={handleActionComplete}
+        dataSource={ganttData}
+        allowSelection={true}
+        allowSorting={true}
+        taskFields={{
+          id: "Id",
+          name: "Subject",
+          startDate: "StartTime",
+          endDate: "EndTime",
+          parentID: "parentID",
+          progress: "Progress",
+          resourceInfo: "CollaboratoreId",
+        }}
+        editSettings={{
+          allowAdding: true,
+          allowEditing: true,
+          allowDeleting: true,
+          allowTaskbarEditing: true,
+          showDeleteConfirmDialog: true,
+        }}
+        toolbar={["Add", "Edit", "Update", "Delete", "Cancel"]}
+      >
+        <ColumnsDirective>
+
+
+
+          <ColumnDirective
+            field="Id"
+            headerText="ID"
+            visible={false} // Nascondi la colonna
+            isPrimaryKey={true} // Identifica questa colonna come la chiave primaria
+          />
+          <ColumnDirective
+            field="Subject" // Campo del nome del task
+            headerText="Task"
+            width="200"
+          />
 <ColumnDirective
-  field="IncaricatoName"
-  headerText="Collaboratori"
-  width="300"
-  template={(props) => {
-    return <span>{props.IncaricatoName || "Nessuno"}</span>;
-  }}
-  edit={collaboratorEditTemplate} // Usa il MultiSelect
-/>
-
-
-  <ColumnDirective
-    field="Id"
-    headerText="ID"
-    visible={false} // Nascondi la colonna
-    isPrimaryKey={true} // Identifica questa colonna come la chiave primaria
-  />
-<ColumnDirective
-  field="Subject" // Campo del nome del task
-  headerText="Task"
+  field="ProjectId" // Usa il campo che contiene l'ID della commessa
+  headerText="Commessa"
   width="200"
+  template={(props) => {
+    const commessa = projectResources.find((res) => res.id === props.ProjectId);
+    return <span>{commessa ? commessa.text : "Non assegnata"}</span>;
+  }}
+  editType="dropdownedit"
+  edit={{
+    params: {
+      dataSource: projectResources.map((commessa) => ({
+        text: commessa.text,
+        value: commessa.id,
+      })),
+      fields: { text: "text", value: "value" },
+      placeholder: "Seleziona Commessa",
+    },
+  }}
 />
-
-    <ColumnDirective
-      field="ProjectId"
-      headerText="Commessa"
-      width="200"
-      visible={true} // Puoi nasconderlo se non vuoi mostrarlo nell'interfaccia
-      isPrimaryKey={false}
-      template={(props) => {
-        const commessa = projectResources.find((item) => item.id === props.ProjectId);
-        return <span>{commessa ? commessa.text : 'Non assegnata'}</span>;
-      }}
-      editType="dropdownedit"
-      edit={{
-        params: {
-          dataSource: projectResources.filter((commessa) =>
-            selectedCommesse.includes(commessa.id)
-          ),
-          fields: { text: "text", value: "id" },
-          placeholder: "Seleziona Commessa",
-        },
-      }}
-    />
-    <ColumnDirective
-      field="parentID"
-      headerText="Parent Evento"
-      width="200"
-      template={(props) => {
-        const parentTask = ganttData.find((task) => task.Id === props.parentID);
-        return <span>{parentTask ? parentTask.Subject : 'Nessuno'}</span>;
-      }}
-      editType="dropdownedit"
-      edit={{
-        params: {
-          dataSource: [
-            { text: "Nessuno", value: null },
-            ...ganttData.map((event) => ({
-              text: event.Subject,
-              value: event.Id,
-            })),
-          ],
-          fields: { text: "text", value: "value" },
-          placeholder: "Seleziona Parent",
-        },
-      }}
-    />
 <ColumnDirective
   field="CollaboratoreId"
   headerText="Collaboratori"
   width="300"
-  template={(props) => {
-    // Assicurati che props.CollaboratoreId sia un array
-    const collaboratorIds = Array.isArray(props.CollaboratoreId)
-      ? props.CollaboratoreId
-      : typeof props.CollaboratoreId === "string"
-      ? props.CollaboratoreId.split(",").map(Number)
-      : [];
-
-    // Mappa gli ID ai nomi usando `categoryResources`
-    const collaboratorData = collaboratorIds.map((id) => {
-      const collaborator = categoryResources.find((collab) => collab.id === id);
-      return collaborator ? `${collaborator.id} - ${collaborator.text}` : null;
-    }).filter(Boolean);
-
-    return (
-      <span>
-        {collaboratorData.length > 0 ? collaboratorData.join(", ") : "Nessuno"}
-      </span>
-    );
-  }}
   edit={{
     create: () => {
       const input = document.createElement("input");
@@ -266,35 +214,38 @@ const Gantt = ({
       return input;
     },
     write: (args) => {
+      console.log("[DEBUG] Collaboratori associati:", args.rowData);
+
+      const defaultValues = Array.isArray(args.rowData?.taskData?.IncaricatoId)
+        ? args.rowData.taskData.IncaricatoId
+        : [];
+
       const multiSelect = new MultiSelectComponent({
         dataSource: categoryResources.map((collab) => ({
-          text: `${collab.id} - ${collab.text}`, // Mostra ID e Nome
+          text: collab.text,
           value: collab.id,
         })),
         fields: { text: "text", value: "value" },
-        value: Array.isArray(args.rowData?.CollaboratoreId)
-          ? args.rowData.CollaboratoreId
-          : args.rowData?.CollaboratoreId?.split(",").map(Number) || [],
+        value: defaultValues, // Pre-seleziona i collaboratori associati
         mode: "CheckBox",
         showDropDownIcon: true,
         placeholder: "Seleziona Collaboratori",
         popupHeight: "250px",
         change: (e) => {
           args.rowData.CollaboratoreId = e.value;
+          console.log("[DEBUG] Nuovi collaboratori selezionati:", e.value);
         },
       });
+
       multiSelect.appendTo(".collaborator-multi-select");
     },
   }}
 />
 
 
-
-
-
-  </ColumnsDirective>
-  <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
-</GanttComponent>
+        </ColumnsDirective>
+        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
+      </GanttComponent>
 
 
     </div>

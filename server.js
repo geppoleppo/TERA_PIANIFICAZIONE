@@ -193,11 +193,16 @@ app.put('/api/eventi/:id', async (req, res) => {
   console.log("Dati ricevuti per l'aggiornamento:", req.body);
 
   try {
-    const collaboratorIds = taskData.IncaricatoId || [];
+    const collaboratorIds = Array.isArray(taskData.IncaricatoId)
+  ? taskData.IncaricatoId // È già un array
+  : taskData.IncaricatoId
+      ? taskData.IncaricatoId.split(',').map((id) => Number(id.trim())) // Converte la stringa in un array di numeri
+      : [];
+
     const collaboratorNames = taskData.IncaricatoName || "Nessuno";
     const id = taskData.Id;
 
-    console.log("ID ricevuto per l'aggiornamento:", id);
+    console.log("ID ricevuto per l'aggiornamento:", collaboratorIds);
 
     const query = `
       UPDATE Eventi
