@@ -204,9 +204,14 @@ const Gantt = ({
   }}
 />
 <ColumnDirective
-  field="CollaboratoreId"
+  field="CollaboratoreId" // Usa sempre CollaboratoreId per i collaboratori associati
   headerText="Collaboratori"
   width="300"
+  template={(props) => {
+    // Leggi direttamente da taskData per mostrare i collaboratori assegnati
+    const collaboratorNames = props.taskData?.IncaricatoName || "Nessuno";
+    return <span>{collaboratorNames}</span>;
+  }}
   edit={{
     create: () => {
       const input = document.createElement("input");
@@ -214,7 +219,7 @@ const Gantt = ({
       return input;
     },
     write: (args) => {
-      console.log("[DEBUG] Collaboratori associati:", args.rowData);
+      console.log("[DEBUG] Collaboratori associati per modifica:", args.rowData);
 
       const defaultValues = Array.isArray(args.rowData?.taskData?.IncaricatoId)
         ? args.rowData.taskData.IncaricatoId
@@ -232,8 +237,12 @@ const Gantt = ({
         placeholder: "Seleziona Collaboratori",
         popupHeight: "250px",
         change: (e) => {
-          args.rowData.CollaboratoreId = e.value;
-          console.log("[DEBUG] Nuovi collaboratori selezionati:", e.value);
+          args.rowData.taskData.IncaricatoId = e.value;
+          args.rowData.taskData.IncaricatoName = e.value
+            .map((id) => categoryResources.find((collab) => collab.id === id)?.text)
+            .filter(Boolean)
+            .join(", ");
+          console.log("[DEBUG] Collaboratori aggiornati:", e.value);
         },
       });
 
@@ -241,6 +250,7 @@ const Gantt = ({
     },
   }}
 />
+
 
 
         </ColumnsDirective>
