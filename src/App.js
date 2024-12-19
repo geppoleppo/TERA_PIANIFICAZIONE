@@ -24,9 +24,9 @@ const App = () => {
   
   
   const handleUpdateEvent = async (updatedEvent) => {
-    try {
-      console.log("Dati inviati per l'aggiornamento:", updatedEvent);
+    console.log("[DEBUG - handleUpdateEvent] Evento prima dell'aggiornamento:", updatedEvent);
   
+    try {
       const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -37,20 +37,21 @@ const App = () => {
         throw new Error(`Errore durante l'aggiornamento: ${response.statusText}`);
       }
   
-      // Leggi la risposta una sola volta
       const updatedData = await response.json();
-      console.log("Evento aggiornato ricevuto dal server:", updatedData);
+      console.log("[DEBUG - handleUpdateEvent] Evento aggiornato dal server:", updatedData);
   
-      // Aggiorna lo stato locale
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
-          event.Id === updatedData.Id ? { ...event, ...updatedData } : event
+          event.Id === updatedData.Id
+            ? { ...event, ...updatedData }
+            : event
         )
       );
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
   
   
 
@@ -80,9 +81,14 @@ const App = () => {
     }
   };
 
+  useEffect(() => {
+    console.log("[DEBUG  000000 - Stato Events] Stato corrente degli eventi:", events);
+  }, [events]);
+
 
   useEffect(() => {
-    console.log('USE EFFECT 1',events)
+    console.log('[DEBUG - USE EFFECT 1] Stato originale degli eventi:', events);
+  
     const enrichedEvents = events.map((event) => {
       const commessa = filteredProjectResources.find((res) => res.id === event.ProjectId);
       return {
@@ -90,31 +96,80 @@ const App = () => {
         CommessaName: commessa ? commessa.text : "Non assegnata",
       };
     });
-
+  
+    console.log('[DEBUG - USE EFFECT 1] Eventi arricchiti:', enrichedEvents);
     setFilteredEventsForGantt(enrichedEvents);
-    //console.log("Dati del Gantt (con CommessaName):", enrichedEvents);
   }, [events, filteredProjectResources]);
+  
 
   useEffect(() => {
-    console.log('USE EFFECT 2')
+    console.log("[DEBUG - USE EFFECT 2] Inizio caricamento dati...");
+  
     const loadData = async () => {
       try {
-        const projects = await fetchProjectResources(); // Carica le commesse
+        const projects = await fetchProjectResources(); // Commesse
+        console.log("[DEBUG - USE EFFECT 2] Commesse caricate:", projects);
         setProjectResources(projects);
-
-        const categories = await fetchCategoryResources(); // Carica i collaboratori
-        console.log("Collaboratori caricati:", categories);
+  
+        const categories = await fetchCategoryResources(); // Collaboratori
+        console.log("[DEBUG - USE EFFECT 2] Collaboratori caricati:", categories);
         setCategoryResources(categories);
+  
+        const rawEvents = await fetchEvents(projects, categories); // Passa categories
+        console.log("[DEBUG - USE EFFECT 2] Eventi originali:", rawEvents);
+  
+        const enrichedEvents = JSON.parse(JSON.stringify(rawEvents)).map((event) => {
+          const incaricatoIds = Array.isArray(event.IncaricatoId)
+            ? event.IncaricatoId.filter((id) => typeof id === "number" && id > 0)
+            : [];
+        
+          console.log("[DEBUG - Trasformazione Evento] IncaricatoId Originale:", event.IncaricatoId);
+          console.log("[DEBUG - Trasformazione Evento] IncaricatoId Filtrato:", incaricatoIds);
+        
+          const incaricatoNames = incaricatoIds
+            .map((id) => categories.find((c) => c.id === id)?.text)
+            .filter(Boolean)
+            .join(", ");
+        
+          return {
+            ...event,
+            IncaricatoId: incaricatoIds,
+            IncaricatoName: incaricatoNames,
+          };
+        });
+        console.log("[DEBUG - Prima di setEvents] Eventi arricchiti:", enrichedEvents);
+console.log("[DEBUG - Dopo filtro finale] Eventi filtrati:", enrichedEvents.map((event) => ({
+  ...event,
+  IncaricatoId: Array.isArray(event.IncaricatoId)
+    ? event.IncaricatoId.filter((id) => typeof id === "number")
+    : [],
+})));
 
-        const enrichedEvents = await fetchEvents(projects); // Passa le commesse per mappare CommessaName
-        setEvents(enrichedEvents);
-        setFilteredEventsForGantt(enrichedEvents); // Inizialmente tutti gli eventi
+        
+  
+        console.log("[DEBUG - USE EFFECT 2] Eventi arricchiti per il Gantt:", enrichedEvents);
+        setEvents(
+          JSON.parse(
+            JSON.stringify(
+              enrichedEvents.map((event) => ({
+                ...event,
+                IncaricatoId: event.IncaricatoId.filter((id) => typeof id === "number"),
+              }))
+            )
+          )
+        );
+        setFilteredEventsForGantt(enrichedEvents);
       } catch (error) {
-        console.error("Errore nel caricamento dei dati:", error);
+        console.error("[DEBUG - USE EFFECT 2] Errore nel caricamento dati:", error);
       }
     };
+  
     loadData();
   }, []);
+  
+  
+
+  
 
 
   // Selezione collaboratori e aggiornamento delle commesse
@@ -130,52 +185,27 @@ const App = () => {
   };
 
   useEffect(() => {
-    console.log('USE EFFECT 3', events);
+    console.log('[DEBUG - USE EFFECT 3] Stato originale degli eventi:', events);
   
-    if (selectedCollaboratori.length === 0) {
-      setFilteredProjectResources([]); // Nessuna commessa mostrata
-      setSelectedCommesse([]); // Nessuna commessa selezionata
-    } else {
-      // Commesse associate ai collaboratori selezionati
-      const associatedCommesseFromCollaboratori = projectResources.filter((commessa) =>
-        selectedCollaboratori.some((collabId) => {
-          const collaboratore = categoryResources.find((c) => c.id === collabId);
-          return collaboratore?.groupIds.includes(commessa.id);
-        })
-      );
+    const filteredEvents = events.filter((event) => {
+      const incaricatoIdArray = Array.isArray(event.IncaricatoId)
+        ? event.IncaricatoId
+        : [];
+      console.log('[DEBUG - USE EFFECT 3] IncaricatoId Analizzato:', incaricatoIdArray);
   
-      // Commesse associate agli eventi dei collaboratori
-      const associatedCommesseFromEvents = events
-        .filter((event) => {
-          const incaricatoIds = Array.isArray(event.IncaricatoId)
-            ? event.IncaricatoId
-            : typeof event.IncaricatoId === "string"
-            ? event.IncaricatoId.split(",").map(Number)
-            : [];
-          return selectedCollaboratori.some((collabId) => incaricatoIds.includes(collabId));
-        })
-        .map((event) => event.ProjectId)
-        .filter(Boolean); // Rimuove valori null o undefined
+      const isCollaboratorMatch =
+        selectedCollaboratori.length === 0 ||
+        incaricatoIdArray.some((id) => selectedCollaboratori.includes(id));
   
-      // Unisci e rimuovi duplicati
-      const allAssociatedCommesse = [
-        ...associatedCommesseFromCollaboratori,
-        ...projectResources.filter((commessa) => associatedCommesseFromEvents.includes(commessa.id)),
-      ];
+      const isCommessaMatch =
+        selectedCommesse.length === 0 || selectedCommesse.includes(event.ProjectId);
   
-      const uniqueCommesse = Array.from(new Set(allAssociatedCommesse.map((c) => c.id))).map((id) =>
-        allAssociatedCommesse.find((c) => c.id === id)
-      );
+      return isCollaboratorMatch && isCommessaMatch;
+    });
   
-      console.log("Commesse filtrate:", uniqueCommesse);
-  
-      setFilteredProjectResources(uniqueCommesse);
-  
-      // Aggiorna le commesse selezionate
-      const selectedIds = uniqueCommesse.map((res) => res.id);
-      setSelectedCommesse(selectedIds);
-    }
-  }, [selectedCollaboratori, projectResources, categoryResources, events]);
+    console.log('[DEBUG - USE EFFECT 3] Eventi filtrati:', filteredEvents);
+    setFilteredEventsForGantt(filteredEvents);
+  }, [selectedCollaboratori, selectedCommesse, events]);
   
   
   
@@ -342,6 +372,9 @@ const App = () => {
         filteredProjectResources={filteredProjectResources}
       />
 <Gantt
+actionBegin={(args) => {
+  console.log("[DEBUG - GANTT] Evento actionBegin Triggerato:", args);
+}}
   ganttData={filteredEventsForGantt}
   projectResources={projectResources} // Per il menu delle commesse
   selectedCommesse={selectedCommesse} // Per gli ID delle commesse selezionabili

@@ -33,40 +33,31 @@ const Gantt = ({
 
   const handleActionComplete = (args) => {
     if (args.requestType === 'save') {
-      // Assicurati che `CollaboratoreId` sia un array
-      const collaboratorIds = Array.isArray(args.data.CollaboratoreId)
-        ? args.data.CollaboratoreId
-        : typeof args.data.CollaboratoreId === 'string'
-          ? args.data.CollaboratoreId.split(',').map((id) => parseInt(id, 10)) // Converte una stringa separata da virgole in array
-          : [];
-
-      // Mappare CollaboratoreId a resourceNames
-      const collaboratorNames = collaboratorIds
-        .map((id) => {
-          const collaborator = categoryResources.find((collab) => collab.id === id);
-          return collaborator ? collaborator.text : null;
-        })
+      // Estrarre e formattare i collaboratori selezionati
+      const collaboratorIds = Array.isArray(args.data.taskData.IncaricatoId)
+        ? args.data.taskData.IncaricatoId
+        : typeof args.data.taskData.IncaricatoId === 'string'
+        ? args.data.taskData.IncaricatoId.split(',').map(Number)
+        : [];
+  
+      // Aggiorna taskData con i collaboratori selezionati
+      args.data.taskData.IncaricatoId = collaboratorIds;
+      args.data.taskData.IncaricatoName = collaboratorIds
+        .map((id) => categoryResources.find((collab) => collab.id === id)?.text)
         .filter(Boolean)
-        .join(', '); // Concatena i nomi separati da virgole
-
-      // Aggiungi i nomi al dato salvato
-      args.data.resourceNames = collaboratorNames;
-      args.data.CollaboratoreId = collaboratorIds; // Assicura che rimanga un array
-
+        .join(', ');
+  
+      console.log('Collaboratori aggiornati nel taskData:', args.data.taskData);
+  
+      // Invia i dati aggiornati al backend
       if (!args.data.Id) {
-        onSaveEvent(args.data);
+        onSaveEvent(args.data.taskData);
       } else {
-        onUpdateEvent(args.data);
-      }
-    }
-
-    if (args.requestType === 'delete') {
-      if (onDeleteEvent) {
-        args.data.forEach((event) => onDeleteEvent(event.Id));
+        onUpdateEvent(args.data.taskData);
       }
     }
   };
-
+  
 
 
   const collaboratorEditTemplate = {
@@ -114,6 +105,7 @@ const Gantt = ({
     fields: { text: "text", value: "id" },
   });
 
+  console.log("[DEBUG] Dati del Gantttttttttttttttt:", ganttData);
 
   return (
     <div key={refreshKey}>
@@ -157,7 +149,7 @@ const Gantt = ({
           endDate: "EndTime",
           parentID: "parentID",
           progress: "Progress",
-          resourceInfo: "CollaboratoreId",
+          resourceInfo: "IncaricatoId", // Deve corrispondere
         }}
         editSettings={{
           allowAdding: true,
@@ -204,52 +196,26 @@ const Gantt = ({
   }}
 />
 <ColumnDirective
-  field="CollaboratoreId" // Usa sempre CollaboratoreId per i collaboratori associati
+  field="IncaricatoId"
   headerText="Collaboratori"
   width="300"
-  template={(props) => {
-    // Leggi direttamente da taskData per mostrare i collaboratori assegnati
-    const collaboratorNames = props.taskData?.IncaricatoName || "Nessuno";
-    return <span>{collaboratorNames}</span>;
-  }}
-  edit={{
-    create: () => {
-      const input = document.createElement("input");
-      input.className = "collaborator-multi-select";
-      return input;
-    },
-    write: (args) => {
-      console.log("[DEBUG] Collaboratori associati per modifica:", args.rowData);
-
-      const defaultValues = Array.isArray(args.rowData?.taskData?.IncaricatoId)
-        ? args.rowData.taskData.IncaricatoId
-        : [];
-
-      const multiSelect = new MultiSelectComponent({
-        dataSource: categoryResources.map((collab) => ({
-          text: collab.text,
-          value: collab.id,
-        })),
-        fields: { text: "text", value: "value" },
-        value: defaultValues, // Pre-seleziona i collaboratori associati
-        mode: "CheckBox",
-        showDropDownIcon: true,
-        placeholder: "Seleziona Collaboratori",
-        popupHeight: "250px",
-        change: (e) => {
-          args.rowData.taskData.IncaricatoId = e.value;
-          args.rowData.taskData.IncaricatoName = e.value
-            .map((id) => categoryResources.find((collab) => collab.id === id)?.text)
-            .filter(Boolean)
-            .join(", ");
-          console.log("[DEBUG] Collaboratori aggiornati:", e.value);
-        },
-      });
-
-      multiSelect.appendTo(".collaborator-multi-select");
-    },
+  editTemplate={(props) => {
+    const multiSelect = new MultiSelectComponent({
+      dataSource: categoryResources.map((collab) => ({
+        text: collab.text,
+        value: collab.id,
+      })),
+      value: props.IncaricatoId?.filter((id) => typeof id === "number") || [],
+      change: (e) => {
+        props.IncaricatoId = e.value.filter((id) => typeof id === "number");
+        console.log("[DEBUG - MultiSelect] Valori aggiornati filtrati:", props.IncaricatoId);
+      },
+    });
+  
+    return <MultiSelectComponent {...multiSelect} />;
   }}
 />
+
 
 
 
