@@ -130,24 +130,30 @@ const App = () => {
   };
 
   useEffect(() => {
-    //console.log('USE EFFECT 3')
+    console.log('USE EFFECT 3', events);
     if (selectedCollaboratori.length === 0) {
       setFilteredProjectResources([]); // Nessuna commessa mostrata
-      setSelectedCommesse([]); // Nessuna commessa selezionata
       console.log("Nessun collaboratore selezionato, nessuna commessa mostrata.");
     } else {
+      // Trova tutte le commesse associate agli eventi dei collaboratori selezionati
+      const associatedCommesseFromEvents = events
+        .filter((event) =>
+          event.IncaricatoId.some((id) => selectedCollaboratori.includes(id))
+        )
+        .map((event) => event.ProjectId); // Raccogli ProjectId dagli eventi
+  
+      // Combina con le commesse direttamente associate ai collaboratori
       const associatedCommesse = projectResources.filter((commessa) =>
-        selectedCollaboratori.some((collabId) => {
-          const collaboratore = categoryResources.find((c) => c.id === collabId);
-          return collaboratore?.groupIds.includes(commessa.id);
-        })
+        associatedCommesseFromEvents.includes(commessa.id)
       );
+  
       setFilteredProjectResources(associatedCommesse);
       const selectedIds = associatedCommesse.map((res) => res.id);
-      setSelectedCommesse(selectedIds);
-      //console.log("Commesse selezionate automaticamente:", selectedIds);
+      setSelectedCommesse(selectedIds); // Aggiorna la selezione delle commesse
+      console.log("Commesse selezionate automaticamente:", selectedIds);
     }
-  }, [selectedCollaboratori, projectResources, categoryResources]);
+  }, [selectedCollaboratori, events, projectResources]);
+  
 
   useEffect(() => {
     console.log('USE EFFECT 4', events);
@@ -161,7 +167,7 @@ const App = () => {
   
       const isCollaboratorMatch =
         selectedCollaboratori.length === 0 ||
-        incaricatoIdArray.some((id) => selectedCollaboratori.includes(id));
+        incaricatoIdArray.some((id) => selectedCollaboratori.includes(id)); // Controlla tutti gli ID
   
       const isCommessaMatch =
         selectedCommesse.length === 0 || selectedCommesse.includes(event.ProjectId);
