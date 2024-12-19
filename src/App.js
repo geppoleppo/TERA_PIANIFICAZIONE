@@ -131,28 +131,53 @@ const App = () => {
 
   useEffect(() => {
     console.log('USE EFFECT 3', events);
+  
     if (selectedCollaboratori.length === 0) {
       setFilteredProjectResources([]); // Nessuna commessa mostrata
-      console.log("Nessun collaboratore selezionato, nessuna commessa mostrata.");
+      setSelectedCommesse([]); // Nessuna commessa selezionata
     } else {
-      // Trova tutte le commesse associate agli eventi dei collaboratori selezionati
-      const associatedCommesseFromEvents = events
-        .filter((event) =>
-          event.IncaricatoId.some((id) => selectedCollaboratori.includes(id))
-        )
-        .map((event) => event.ProjectId); // Raccogli ProjectId dagli eventi
-  
-      // Combina con le commesse direttamente associate ai collaboratori
-      const associatedCommesse = projectResources.filter((commessa) =>
-        associatedCommesseFromEvents.includes(commessa.id)
+      // Commesse associate ai collaboratori selezionati
+      const associatedCommesseFromCollaboratori = projectResources.filter((commessa) =>
+        selectedCollaboratori.some((collabId) => {
+          const collaboratore = categoryResources.find((c) => c.id === collabId);
+          return collaboratore?.groupIds.includes(commessa.id);
+        })
       );
   
-      setFilteredProjectResources(associatedCommesse);
-      const selectedIds = associatedCommesse.map((res) => res.id);
-      setSelectedCommesse(selectedIds); // Aggiorna la selezione delle commesse
-      console.log("Commesse selezionate automaticamente:", selectedIds);
+      // Commesse associate agli eventi dei collaboratori
+      const associatedCommesseFromEvents = events
+        .filter((event) => {
+          const incaricatoIds = Array.isArray(event.IncaricatoId)
+            ? event.IncaricatoId
+            : typeof event.IncaricatoId === "string"
+            ? event.IncaricatoId.split(",").map(Number)
+            : [];
+          return selectedCollaboratori.some((collabId) => incaricatoIds.includes(collabId));
+        })
+        .map((event) => event.ProjectId)
+        .filter(Boolean); // Rimuove valori null o undefined
+  
+      // Unisci e rimuovi duplicati
+      const allAssociatedCommesse = [
+        ...associatedCommesseFromCollaboratori,
+        ...projectResources.filter((commessa) => associatedCommesseFromEvents.includes(commessa.id)),
+      ];
+  
+      const uniqueCommesse = Array.from(new Set(allAssociatedCommesse.map((c) => c.id))).map((id) =>
+        allAssociatedCommesse.find((c) => c.id === id)
+      );
+  
+      console.log("Commesse filtrate:", uniqueCommesse);
+  
+      setFilteredProjectResources(uniqueCommesse);
+  
+      // Aggiorna le commesse selezionate
+      const selectedIds = uniqueCommesse.map((res) => res.id);
+      setSelectedCommesse(selectedIds);
     }
-  }, [selectedCollaboratori, events, projectResources]);
+  }, [selectedCollaboratori, projectResources, categoryResources, events]);
+  
+  
   
 
   useEffect(() => {
