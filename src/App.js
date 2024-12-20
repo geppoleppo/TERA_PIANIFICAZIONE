@@ -147,18 +147,26 @@ console.log("[DEBUG - Dopo filtro finale] Eventi filtrati:", enrichedEvents.map(
 
         
   
-        console.log("[DEBUG - USE EFFECT 2] Eventi arricchiti per il Gantt:", enrichedEvents);
+        console.log("[DEBUG - USE EFFECT 2] Eventi arricchiti per il Gantt:", enrichedEvents.map((event) => ({
+          ...event,
+          IncaricatoId: Array.isArray(event.IncaricatoId)
+            ? event.IncaricatoId.filter((id) => typeof id === "number")
+            : [],
+        })));
         setEvents(
-          JSON.parse(
-            JSON.stringify(
-              enrichedEvents.map((event) => ({
-                ...event,
-                IncaricatoId: event.IncaricatoId.filter((id) => typeof id === "number"),
-              }))
-            )
-          )
+          enrichedEvents.map((event) => ({
+            ...event,
+            IncaricatoId: Array.isArray(event.IncaricatoId)
+              ? event.IncaricatoId.filter((id) => typeof id === "number")
+              : [],
+          }))
         );
-        setFilteredEventsForGantt(enrichedEvents);
+        setFilteredEventsForGantt(enrichedEvents.map((event) => ({
+          ...event,
+          IncaricatoId: Array.isArray(event.IncaricatoId)
+            ? event.IncaricatoId.filter((id) => typeof id === "number")
+            : [],
+        })));
       } catch (error) {
         console.error("[DEBUG - USE EFFECT 2] Errore nel caricamento dati:", error);
       }
@@ -372,10 +380,18 @@ console.log("[DEBUG - Dopo filtro finale] Eventi filtrati:", enrichedEvents.map(
         filteredProjectResources={filteredProjectResources}
       />
 <Gantt
-actionBegin={(args) => {
-  console.log("[DEBUG - GANTT] Evento actionBegin Triggerato:", args);
-}}
-  ganttData={filteredEventsForGantt}
+ ganttData={JSON.parse(
+  JSON.stringify(
+    filteredEventsForGantt.map((event) => ({
+      ...event,
+      IncaricatoId: Array.isArray(event.IncaricatoId)
+        ? event.IncaricatoId.filter((id) => typeof id === "number")
+        : [],
+    }))
+  )
+)}
+
+
   projectResources={projectResources} // Per il menu delle commesse
   selectedCommesse={selectedCommesse} // Per gli ID delle commesse selezionabili
   //categoryResources={categoryResources} // Per il menu collaboratori

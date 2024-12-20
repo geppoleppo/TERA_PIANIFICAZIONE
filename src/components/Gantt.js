@@ -27,6 +27,8 @@ const Gantt = ({
 }) => {
   const [refreshKey, setRefreshKey] = useState(0); // Chiave per forzare il ri-rendering
 
+  console.log("[DEBUG - Gantt.js] ganttData ricevuto da App.js:", ganttData);
+
   useEffect(() => {
     setRefreshKey((prevKey) => prevKey + 1); // Forza il ri-rendering quando cambia ganttData
   }, [ganttData]);
@@ -41,11 +43,11 @@ const Gantt = ({
         : [];
   
       // Aggiorna taskData con i collaboratori selezionati
-      args.data.taskData.IncaricatoId = collaboratorIds;
-      args.data.taskData.IncaricatoName = collaboratorIds
-        .map((id) => categoryResources.find((collab) => collab.id === id)?.text)
-        .filter(Boolean)
-        .join(', ');
+      args.data.taskData.IncaricatoId = Array.isArray(args.data.taskData.IncaricatoId)
+      ? args.data.taskData.IncaricatoId.filter((id) => typeof id === "number")
+      : [];
+    console.log("[DEBUG - handleActionComplete] IncaricatoId Pulito:", args.data.taskData.IncaricatoId);
+
   
       console.log('Collaboratori aggiornati nel taskData:', args.data.taskData);
   
@@ -105,41 +107,40 @@ const Gantt = ({
     fields: { text: "text", value: "id" },
   });
 
-  console.log("[DEBUG] Dati del Gantttttttttttttttt:", ganttData);
+  const cleanedGanttData = ganttData.map((event) => ({
+    ...event,
+    IncaricatoId: Array.isArray(event.IncaricatoId)
+      ? event.IncaricatoId.filter((id) => typeof id === "number")
+      : [],
+  }));
+  
+  console.log("[DEBUG - Gantt.js] Dati puliti per il Gantt:", cleanedGanttData);
+
 
   return (
     <div key={refreshKey}>
+
+      
       <GanttComponent
-        actionBegin={(args) => {
-          console.log("[DEBUG] Intera struttura args:", args);
-
-          if (args.requestType === "beforeOpenEditDialog") {
-            console.log("[DEBUG] Dati rowData prima della modifica:", args.rowData);
-
-            const { rowData } = args;
-
-            // Assicurati che CollaboratoreId sia un array valido
-            if (!Array.isArray(rowData.CollaboratoreId)) {
-              console.log("[DEBUG] Correzione CollaboratoreId, valore originale:", rowData.CollaboratoreId);
-              rowData.CollaboratoreId = rowData.CollaboratoreId
-                ? rowData.CollaboratoreId.split(',').map(Number)
-                : [];
-            }
-
-            console.log("[DEBUG] Dati rowData dopo la correzione:", rowData);
-          }
-
-          if (args.requestType === "save") {
-            console.log("[DEBUG] Salvataggio in corso. Dati inviati:", args.data);
-          }
-        }}
+ actionBegin={(args) => {
+  console.log("[DEBUG - Gantt.js actionBegin] Args:", args);
+  if (args.data && args.data.IncaricatoId) {
+    console.log("[DEBUG - Gantt.js actionBegin] IncaricatoId:", args.data.IncaricatoId);
+  }
+}}
+actionComplete={(args) => {
+  console.log("[DEBUG - Gantt.js actionComplete] Args:", args);
+  if (args.data && args.data.IncaricatoId) {
+    console.log("[DEBUG - Gantt.js actionComplete] IncaricatoId:", args.data.IncaricatoId);
+  }
+}}
         resources={categoryResources}
         resourceFields={{
           id: "id",
           name: "text",
         }}
-        actionComplete={handleActionComplete}
-        dataSource={ganttData}
+        //actionComplete={handleActionComplete}
+        dataSource={cleanedGanttData}
         allowSelection={true}
         allowSorting={true}
         taskFields={{
