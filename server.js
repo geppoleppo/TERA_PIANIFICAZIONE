@@ -188,40 +188,64 @@ app.get('/api/eventi', async (req, res) => {
 
 
 app.put('/api/eventi/:id', async (req, res) => {
-  const { Subject, StartTime, EndTime, taskData, CategoryColor, Description, parentID,commessaName } = req.body;
+  const {
+    Subject,
+    StartTime,
+    EndTime,
+    CommessaName,
+    Duration,
+    Progress,
+    CategoryColor,
+    Description,
+    parentID,
+    IncaricatoName,
+    Id, // Prendi l'ID direttamente dalla richiesta
+  } = req.body;
 
   console.log("Dati ricevuti per l'aggiornamento:", req.body);
 
   try {
-    const collaboratorIds = Array.isArray(taskData.IncaricatoId)
-  ? taskData.IncaricatoId // È già un array
-  : taskData.IncaricatoId
-      ? taskData.IncaricatoId.split(',').map((id) => Number(id.trim())) // Converte la stringa in un array di numeri
+    // Verifica se l'ID è valido
+    if (!Id) {
+      return res.status(400).json({ error: "ID evento mancante nella richiesta." });
+    }
+
+    const collaboratorIds = Array.isArray(req.body.IncaricatoId)
+      ? req.body.IncaricatoId // È già un array
+      : req.body.IncaricatoId
+      ? req.body.IncaricatoId.split(',').map((id) => Number(id.trim())) // Converte la stringa in un array di numeri
       : [];
-
-    const collaboratorNames = taskData.IncaricatoName || "Nessuno";
-    const id = taskData.Id;
-
-    console.log("ID ricevuto per l'aggiornamento:", collaboratorIds);
 
     const query = `
       UPDATE Eventi
-      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?,
-          IncaricatoId = ?, IncaricatoName = ?, Colore = ?, Descrizione = ?, parentID = ?
+      SET 
+        Titolo = ?, 
+        Inizio = ?, 
+        Fine = ?, 
+        CommessaName = ?,
+        Duration = ?,
+        Progress = ?,
+        IncaricatoId = ?, 
+        IncaricatoName = ?, 
+        Colore = ?, 
+        Descrizione = ?, 
+        parentID = ?
       WHERE Id = ?
     `;
 
     const params = [
-      Subject,
+      Subject || "Titolo non specificato",
       StartTime,
       EndTime,
-      taskData.CommessaName || null,
+      CommessaName || "Commessa non specificata",
+      Duration ,
+      Progress ,
       collaboratorIds.join(','),
-      collaboratorNames,
+      IncaricatoName || "Nessuno",
       CategoryColor || "#000000",
       Description || "",
-      parentID,
-      id,
+      parentID || null,
+      Id,
     ];
 
     console.log("Query UPDATE:", query);
@@ -235,26 +259,20 @@ app.put('/api/eventi/:id', async (req, res) => {
     }
 
     // Recupera l'evento aggiornato
-    console.log("Tipo di ID prima della SELECT:", typeof id, id);
-    const updatedEvent = await runQuery('SELECT * FROM Eventi WHERE Id = ?', [Number(id)]);
-
-    console.log("Evento aggiornato:", updatedEvent);
-   
+    const updatedEvent = await runQuery('SELECT * FROM Eventi WHERE Id = ?', [Number(Id)]);
 
     if (updatedEvent.length > 0) {
       res.json(updatedEvent[0]);
     } else {
-      console.error("Nessun evento trovato con ID:", id);
+      console.error("Nessun evento trovato con ID:", Id);
       res.status(404).json({ error: "Evento non trovato dopo l'aggiornamento." });
     }
   } catch (error) {
     console.error("Errore durante l'aggiornamento dell'evento:", error);
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
-}
+});
 
-
-);
 
 
 

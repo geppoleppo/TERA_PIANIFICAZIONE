@@ -42,8 +42,8 @@ const Gantt = ({ ganttData }) => {
               Subject: event.Subject,
               StartTime: event.StartTime,
               EndTime: event.EndTime,
-              Duration: event.Duration || 1,
-              Progress: event.Progress || 0,
+              Duration: event.Duration,
+              Progress: event.Progress,
               IncaricatoName: event.IncaricatoName,
               CommessaName: event.CommessaName,
             },
@@ -109,8 +109,8 @@ const Gantt = ({ ganttData }) => {
         }}
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
         actionBegin={(args) => {
-          console.log("EVENTOOOO",args.requestType)
-          if (args.requestType === 'save' || 'taskbarediting') {
+          console.log("EVENTOOOO",args)
+          if (args.requestType === 'save' || args.requestType ==='taskbarediting' ||args.requestType ==='beforeSave'){
             console.log("Dati modificati:", args.data);
             updateEventOnDB(args.data);
           }
