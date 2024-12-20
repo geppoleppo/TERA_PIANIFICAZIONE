@@ -188,7 +188,7 @@ app.get('/api/eventi', async (req, res) => {
 
 
 app.put('/api/eventi/:id', async (req, res) => {
-  const { Subject, StartTime, EndTime, taskData, CategoryColor, Description, parentID } = req.body;
+  const { Subject, StartTime, EndTime, taskData, CategoryColor, Description, parentID,commessaName } = req.body;
 
   console.log("Dati ricevuti per l'aggiornamento:", req.body);
 
@@ -215,7 +215,7 @@ app.put('/api/eventi/:id', async (req, res) => {
       Subject,
       StartTime,
       EndTime,
-      taskData.ProjectId || null,
+      taskData.CommessaName || null,
       collaboratorIds.join(','),
       collaboratorNames,
       CategoryColor || "#000000",
