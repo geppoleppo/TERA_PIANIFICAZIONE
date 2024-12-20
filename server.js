@@ -152,11 +152,8 @@ app.get('/api/eventi', async (req, res) => {
     const mappedEventi = eventi.map(evento => {
       // Converti IncaricatoId in array di numeri
       const incaricatoIds = evento.IncaricatoId
-      ? evento.IncaricatoId.split(',')
-          .map(id => parseInt(id.trim(), 10))
-          .filter(id => !isNaN(id)) // Filtra solo numeri validi
-      : [];
-    
+        ? evento.IncaricatoId.split(',').map(id => parseInt(id.trim(), 10))
+        : [];
 
       // Mappa gli ID ai nomi usando i collaboratori dal database
       const incaricatoNames = incaricatoIds
@@ -191,34 +188,73 @@ app.get('/api/eventi', async (req, res) => {
 
 
 app.put('/api/eventi/:id', async (req, res) => {
-  const { id } = req.params;
-  const { IncaricatoId, ...otherData } = req.body;
+  const { Subject, StartTime, EndTime, taskData, CategoryColor, Description, parentID } = req.body;
+
+  console.log("Dati ricevuti per l'aggiornamento:", req.body);
 
   try {
+    const collaboratorIds = Array.isArray(taskData.IncaricatoId)
+  ? taskData.IncaricatoId // È già un array
+  : taskData.IncaricatoId
+      ? taskData.IncaricatoId.split(',').map((id) => Number(id.trim())) // Converte la stringa in un array di numeri
+      : [];
+
+    const collaboratorNames = taskData.IncaricatoName || "Nessuno";
+    const id = taskData.Id;
+
+    console.log("ID ricevuto per l'aggiornamento:", collaboratorIds);
+
     const query = `
       UPDATE Eventi
-      SET IncaricatoId = ?, Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Descrizione = ?, parentID = ?
+      SET Titolo = ?, Inizio = ?, Fine = ?, CommessaName = ?,
+          IncaricatoId = ?, IncaricatoName = ?, Colore = ?, Descrizione = ?, parentID = ?
       WHERE Id = ?
     `;
+
     const params = [
-      Array.isArray(IncaricatoId) ? IncaricatoId.join(',') : null,
-      otherData.Subject,
-      otherData.StartTime,
-      otherData.EndTime,
-      otherData.ProjectId || null,
-      otherData.CategoryColor || '#000000',
-      otherData.Description || '',
-      otherData.parentID || null,
+      Subject,
+      StartTime,
+      EndTime,
+      taskData.ProjectId || null,
+      collaboratorIds.join(','),
+      collaboratorNames,
+      CategoryColor || "#000000",
+      Description || "",
+      parentID,
       id,
     ];
 
-    await runQuery(query, params);
-    res.json({ message: 'Evento aggiornato con successo!' });
+    console.log("Query UPDATE:", query);
+    console.log("Parametri:", params);
+
+    const result = await runQuery(query, params);
+    console.log("Righe aggiornate:", result.changes);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: "Evento non trovato per l'aggiornamento." });
+    }
+
+    // Recupera l'evento aggiornato
+    console.log("Tipo di ID prima della SELECT:", typeof id, id);
+    const updatedEvent = await runQuery('SELECT * FROM Eventi WHERE Id = ?', [Number(id)]);
+
+    console.log("Evento aggiornato:", updatedEvent);
+   
+
+    if (updatedEvent.length > 0) {
+      res.json(updatedEvent[0]);
+    } else {
+      console.error("Nessun evento trovato con ID:", id);
+      res.status(404).json({ error: "Evento non trovato dopo l'aggiornamento." });
+    }
   } catch (error) {
-    console.error('Errore durante l\'aggiornamento dell\'evento:', error);
-    res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
+    console.error("Errore durante l'aggiornamento dell'evento:", error);
+    res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
-});
+}
+
+
+);
 
 
 
