@@ -1,229 +1,108 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   GanttComponent,
-  Inject,
   Selection,
-  Toolbar,
   DayMarkers,
+  Toolbar,
   Edit,
-  Filter,
-  Sort,
-  ColumnsDirective,
-  ColumnDirective,
-
+  Resize,
+  RowDD,
+  Inject,
 } from '@syncfusion/ej2-react-gantt';
-import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 
-const Gantt = ({
-  ganttData,
-  onSaveEvent,
-  onUpdateEvent,
-  onDeleteEvent,
-  projectResources,
-  selectedCommesse,
-  categoryResources,
-  selectedCollaboratori,
-  parentOptions, // Nuovo parametro
-}) => {
-  const [refreshKey, setRefreshKey] = useState(0); // Chiave per forzare il ri-rendering
+const Gantt = ({ ganttData }) => {
+  // Trasforma i dati per il Gantt
+  let structuredData = [];
+  try {
+    structuredData = ganttData.reduce((acc, event) => {
+      const existingProject = acc.find((proj) => proj.CommessaName === event.CommessaName);
 
-  console.log("[DEBUG - Gantt.js] ganttData ricevuto da App.js:", ganttData);
+      if (existingProject) {
+        existingProject.subtasks.push({
+          Id: event.Id,
+          Subject: event.Subject,
+          StartTime: event.StartTime,
+          EndTime: event.EndTime,
+          Duration: event.Duration, // Valore di default per Duration
+          Progress: event.Progress, // Valore di default per Progress
+          IncaricatoName: event.IncaricatoName,
+          CommessaName: event.CommessaName,
+        });
+      } else {
+        acc.push({
+          Id: event.ProjectId,
+          CommessaName: event.CommessaName,
+          StartTime: event.StartTime,
+          EndTime: event.EndTime,
+          Duration: event.Duration, // Valore di default per Duration
+          Progress: event.Progress, // Valore di default per Progress
+          subtasks: [
+            {
+              Id: event.Id,
+              Subject: event.Subject,
+              StartTime: event.StartTime,
+              EndTime: event.EndTime,
+              Duration: event.Duration || 1, // Valore di default per Duration
+              Progress: event.Progress || 0, // Valore di default per Progress
+              IncaricatoName: event.IncaricatoName,
+              
+            },
+          ],
+        });
+      }
+      return acc;
+    }, []);
+  } catch (error) {
+    console.error("Errore nella trasformazione dei dati:", error);
+  }
 
   useEffect(() => {
-    setRefreshKey((prevKey) => prevKey + 1); // Forza il ri-rendering quando cambia ganttData
-  }, [ganttData]);
-
-  const handleActionComplete = (args) => {
-    if (args.requestType === 'save') {
-      // Estrarre e formattare i collaboratori selezionati
-      const collaboratorIds = Array.isArray(args.data.taskData.IncaricatoId)
-        ? args.data.taskData.IncaricatoId
-        : typeof args.data.taskData.IncaricatoId === 'string'
-        ? args.data.taskData.IncaricatoId.split(',').map(Number)
-        : [];
-  
-      // Aggiorna taskData con i collaboratori selezionati
-      args.data.taskData.IncaricatoId = Array.isArray(args.data.taskData.IncaricatoId)
-      ? args.data.taskData.IncaricatoId.filter((id) => typeof id === "number")
-      : [];
-    console.log("[DEBUG - handleActionComplete] IncaricatoId Pulito:", args.data.taskData.IncaricatoId);
-
-  
-      console.log('Collaboratori aggiornati nel taskData:', args.data.taskData);
-  
-      // Invia i dati aggiornati al backend
-      if (!args.data.Id) {
-        onSaveEvent(args.data.taskData);
-      } else {
-        onUpdateEvent(args.data.taskData);
-      }
-    }
-  };
-  
-
-
-  const collaboratorEditTemplate = {
-    create: () => {
-      const input = document.createElement("input");
-      input.className = "collaborator-multi-select";
-      return input;
-    },
-
-    write: (args) => {
-      console.log("[Collaboratori] Dati dell'evento:", args.rowData);
-
-      const multiSelect = new MultiSelectComponent({
-        dataSource: categoryResources.map((collab) => ({
-          text: collab.text,
-          value: collab.id,
-        })),
-        fields: { text: "text", value: "value" },
-        value: args.rowData?.CollaboratoreId || [], // Precarica i collaboratori associati
-        mode: "CheckBox",
-        showDropDownIcon: true,
-        placeholder: "Seleziona Collaboratori",
-        popupHeight: "250px",
-        change: (e) => {
-          args.rowData.CollaboratoreId = e.value; // Aggiorna i dati dell'evento
-          console.log("[Collaboratori] Valori selezionati:", e.value);
-        },
-      });
-
-      multiSelect.appendTo(".collaborator-multi-select");
-    },
-
-    destroy: () => {
-      const multiSelect = document.querySelector(".collaborator-multi-select");
-      if (multiSelect && multiSelect.ej2_instances) {
-        multiSelect.ej2_instances[0].destroy();
-      }
-    },
-  };
-
-  console.log("[DEBUG] Configurazione del menu Commessa:", {
-    dataSource: projectResources.filter((commessa) =>
-      selectedCommesse.includes(commessa.id)
-    ),
-    fields: { text: "text", value: "id" },
-  });
-
-  const cleanedGanttData = ganttData.map((event) => ({
-    ...event,
-    IncaricatoId: Array.isArray(event.IncaricatoId)
-      ? event.IncaricatoId.filter((id) => typeof id === "number")
-      : [],
-  }));
-  
-  console.log("[DEBUG - Gantt.js] Dati puliti per il Gantt:", cleanedGanttData);
-
+    console.log("Dati strutturati per Gantt:", structuredData);
+  }, [structuredData]);
 
   return (
-    <div key={refreshKey}>
-
-      
-      <GanttComponent
- actionBegin={(args) => {
-  console.log("[DEBUG - Gantt.js actionBegin] Args:", args);
-  if (args.data && args.data.IncaricatoId) {
-    console.log("[DEBUG - Gantt.js actionBegin] IncaricatoId:", args.data.IncaricatoId);
-  }
-}}
-actionComplete={(args) => {
-  console.log("[DEBUG - Gantt.js actionComplete] Args:", args);
-  if (args.data && args.data.IncaricatoId) {
-    console.log("[DEBUG - Gantt.js actionComplete] IncaricatoId:", args.data.IncaricatoId);
-  }
-}}
-        resources={categoryResources}
-        resourceFields={{
-          id: "id",
-          name: "text",
-        }}
-        //actionComplete={handleActionComplete}
-        dataSource={cleanedGanttData}
-        allowSelection={true}
-        allowSorting={true}
-        taskFields={{
-          id: "Id",
-          name: "Subject",
-          startDate: "StartTime",
-          endDate: "EndTime",
-          parentID: "parentID",
-          progress: "Progress",
-          resourceInfo: "IncaricatoId", // Deve corrispondere
-        }}
-        editSettings={{
-          allowAdding: true,
-          allowEditing: true,
-          allowDeleting: true,
-          allowTaskbarEditing: true,
-          showDeleteConfirmDialog: true,
-        }}
-        toolbar={["Add", "Edit", "Update", "Delete", "Cancel"]}
-      >
-        <ColumnsDirective>
-
-
-
-          <ColumnDirective
-            field="Id"
-            headerText="ID"
-            visible={false} // Nascondi la colonna
-            isPrimaryKey={true} // Identifica questa colonna come la chiave primaria
-          />
-          <ColumnDirective
-            field="Subject" // Campo del nome del task
-            headerText="Task"
-            width="200"
-          />
-<ColumnDirective
-  field="ProjectId" // Usa il campo che contiene l'ID della commessa
-  headerText="Commessa"
-  width="200"
-  template={(props) => {
-    const commessa = projectResources.find((res) => res.id === props.ProjectId);
-    return <span>{commessa ? commessa.text : "Non assegnata"}</span>;
+    <div>
+<GanttComponent
+  dataSource={structuredData}
+  viewType="ProjectView"
+  taskFields={{
+    id: 'Id',
+    name: 'CommessaName',
+    startDate: 'StartTime',
+    endDate: 'EndTime',
+    duration: 'Duration',
+    progress: 'Progress',
+    child: 'subtasks',
   }}
-  editType="dropdownedit"
-  edit={{
-    params: {
-      dataSource: projectResources.map((commessa) => ({
-        text: commessa.text,
-        value: commessa.id,
-      })),
-      fields: { text: "text", value: "value" },
-      placeholder: "Seleziona Commessa",
-    },
+  columns={[
+    { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true }, // Chiave primaria
+    { field: 'CommessaName', headerText: 'Commessa', width: 250 },
+    { field: 'Subject', headerText: 'Evento', width: 200 },
+    { field: 'StartTime', headerText: 'Start Date' },
+    { field: 'EndTime', headerText: 'End Date' },
+    { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200 },
+    { field: 'Progress', headerText: 'Progress' },
+  ]}
+  editSettings={{
+    allowAdding: true,
+    allowEditing: true,
+    allowDeleting: true,
+    allowTaskbarEditing: true,
+    showDeleteConfirmDialog: true,
   }}
-/>
-<ColumnDirective
-  field="IncaricatoId"
-  headerText="Collaboratori"
-  width="300"
-  editTemplate={(props) => {
-    const multiSelect = new MultiSelectComponent({
-      dataSource: categoryResources.map((collab) => ({
-        text: collab.text,
-        value: collab.id,
-      })),
-      value: props.IncaricatoId?.filter((id) => typeof id === "number") || [],
-      change: (e) => {
-        props.IncaricatoId = e.value.filter((id) => typeof id === "number");
-        console.log("[DEBUG - MultiSelect] Valori aggiornati filtrati:", props.IncaricatoId);
-      },
-    });
-  
-    return <MultiSelectComponent {...multiSelect} />;
+  toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
+  labelSettings={{
+    taskLabel: 'CommessaName',
   }}
-/>
-
-
-
-
-        </ColumnsDirective>
-        <Inject services={[Selection, Toolbar, DayMarkers, Edit, Filter, Sort]} />
-      </GanttComponent>
-
+  splitterSettings={{
+    columnIndex: 1,
+  }}
+  height="450px"
+  projectStartDate={new Date('12/20/2024')}
+  projectEndDate={new Date('12/31/2028')}
+>
+  <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD]} />
+</GanttComponent>
 
     </div>
   );

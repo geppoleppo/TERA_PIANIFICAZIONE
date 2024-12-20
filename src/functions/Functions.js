@@ -194,36 +194,27 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
   // Funzione per aggiornare un evento
 
   export const updateEvent = async (eventData, fetchEvents) => {
-    // Normalizza CollaboratoreId come stringa separata da virgole
-    const collaboratorIds = Array.isArray(eventData.taskData?.CollaboratoreId)
-      ? eventData.taskData.CollaboratoreId.join(',')
-      : eventData.taskData?.CollaboratoreId || null;
-  
-    const updatedEvent = {
-      ...eventData.taskData,
-      CollaboratoreId: collaboratorIds,
-      parentID: eventData.taskData?.parentID,
-      Description: eventData.taskData?.Description,
-    };
+    const collaboratorId = Array.isArray(eventData.CollaboratoreId)
+      ? eventData.CollaboratoreId.join(',')
+      : eventData.CollaboratoreId;
   
     try {
-      const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
+      const response = await fetch(`http://localhost:3001/api/eventi/${eventData.Id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedEvent),
+        body: JSON.stringify({
+          ...eventData,
+          CollaboratoreId: collaboratorId,  // Stringa corretta per CollaboratoreId
+          parentID: eventData.parentID,     // Includi `parentID` per l'aggiornamento
+          Description: eventData.Description 
+        })
       });
-  
-      if (!response.ok) {
-        throw new Error(`Errore durante l'aggiornamento dell'evento: ${response.statusText}`);
-      }
-  
-      console.log("Evento aggiornato con successo:", updatedEvent);
-      fetchEvents(); // Ricarica gli eventi per aggiornare il Gantt
+      const data = await response.json();
+      fetchEvents(); // Ricarica gli eventi
     } catch (error) {
-      console.error("Errore durante l'aggiornamento dell'evento:", error);
+      console.error("ErrorRONE durante l'aggiornamento dell'evento:", error);
     }
-  };
-  
+};
 
 // Functions.js
 
@@ -261,38 +252,22 @@ export const fetchCategoryResources = async () => {
 };
 
 // Funzione per caricare gli eventi dal database
-export const fetchEvents = async (projectResources, categoryResources) => {
+export const fetchEvents = async (projectResources) => {
   try {
     const response = await fetch('http://localhost:3001/api/eventi');
     const data = await response.json();
     console.log("DATA", data);
 
-    if (!projectResources || projectResources.length === 0) {
-      console.warn("[DEBUG] projectResources è vuoto o non pronto.");
-      return data; // Ritorna i dati grezzi senza arricchirli
-    }
-
     return data.map((event) => {
       const commessa = projectResources.find((res) => res.id === event.ProjectId);
-
-      // Filtra solo i numeri in IncaricatoId
-      const incaricatoIds = Array.isArray(event.IncaricatoId)
-      ? event.IncaricatoId.filter((id) => typeof id === "number" && id > 0) // Filtra numeri validi
-      : [];
-
-      const incaricatoNames = incaricatoIds
-        .map((id) => {
-          const collaboratore = categoryResources.find((c) => c.id === id);
-          return collaboratore ? collaboratore.text : null;
-        })
-        .filter(Boolean)
-        .join(", ");
-        
       return {
         ...event,
         ProjectId: parseInt(event.ProjectId, 10),
-        IncaricatoId: incaricatoIds, // Include solo ID numerici
-        IncaricatoName: incaricatoNames,
+        // Controlla se IncaricatoId è già un array, altrimenti convertilo
+        CollaboratoreId: Array.isArray(event.IncaricatoId)
+          ? event.IncaricatoId
+          : event.IncaricatoId.split(',').map(Number),
+        IncaricatoName: event.IncaricatoName || "Nessuno", // Mostra i nomi
         Color: event.Colore || '#FF0000',
         CommessaName: commessa ? commessa.text : "Non assegnata",
       };
@@ -302,9 +277,6 @@ export const fetchEvents = async (projectResources, categoryResources) => {
     return [];
   }
 };
-
-
-
 
 
 
