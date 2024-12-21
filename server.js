@@ -146,7 +146,12 @@ app.get('/api/eventi', async (req, res) => {
     const collaboratoriQuery = 'SELECT Id, Nome FROM Collaboratori';
     const collaboratori = await getRecords(collaboratoriQuery);
 
+    // Query per recuperare le commesse
+    const commesseQuery = 'SELECT Id, CommessaName FROM Commesse';
+    const commesse = await getRecords(commesseQuery);
+
     console.log("Collaboratori caricati:", collaboratori);
+    console.log("Commesse caricate:", commesse);
 
     // Mappatura degli eventi
     const mappedEventi = eventi.map(evento => {
@@ -164,17 +169,23 @@ app.get('/api/eventi', async (req, res) => {
         .filter(Boolean) // Rimuove eventuali valori null o undefined
         .join(", "); // Concatena i nomi con virgole
 
+      // Trova il nome della commessa usando CommessaId
+      const commessa = commesse.find(c => c.Id === evento.CommessaId);
+
       return {
         Id: evento.Id,
         Subject: evento.Titolo,
         StartTime: evento.Inizio,
         EndTime: evento.Fine,
-        ProjectId: parseInt(evento.CommessaName, 10) || null,
+        CommessaId: evento.CommessaId || null, // ID della commessa
+        CommessaName: commessa ? commessa.CommessaName : "Commessa sconosciuta", // Nome della commessa
+        Duration: evento.Duration || 0,
+        Progress: evento.Progress || 0,
         IncaricatoId: incaricatoIds, // Array di ID
         IncaricatoName: incaricatoNames || "Nessuno", // Stringa con nomi
         CategoryColor: evento.Colore || "#000000",
         parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
-        CommessaName: evento.CommessaName
+        Description: evento.Descrizione || "",
       };
     });
 
@@ -198,33 +209,67 @@ app.put('/api/eventi/:id', async (req, res) => {
     CategoryColor,
     Description,
     parentID,
-    IncaricatoName,
-    Id, // Prendi l'ID direttamente dalla richiesta
+    IncaricatoName, // Nomi dei collaboratori
+    Id, // ID evento
   } = req.body;
 
   console.log("Dati ricevuti per l'aggiornamento:", req.body);
 
   try {
-    // Verifica se l'ID è valido
     if (!Id) {
       return res.status(400).json({ error: "ID evento mancante nella richiesta." });
     }
 
-    const collaboratorIds = Array.isArray(req.body.IncaricatoId)
-      ? req.body.IncaricatoId // È già un array
-      : req.body.IncaricatoId
-      ? req.body.IncaricatoId.split(',').map((id) => Number(id.trim())) // Converte la stringa in un array di numeri
+    // Trova CommessaId mappando CommessaName
+    const commessaQuery = 'SELECT Id FROM Commesse WHERE CommessaName = ?';
+    const commessaResult = await getRecords(commessaQuery, [CommessaName]);
+
+    if (commessaResult.length === 0) {
+      return res.status(404).json({ error: "Commessa non trovata per il nome fornito." });
+    }
+    const CommessaId = commessaResult[0].Id;
+
+    // Ottieni gli ID dei collaboratori dal database mappando i nomi
+    const collaboratoriQuery = 'SELECT Id, Nome FROM Collaboratori';
+    const collaboratori = await getRecords(collaboratoriQuery);
+
+    const collaboratorIds = IncaricatoName
+      ? IncaricatoName.split(',').map((name) => {
+          const collaborator = collaboratori.find(
+            (collab) => collab.Nome.trim() === name.trim()
+          );
+          return collaborator ? collaborator.Id : null;
+        }).filter(Boolean) // Rimuove eventuali valori null
       : [];
 
+    // Prepara i parametri per la query
+    const params = [
+      Subject || "Titolo non specificato",
+      StartTime,
+      EndTime,
+      CommessaId || null, // ID della commessa trovato
+      CommessaName || "Commessa non specificata",
+      Duration || 0, // Valore di default
+      Progress || 0, // Valore di default
+      collaboratorIds.join(','), // Concatena gli ID dei collaboratori
+      IncaricatoName || "Nessuno",
+      CategoryColor || "#000000",
+      Description || "",
+      parentID || null,
+      Id,
+    ];
+
+    // Query di aggiornamento
     const query = `
       UPDATE Eventi
       SET 
         Titolo = ?, 
         Inizio = ?, 
         Fine = ?, 
-        CommessaName = ?,
-        Duration = ?,
-        Progress = ?,
+        CommessaId = ?, 
+        CommessaName = ?, 
+        Duration = ?, 
+        Progress = ?, 
         IncaricatoId = ?, 
         IncaricatoName = ?, 
         Colore = ?, 
@@ -233,45 +278,28 @@ app.put('/api/eventi/:id', async (req, res) => {
       WHERE Id = ?
     `;
 
-    const params = [
-      Subject || "Titolo non specificato",
-      StartTime,
-      EndTime,
-      CommessaName || "Commessa non specificata",
-      Duration ,
-      Progress ,
-      collaboratorIds.join(','),
-      IncaricatoName || "Nessuno",
-      CategoryColor || "#000000",
-      Description || "",
-      parentID || null,
-      Id,
-    ];
-
-    console.log("Query UPDATE:", query);
-    console.log("Parametri:", params);
-
+    // Esegui la query
     const result = await runQuery(query, params);
-    console.log("Righe aggiornate:", result.changes);
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: "Evento non trovato per l'aggiornamento." });
+      return res.status(404).json({ error: "Nessuna riga aggiornata. Evento non trovato." });
     }
 
     // Recupera l'evento aggiornato
-    const updatedEvent = await runQuery('SELECT * FROM Eventi WHERE Id = ?', [Number(Id)]);
+    const updatedEvent = await getRecords('SELECT * FROM Eventi WHERE Id = ?', [Id]);
 
-    if (updatedEvent.length > 0) {
-      res.json(updatedEvent[0]);
-    } else {
-      console.error("Nessun evento trovato con ID:", Id);
-      res.status(404).json({ error: "Evento non trovato dopo l'aggiornamento." });
-    }
+    res.json({
+      message: "Evento aggiornato con successo",
+      event: updatedEvent[0],
+    });
   } catch (error) {
     console.error("Errore durante l'aggiornamento dell'evento:", error);
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
+
+
+
 
 
 
