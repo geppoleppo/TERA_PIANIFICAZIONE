@@ -82,39 +82,42 @@ const App = () => {
 
 
   useEffect(() => {
-    console.log('USE EFFECT 1',events)
-    const enrichedEvents = events.map((event) => {
-      const commessa = filteredProjectResources.find((res) => res.id === event.ProjectId);
-      return {
-        ...event,
-        CommessaName: commessa ? commessa.text : "Non assegnata",
-      };
-    });
-
+    console.log('USE EFFECT 1', events);
+    const enrichedEvents = events.map(event => ({
+      ...event,
+      IncaricatoId: Array.isArray(event.IncaricatoId)
+        ? event.IncaricatoId
+        : (event.IncaricatoId || '').split(',').map(Number), // Converte stringa in array
+      IncaricatoName: event.IncaricatoName || 'Nessuno',
+    }));
     setFilteredEventsForGantt(enrichedEvents);
-    //console.log("Dati del Gantt (con CommessaName):", enrichedEvents);
   }, [events, filteredProjectResources]);
+  
 
   useEffect(() => {
-    console.log('USE EFFECT 2')
+    console.log('USE EFFECT 2', events);
     const loadData = async () => {
       try {
-        const projects = await fetchProjectResources(); // Carica le commesse
+        const projects = await fetchProjectResources();
         setProjectResources(projects);
-
-        const categories = await fetchCategoryResources(); // Carica i collaboratori
-        console.log("Collaboratori caricati:", categories);
-        setCategoryResources(categories);
-
-        const enrichedEvents = await fetchEvents(projects); // Passa le commesse per mappare CommessaName
-        setEvents(enrichedEvents);
-        setFilteredEventsForGantt(enrichedEvents); // Inizialmente tutti gli eventi
+  
+        const collaborators = await fetchCategoryResources();
+        console.log("[DEBUG] Collaboratori caricati:", collaborators); // Log per verificare i dati
+        setCategoryResources(collaborators); // Popola il menu Collaboratori
+  
+        const events = await fetchEvents(projects);
+        setEvents(events);
+  
+        setFilteredEventsForGantt(events); // Inizialmente tutti gli eventi
       } catch (error) {
         console.error("Errore nel caricamento dei dati:", error);
       }
     };
     loadData();
   }, []);
+  
+  
+  
 
 
   // Selezione collaboratori e aggiornamento delle commesse

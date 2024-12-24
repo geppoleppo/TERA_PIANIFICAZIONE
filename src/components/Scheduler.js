@@ -246,7 +246,7 @@ const Scheduler = ({
         {/* Resource Definitions */}
         <ResourcesDirective>
           <ResourceDirective
-            field="ProjectId"
+            field="CommessaId"
             title="Projects"
             name="Projects"
             dataSource={filteredProjectResources} // Usa le risorse filtrate

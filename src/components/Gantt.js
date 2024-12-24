@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   GanttComponent,
   Selection,
@@ -14,56 +14,31 @@ const Gantt = ({ ganttData }) => {
   // Trasforma i dati per il Gantt
   let structuredData = [];
   try {
-    structuredData = ganttData.reduce((acc, event) => {
-      const existingProject = acc.find((proj) => proj.CommessaName === event.CommessaName);
-
-      if (existingProject) {
-        existingProject.subtasks.push({
-          Id: event.Id,
-          Subject: event.Subject,
-          StartTime: event.StartTime,
-          EndTime: event.EndTime,
-          Duration: event.Duration,
-          Progress: event.Progress,
-          IncaricatoName: event.IncaricatoName,
-          CommessaName: event.CommessaName,
-        });
-      } else {
-        acc.push({
-          Id: event.ProjectId,
-          CommessaName: event.CommessaName,
-          StartTime: event.StartTime,
-          EndTime: event.EndTime,
-          Duration: event.Duration,
-          Progress: event.Progress,
-          subtasks: [
-            {
-              Id: event.Id,
-              Subject: event.Subject,
-              StartTime: event.StartTime,
-              EndTime: event.EndTime,
-              Duration: event.Duration,
-              Progress: event.Progress,
-              IncaricatoName: event.IncaricatoName,
-              CommessaName: event.CommessaName,
-            },
-          ],
-        });
-      }
-      return acc;
-    }, []);
+    structuredData = ganttData.map((event) => ({
+      ...event,
+      IncaricatoId: event.IncaricatoId || [], // Gestione esplicita di IncaricatoId
+      IncaricatoName: event.IncaricatoName || 'Nessuno', // Gestione esplicita di IncaricatoName
+    }));
   } catch (error) {
-    console.error("Errore nella trasformazione dei dati:", error);
+    console.error('Errore nella trasformazione dei dati:', error);
   }
 
   const updateEventOnDB = async (updatedEvent) => {
+    console.log('AAAAAAAAAAAAAAAAAAAAAA',updatedEvent)
     try {
-      console.log("Invio al server:", updatedEvent);
+      const payload = {
+        ...updatedEvent.taskData,
+        IncaricatoId: Array.isArray(updatedEvent.taskData.IncaricatoId)
+          ? updatedEvent.taskData.IncaricatoId.join(',')
+          : updatedEvent.taskData.IncaricatoId,
+      };
+
+      console.log('Invio al server:', payload);
 
       const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedEvent),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -71,9 +46,9 @@ const Gantt = ({ ganttData }) => {
       }
 
       const updatedData = await response.json();
-      console.log("Risposta del server:", updatedData);
+      console.log('Risposta del server:', updatedData);
     } catch (error) {
-      console.error("Errore durante l'aggiornamento dell'evento:", error);
+      console.error('Errore durante l\'aggiornamento dell\'evento:', error);
     }
   };
 
@@ -109,9 +84,9 @@ const Gantt = ({ ganttData }) => {
         }}
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
         actionBegin={(args) => {
-          console.log("EVENTOOOO",args)
-          if (args.requestType === 'save' || args.requestType ==='taskbarediting' ||args.requestType ==='beforeSave'){
-            console.log("Dati modificati:", args.data);
+          console.log('TIPO DI EVENTO',args.requestType)
+          if (args.requestType === 'save' || 'beforeSave'  || 'refresh') {
+            console.log('Dati modificati:', args.data);
             updateEventOnDB(args.data);
           }
         }}

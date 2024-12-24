@@ -256,27 +256,20 @@ export const fetchEvents = async (projectResources) => {
   try {
     const response = await fetch('http://localhost:3001/api/eventi');
     const data = await response.json();
-    console.log("DATA", data);
-
-    return data.map((event) => {
-      const commessa = projectResources.find((res) => res.id === event.ProjectId);
-      return {
-        ...event,
-        ProjectId: parseInt(event.ProjectId, 10),
-        // Controlla se IncaricatoId è già un array, altrimenti convertilo
-        CollaboratoreId: Array.isArray(event.IncaricatoId)
-          ? event.IncaricatoId
-          : event.IncaricatoId.split(',').map(Number),
-        IncaricatoName: event.IncaricatoName || "Nessuno", // Mostra i nomi
-        Color: event.Colore || '#FF0000',
-        CommessaName: commessa ? commessa.text : "Non assegnata",
-      };
-    });
+    return data.map(event => ({
+      ...event,
+      IncaricatoId: Array.isArray(event.IncaricatoId)
+        ? event.IncaricatoId
+        : (event.IncaricatoId || '').split(',').map(Number), // Converte in array
+      IncaricatoName: event.IncaricatoName || 'Nessuno',
+    }));
   } catch (error) {
     console.error('Errore durante il caricamento degli eventi:', error);
     return [];
   }
 };
+
+
 
 
 

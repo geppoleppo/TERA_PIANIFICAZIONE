@@ -49,7 +49,8 @@ app.post('/api/eventi', async (req, res) => {
     Subject,
     StartTime,
     EndTime,
-    ProjectId,
+    CommessaId,
+    CommessaName,
     CollaboratoreId,
     CategoryColor,
     Description,
@@ -59,15 +60,16 @@ app.post('/api/eventi', async (req, res) => {
   try {
     const query = `
       INSERT INTO Eventi 
-      (Titolo, Inizio, Fine, CommessaName, IncaricatoId, Colore, Descrizione, parentID)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (Titolo, Inizio, Fine,CommessaId, CommessaName, IncaricatoId, Colore, Descrizione, parentID)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
     `;
 
     const result = await runQuery(query, [
       Subject,
       StartTime,
       EndTime,
-      ProjectId || null,
+      CommessaId || null,
+      CommessaName,
       Array.isArray(CollaboratoreId) ? CollaboratoreId.join(',') : null,
       CategoryColor || '#000000',
       Description || '',
@@ -203,66 +205,29 @@ app.put('/api/eventi/:id', async (req, res) => {
     Subject,
     StartTime,
     EndTime,
+    CommessaId,
     CommessaName,
     Duration,
     Progress,
     CategoryColor,
     Description,
     parentID,
-    IncaricatoName, // Nomi dei collaboratori
-    Id, // ID evento
+    IncaricatoId, // Array o stringa di collaboratori
+    IncaricatoName, // Nome del collaboratore
   } = req.body;
 
-  console.log("Dati ricevuti per l'aggiornamento:", req.body);
-
   try {
-    if (!Id) {
-      return res.status(400).json({ error: "ID evento mancante nella richiesta." });
-    }
+    console.log("Dati ricevuti per aggiornamento evento:", req.body);
 
-    // Trova CommessaId mappando CommessaName
-    const commessaQuery = 'SELECT Id FROM Commesse WHERE CommessaName = ?';
-    const commessaResult = await getRecords(commessaQuery, [CommessaName]);
-
-    if (commessaResult.length === 0) {
-      return res.status(404).json({ error: "Commessa non trovata per il nome fornito." });
-    }
-    const CommessaId = commessaResult[0].Id;
-
-    // Ottieni gli ID dei collaboratori dal database mappando i nomi
-    const collaboratoriQuery = 'SELECT Id, Nome FROM Collaboratori';
-    const collaboratori = await getRecords(collaboratoriQuery);
-
-    const collaboratorIds = IncaricatoName
-      ? IncaricatoName.split(',').map((name) => {
-          const collaborator = collaboratori.find(
-            (collab) => collab.Nome.trim() === name.trim()
-          );
-          return collaborator ? collaborator.Id : null;
-        }).filter(Boolean) // Rimuove eventuali valori null
+    // Assicurati che IncaricatoId sia un array o converti una stringa separata da virgole
+    const collaboratorIds = Array.isArray(IncaricatoId)
+      ? IncaricatoId
+      : typeof IncaricatoId === 'string'
+      ? IncaricatoId.split(',').map(Number)
       : [];
 
-    // Prepara i parametri per la query
-    const params = [
-      Subject || "Titolo non specificato",
-      StartTime,
-      EndTime,
-      CommessaId || null, // ID della commessa trovato
-      CommessaName || "Commessa non specificata",
-      Duration || 0, // Valore di default
-      Progress || 0, // Valore di default
-      collaboratorIds.join(','), // Concatena gli ID dei collaboratori
-      IncaricatoName || "Nessuno",
-      CategoryColor || "#000000",
-      Description || "",
-      parentID || null,
-      Id,
-    ];
-
-    // Query di aggiornamento
     const query = `
-      UPDATE Eventi
-      SET 
+      UPDATE Eventi SET
         Titolo = ?, 
         Inizio = ?, 
         Fine = ?, 
@@ -278,25 +243,31 @@ app.put('/api/eventi/:id', async (req, res) => {
       WHERE Id = ?
     `;
 
-    // Esegui la query
-    const result = await runQuery(query, params);
+    const params = [
+      Subject, 
+      StartTime, 
+      EndTime, 
+      CommessaId, 
+      CommessaName,
+      Duration, 
+      Progress, 
+      collaboratorIds.join(','), // Concatena gli ID in una stringa
+      IncaricatoName, 
+      CategoryColor, 
+      Description, 
+      parentID, 
+      req.params.id,
+    ];
 
-    if (result.changes === 0) {
-      return res.status(404).json({ error: "Nessuna riga aggiornata. Evento non trovato." });
-    }
+    await runQuery(query, params);
 
-    // Recupera l'evento aggiornato
-    const updatedEvent = await getRecords('SELECT * FROM Eventi WHERE Id = ?', [Id]);
-
-    res.json({
-      message: "Evento aggiornato con successo",
-      event: updatedEvent[0],
-    });
+    res.json({ message: "Evento aggiornato con successo!" });
   } catch (error) {
     console.error("Errore durante l'aggiornamento dell'evento:", error);
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
+
 
 
 
@@ -419,7 +390,7 @@ app.get('/api/eventi/:id', async (req, res) => {
       Subject: evento[0].Titolo,
       StartTime: evento[0].Inizio,
       EndTime: evento[0].Fine,
-      ProjectId: parseInt(evento[0].CommessaName, 10),
+      CommessaIdId:  evento[0].CommessaId,
       CollaboratoreId: evento[0].IncaricatoId.split(',').map(id => parseInt(id, 10)),
       CategoryColor: evento[0].Colore || "#000000",
       Description: evento[0].Descrizione, // Includi altri campi necessari
