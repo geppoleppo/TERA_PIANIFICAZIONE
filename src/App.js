@@ -133,13 +133,14 @@ const App = () => {
   };
 
   useEffect(() => {
-    console.log('USE EFFECT 3', events);
+    console.log('USE EFFECT 3 - Selezione Collaboratori aggiornata:', selectedCollaboratori);
   
     if (selectedCollaboratori.length === 0) {
-      setFilteredProjectResources([]); // Nessuna commessa mostrata
-      setSelectedCommesse([]); // Nessuna commessa selezionata
+      setFilteredProjectResources([]);
+      setSelectedCommesse([]);
+      setFilteredEventsForGantt([]); // Nessun evento mostrato se nessun collaboratore selezionato
     } else {
-      // Commesse associate ai collaboratori selezionati
+      // Filtra le commesse associate ai collaboratori selezionati
       const associatedCommesseFromCollaboratori = projectResources.filter((commessa) =>
         selectedCollaboratori.some((collabId) => {
           const collaboratore = categoryResources.find((c) => c.id === collabId);
@@ -147,34 +148,26 @@ const App = () => {
         })
       );
   
-      // Commesse associate agli eventi dei collaboratori
-      const associatedCommesseFromEvents = events
-        .filter((event) => {
-          const incaricatoIds = Array.isArray(event.IncaricatoId)
-            ? event.IncaricatoId
-            : typeof event.IncaricatoId === "string"
-            ? event.IncaricatoId.split(",").map(Number)
-            : [];
-          return selectedCollaboratori.some((collabId) => incaricatoIds.includes(collabId));
-        })
-        .map((event) => event.ProjectId)
-        .filter(Boolean); // Rimuove valori null o undefined
+      // Filtra gli eventi associati ai collaboratori selezionati
+      const filteredEvents = events.filter((event) => {
+        const incaricatoIds = Array.isArray(event.IncaricatoId)
+          ? event.IncaricatoId
+          : typeof event.IncaricatoId === 'string'
+          ? event.IncaricatoId.split(',').map(Number)
+          : [];
+        return selectedCollaboratori.some((collabId) => incaricatoIds.includes(collabId));
+      });
   
-      // Unisci e rimuovi duplicati
-      const allAssociatedCommesse = [
-        ...associatedCommesseFromCollaboratori,
-        ...projectResources.filter((commessa) => associatedCommesseFromEvents.includes(commessa.id)),
-      ];
+      setFilteredEventsForGantt(filteredEvents);
   
-      const uniqueCommesse = Array.from(new Set(allAssociatedCommesse.map((c) => c.id))).map((id) =>
-        allAssociatedCommesse.find((c) => c.id === id)
-      );
+      // Aggiorna le commesse da visualizzare
+      const uniqueCommesse = Array.from(
+        new Set(associatedCommesseFromCollaboratori.map((c) => c.id))
+      ).map((id) => associatedCommesseFromCollaboratori.find((c) => c.id === id));
   
-      console.log("Commesse filtrate:", uniqueCommesse);
-  
+      console.log('Commesse filtrate:', uniqueCommesse);
       setFilteredProjectResources(uniqueCommesse);
   
-      // Aggiorna le commesse selezionate
       const selectedIds = uniqueCommesse.map((res) => res.id);
       setSelectedCommesse(selectedIds);
     }
@@ -184,25 +177,32 @@ const App = () => {
   
 
   useEffect(() => {
-    console.log('USE EFFECT 4', events);
+    console.log('USE EFFECT 4 - Filtraggio Eventi Gantt', selectedCollaboratori, selectedCommesse);
   
     const filteredEvents = events.filter((event) => {
       const incaricatoIdArray = Array.isArray(event.IncaricatoId)
         ? event.IncaricatoId
-        : typeof event.IncaricatoId === "string"
+        : typeof event.IncaricatoId === 'string'
         ? event.IncaricatoId.split(',').map(Number)
-        : []; // Converte stringhe in array e gestisce null/undefined
+        : [];
+  
+      console.log('Event:', event);
+      console.log('IncaricatoIdArray:', incaricatoIdArray);
   
       const isCollaboratorMatch =
         selectedCollaboratori.length === 0 ||
-        incaricatoIdArray.some((id) => selectedCollaboratori.includes(id)); // Controlla tutti gli ID
+        incaricatoIdArray.some((id) => selectedCollaboratori.includes(id));
+      console.log('Collaborator Match:', isCollaboratorMatch);
   
       const isCommessaMatch =
-        selectedCommesse.length === 0 || selectedCommesse.includes(event.ProjectId);
+        selectedCommesse.length === 0 ||
+        selectedCommesse.includes(Number(event.CommessaId)); // Conversione per sicurezza
+      console.log('Commessa Match:', isCommessaMatch);
   
       return isCollaboratorMatch && isCommessaMatch;
     });
   
+    console.log('Eventi filtrati per il Gantt:', filteredEvents);
     setFilteredEventsForGantt(filteredEvents);
   }, [selectedCollaboratori, selectedCommesse, events]);
   

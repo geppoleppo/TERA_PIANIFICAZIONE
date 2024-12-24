@@ -97,7 +97,7 @@ const Gantt = ({ ganttData }) => {
           columnIndex: 1,
         }}
         height="450px"
-        projectStartDate={new Date('12/20/2024')}
+        projectStartDate={new Date('01/20/2024')}
         projectEndDate={new Date('12/31/2028')}
       >
         <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD]} />
