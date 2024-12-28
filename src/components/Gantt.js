@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  
   GanttComponent,
   Selection,
   DayMarkers,
@@ -9,48 +10,44 @@ import {
   RowDD,
   Inject,
 } from '@syncfusion/ej2-react-gantt';
+import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 
-const Gantt = ({ ganttData }) => {
-  // Trasforma i dati per il Gantt
-  let structuredData = [];
-  try {
-    structuredData = ganttData.map((event) => ({
-      ...event,
-      IncaricatoId: event.IncaricatoId || [], // Gestione esplicita di IncaricatoId
-      IncaricatoName: event.IncaricatoName || 'Nessuno', // Gestione esplicita di IncaricatoName
-    }));
-  } catch (error) {
-    console.error('Errore nella trasformazione dei dati:', error);
-  }
+const Gantt = ({ ganttData, selectedCollaboratori, selectedCommesse,onUpdateEvent }) => {
+  // Trasforma i dati in formato gerarchico
+  const structuredData = selectedCommesse
+    .map((commessaId) => {
+      // Filtra gli eventi associati alla commessa
+      const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
 
-  const updateEventOnDB = async (updatedEvent) => {
-    console.log('AAAAAAAAAAAAAAAAAAAAAA',updatedEvent)
-    try {
-      const payload = {
-        ...updatedEvent.taskData,
-        IncaricatoId: Array.isArray(updatedEvent.taskData.IncaricatoId)
-          ? updatedEvent.taskData.IncaricatoId.join(',')
-          : updatedEvent.taskData.IncaricatoId,
-      };
-
-      console.log('Invio al server:', payload);
-
-      const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Errore durante l'aggiornamento: ${response.statusText}`);
+      // Se non ci sono eventi associati, non includere questa commessa
+      if (commessaEvents.length === 0) {
+        return null;
       }
 
-      const updatedData = await response.json();
-      console.log('Risposta del server:', updatedData);
-    } catch (error) {
-      console.error('Errore durante l\'aggiornamento dell\'evento:', error);
-    }
-  };
+      const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
+
+      return {
+        Id: commessaId,
+
+        StartTime: commessaEvents[0]?.StartTime || new Date(),
+        EndTime: commessaEvents[commessaEvents.length - 1]?.EndTime || new Date(),
+        subtasks: commessaEvents.map((event) => ({
+          Id: event.Id,
+          Subject: event.Subject,
+          StartTime: event.StartTime,
+          EndTime: event.EndTime,
+          Duration: event.Duration,
+          Progress: event.Progress,
+          IncaricatoName: event.IncaricatoName,
+          IncaricatoId: event.IncaricatoId,
+          CommessaId: commessaId,
+          CommessaName: commessaName,
+        })),
+      };
+    })
+    .filter((commessa) => commessa !== null); // Rimuove le commesse senza eventi
+
+  console.log('Dati strutturati per il Gantt:', structuredData);
 
   return (
     <div>
@@ -59,7 +56,8 @@ const Gantt = ({ ganttData }) => {
         viewType="ProjectView"
         taskFields={{
           id: 'Id',
-          name: 'CommessaName',
+          CommessaName: 'CommessaName',
+          CommessaId: 'CommessaId',
           startDate: 'StartTime',
           endDate: 'EndTime',
           duration: 'Duration',
@@ -68,13 +66,16 @@ const Gantt = ({ ganttData }) => {
         }}
         columns={[
           { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
-          { field: 'CommessaName', headerText: 'Commessa', width: 250 },
+          { field: 'CommessaName', headerText: 'Commessa', width: 100 },
+          { field: 'CommessaId', headerText: 'CommessaId', width: 100 },
           { field: 'Subject', headerText: 'Evento', width: 200 },
           { field: 'StartTime', headerText: 'Start Date' },
           { field: 'EndTime', headerText: 'End Date' },
           { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200 },
+          { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 200 },
           { field: 'Progress', headerText: 'Progress' },
         ]}
+        taskType='FixedWork'
         editSettings={{
           allowAdding: true,
           allowEditing: true,
@@ -83,22 +84,31 @@ const Gantt = ({ ganttData }) => {
           showDeleteConfirmDialog: true,
         }}
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
+        toolbarClick= { (args: ClickEventArgs) => {
+          if (args.item.id === 'showhidebar') {
+              gantt.showOverAllocation = gantt.showOverAllocation ? false : true;
+          }
+      }}
+
+
+
         actionBegin={(args) => {
-          console.log('TIPO DI EVENTO',args.requestType)
-          if (args.requestType === 'save' || 'beforeSave'  || 'refresh') {
+          
+          if (args.requestType === 'save' || args.requestType === 'beforeSave') {
             console.log('Dati modificati:', args.data);
-            updateEventOnDB(args.data);
+            onUpdateEvent(args.data);
           }
         }}
         labelSettings={{
           taskLabel: 'CommessaName',
+          rightLabel: 'IncaricatoName',
         }}
         splitterSettings={{
           columnIndex: 1,
         }}
         height="450px"
-        projectStartDate={new Date('01/20/2024')}
-        projectEndDate={new Date('12/31/2028')}
+        projectStartDate={new Date('12/15/2024')}
+        projectEndDate={new Date('12/31/2025')}
       >
         <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD]} />
       </GanttComponent>

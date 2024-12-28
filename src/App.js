@@ -24,6 +24,7 @@ const App = () => {
   
   
   const handleUpdateEvent = async (updatedEvent) => {
+    console.log("DATI in handleUpdateEvent:",updatedEvent)
     try {
       console.log("Dati inviati per l'aggiornamento:", updatedEvent);
   
