@@ -51,6 +51,7 @@ const Gantt = ({ ganttData, selectedCollaboratori, selectedCommesse,onUpdateEven
 
   return (
     <div>
+      {structuredData.length > 0 ? (
       <GanttComponent
         dataSource={structuredData}
         viewType="ProjectView"
@@ -112,7 +113,10 @@ const Gantt = ({ ganttData, selectedCollaboratori, selectedCommesse,onUpdateEven
       >
         <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD]} />
       </GanttComponent>
-    </div>
+) : (
+  <p>Caricamento dati...</p> // Mostra un messaggio o un indicatore di caricamento
+)}
+</div>
   );
 };
 
