@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import {
-  
   GanttComponent,
   Selection,
   DayMarkers,
@@ -12,36 +11,32 @@ import {
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 
-const Gantt = ({ ganttData, selectedCollaboratori, selectedCommesse,onUpdateEvent }) => {
+const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEvent,categoryResources }) => {
   const ganttRef = useRef(null);
 
   useEffect(() => {
     if (ganttRef.current && ganttData.length > 0) {
       ganttRef.current.refresh(); // Forza l'aggiornamento dei dati
     }
-  }, [ganttData]); // Trigger quando `ganttData` cambia
+  }, [ganttData]);
 
-  // Trasforma i dati in formato gerarchico
-  const resources = selectedCollaboratori.map((collabId) => ({
-    resourceId: collabId,
-    resourceName: `Collaboratore ${collabId}`,
+  // Calcola le risorse dai dati di Gantt
+  const resources = categoryResources.map((resource) => ({
+    resourceId: resource.id,
+    resourceName: resource.text,
   }));
 
+  // Trasforma i dati in formato gerarchico
   const structuredData = selectedCommesse
     .map((commessaId) => {
-      // Filtra gli eventi associati alla commessa
       const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
 
-      // Se non ci sono eventi associati, non includere questa commessa
-      if (commessaEvents.length === 0) {
-        return null;
-      }
+      if (commessaEvents.length === 0) return null;
 
       const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
 
       return {
         Id: commessaId,
-
         StartTime: commessaEvents[0]?.StartTime || new Date(),
         EndTime: commessaEvents[commessaEvents.length - 1]?.EndTime || new Date(),
         subtasks: commessaEvents.map((event) => ({
@@ -58,22 +53,23 @@ const Gantt = ({ ganttData, selectedCollaboratori, selectedCommesse,onUpdateEven
         })),
       };
     })
-    .filter((commessa) => commessa !== null); // Rimuove le commesse senza eventi
+    .filter((commessa) => commessa !== null);
 
   console.log('Dati strutturati per il Gantt:', structuredData);
+  console.log('Risorse calcolate:', categoryResources);
 
   return (
     <div>
       {structuredData.length > 0 ? (
         <GanttComponent
-          key={JSON.stringify(structuredData)} // Forza un nuovo render quando structuredData cambia
+          key={JSON.stringify(structuredData)} // Forza il render quando structuredData cambia
           ref={ganttRef}
           dataSource={structuredData}
           resources={resources}
           resourceFields={{
-          id: 'resourceId',
-          name: 'resourceName',
-        }} 
+            id: 'resourceId',
+            name: 'resourceName',
+          }}
           viewType="ProjectView"
           taskFields={{
             id: 'Id',
@@ -97,7 +93,7 @@ const Gantt = ({ ganttData, selectedCollaboratori, selectedCommesse,onUpdateEven
             { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 200 },
             { field: 'Progress', headerText: 'Progress' },
           ]}
-          taskType='FixedWork'
+          taskType="FixedWork"
           editSettings={{
             allowAdding: true,
             allowEditing: true,
