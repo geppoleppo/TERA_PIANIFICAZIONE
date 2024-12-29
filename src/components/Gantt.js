@@ -90,16 +90,17 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
               field: 'CommessaName',
               headerText: 'Commessa',
               width: 150,
-              visible: false,
+              visible: true,
               template: (data) => {
                 // Mostra il nome della commessa solo per il parent task
-                return data.subtasks ? data.CommessaName : '';
+                return data.IncaricatoId ? '': data.CommessaName;
               },
             },
             {
               field: 'Subject',
               headerText: 'Evento',
               width: 200,
+              visible: false,
               template: (data) => {
                 // Mostra il nome dell'evento solo per le subtasks
                 return data.subtasks ? '' : data.Subject;
@@ -132,7 +133,7 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
             }
           }}
           labelSettings={{
-            taskLabel: 'CommessaName',
+            taskLabel: 'Subject',
             rightLabel: 'IncaricatoName',
           }}
           splitterSettings={{
