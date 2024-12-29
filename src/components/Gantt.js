@@ -28,32 +28,34 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
 
   // Trasforma i dati in formato gerarchico
   const structuredData = selectedCommesse
-    .map((commessaId) => {
-      const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
+  .map((commessaId) => {
+    const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
 
-      if (commessaEvents.length === 0) return null;
+    if (commessaEvents.length === 0) return null;
 
-      const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
+    const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
 
-      return {
-        Id: commessaId,
-        StartTime: commessaEvents[0]?.StartTime || new Date(),
-        EndTime: commessaEvents[commessaEvents.length - 1]?.EndTime || new Date(),
-        subtasks: commessaEvents.map((event) => ({
-          Id: event.Id,
-          Subject: event.Subject,
-          StartTime: event.StartTime,
-          EndTime: event.EndTime,
-          Duration: event.Duration,
-          Progress: event.Progress,
-          IncaricatoName: event.IncaricatoName,
-          IncaricatoId: event.IncaricatoId,
-          CommessaId: commessaId,
-          CommessaName: commessaName,
-        })),
-      };
-    })
-    .filter((commessa) => commessa !== null);
+    return {
+      Id: commessaId,
+      CommessaName: commessaName,
+      StartTime: commessaEvents[0]?.StartTime || new Date(),
+      EndTime: commessaEvents[commessaEvents.length - 1]?.EndTime || new Date(),
+      subtasks: commessaEvents.map((event) => ({
+        Id: event.Id,
+        Subject: event.Subject,
+        StartTime: event.StartTime,
+        EndTime: event.EndTime,
+        Duration: event.Duration,
+        Progress: event.Progress,
+        IncaricatoName: event.IncaricatoName,
+        IncaricatoId: event.IncaricatoId,
+        CommessaId: commessaId,
+        CommessaName: commessaName,
+      })),
+    };
+  })
+  .filter((commessa) => commessa !== null);
+
 
   console.log('Dati strutturati per il Gantt:', structuredData);
   console.log('Risorse calcolate:', categoryResources);
@@ -84,14 +86,30 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
           }}
           columns={[
             { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
-            { field: 'CommessaName', headerText: 'Commessa', width: 100 },
-            { field: 'CommessaId', headerText: 'CommessaId', width: 100 },
-            { field: 'Subject', headerText: 'Evento', width: 200 },
-            { field: 'StartTime', headerText: 'Start Date' },
-            { field: 'EndTime', headerText: 'End Date' },
+            {
+              field: 'CommessaName',
+              headerText: 'Commessa',
+              width: 150,
+              visible: false,
+              template: (data) => {
+                // Mostra il nome della commessa solo per il parent task
+                return data.subtasks ? data.CommessaName : '';
+              },
+            },
+            {
+              field: 'Subject',
+              headerText: 'Evento',
+              width: 200,
+              template: (data) => {
+                // Mostra il nome dell'evento solo per le subtasks
+                return data.subtasks ? '' : data.Subject;
+              },
+            },
+            { field: 'StartTime', headerText: 'Start Date', width: 150 },
+            { field: 'EndTime', headerText: 'End Date', width: 150 },
             { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200 },
-            { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 200 },
-            { field: 'Progress', headerText: 'Progress' },
+            { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150 },
+            { field: 'Progress', headerText: 'Progress', width: 150 },
           ]}
           taskType="FixedWork"
           editSettings={{
