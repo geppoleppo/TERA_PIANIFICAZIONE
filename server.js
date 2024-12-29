@@ -212,19 +212,23 @@ app.put('/api/eventi/:id', async (req, res) => {
     CategoryColor,
     Description,
     parentID,
-    IncaricatoId, // Array o stringa di collaboratori
-    IncaricatoName, // Nome del collaboratore
+    ganttProperties, // Proprietà aggiuntive dal Gantt
   } = req.body;
 
   try {
     console.log("Dati ricevuti per aggiornamento evento:", req.body);
 
-    // Assicurati che IncaricatoId sia un array o converti una stringa separata da virgole
-    const collaboratorIds = Array.isArray(IncaricatoId)
-      ? IncaricatoId
-      : typeof IncaricatoId === 'string'
-      ? IncaricatoId.split(',').map(Number)
+    // Estrarre resourceInfo da ganttProperties
+    const resourceInfo = ganttProperties?.resourceInfo || [];
+
+    // Estrarre gli ID e i nomi dei collaboratori da resourceInfo
+    const collaboratorIds = Array.isArray(resourceInfo)
+      ? resourceInfo.map((resource) => resource.resourceId)
       : [];
+
+    const IncaricatoName = Array.isArray(resourceInfo)
+      ? resourceInfo.map((resource) => resource.resourceName).join(', ')
+      : '';
 
     const query = `
       UPDATE Eventi SET
@@ -267,6 +271,7 @@ app.put('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
+
 
 
 

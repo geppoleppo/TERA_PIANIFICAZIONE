@@ -11,7 +11,7 @@ import {
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 
-const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEvent,categoryResources }) => {
+const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEvent,categoryResources,collaborators }) => {
   const ganttRef = useRef(null);
 
   useEffect(() => {
@@ -38,6 +38,7 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
     return {
       Id: commessaId,
       CommessaName: commessaName,
+      CommessaId:commessaId,
       StartTime: commessaEvents[0]?.StartTime || new Date(),
       EndTime: commessaEvents[commessaEvents.length - 1]?.EndTime || new Date(),
       subtasks: commessaEvents.map((event) => ({
@@ -58,7 +59,7 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
 
 
   console.log('Dati strutturati per il Gantt:', structuredData);
-  console.log('Risorse calcolate:', categoryResources);
+  console.log('Risorse calcolate:', collaborators);
 
   return (
     <div>
@@ -68,10 +69,12 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
           ref={ganttRef}
           dataSource={structuredData}
           resources={resources}
+          
           resourceFields={{
             id: 'resourceId',
             name: 'resourceName',
           }}
+
           viewType="ProjectView"
           taskFields={{
             id: 'Id',
@@ -83,6 +86,7 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
             progress: 'Progress',
             child: 'subtasks',
             resourceInfo: 'resources',
+
           }}
           columns={[
             { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
@@ -108,9 +112,10 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
             },
             { field: 'StartTime', headerText: 'Start Date', width: 150 },
             { field: 'EndTime', headerText: 'End Date', width: 150 },
-            { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200 },
-            { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150 },
+            { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200,visible: false,},
+            { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150,visible: false, },
             { field: 'Progress', headerText: 'Progress', width: 150 },
+            { field: 'CommessaId', headerText: 'CommessaId', width: 150,visible: false, },
           ]}
           taskType="FixedWork"
           editSettings={{

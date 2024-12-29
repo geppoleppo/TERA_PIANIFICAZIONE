@@ -356,6 +356,7 @@ const App = () => {
   onSaveEvent={handleSaveEvent}
   onUpdateEvent={handleUpdateEvent}
   onDeleteEvent={handleDeleteEvent}
+ 
 />
       
     </div>
