@@ -11,7 +11,7 @@ import {
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 
-const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEvent,categoryResources,collaborators }) => {
+const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEvent,categoryResources,allCollaborators }) => {
   const ganttRef = useRef(null);
 
   useEffect(() => {
@@ -20,12 +20,12 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
     }
   }, [ganttData]);
 
-  // Calcola le risorse dai dati di Gantt
-  const resources = categoryResources.map((resource) => ({
-    resourceId: resource.id,
-    resourceName: resource.text,
-  }));
 
+  // Risorse per il menu delle risorse (tutti i collaboratori)
+  const resources = allCollaborators.map((collaborator) => ({
+    resourceId: collaborator.id,
+    resourceName: collaborator.text,
+  }));
   // Trasforma i dati in formato gerarchico
   const structuredData = selectedCommesse
   .map((commessaId) => {
@@ -59,7 +59,7 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
 
 
   console.log('Dati strutturati per il Gantt:', structuredData);
-  console.log('Risorse calcolate:', collaborators);
+  console.log('Risorse calcolate:', allCollaborators);
 
   return (
     <div>

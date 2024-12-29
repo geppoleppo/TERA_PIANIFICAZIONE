@@ -19,7 +19,7 @@ const App = () => {
   const [selectedCommesse, setSelectedCommesse] = useState([]); // Commesse selezionate
   const [events, setEvents] = useState([]); // Eventi originali
   const [filteredEventsForGantt, setFilteredEventsForGantt] = useState([]); // Eventi filtrati
-  const ganttRef = useRef(null);
+  const [collaborators, setCollaborators] = useState([]); // Tutti i collaboratori
   
   
   
@@ -94,7 +94,6 @@ const App = () => {
     setFilteredEventsForGantt(enrichedEvents);
   }, [events, filteredProjectResources]);
   
-
   useEffect(() => {
     console.log('USE EFFECT 2', events);
     const loadData = async () => {
@@ -102,9 +101,10 @@ const App = () => {
         const projects = await fetchProjectResources();
         setProjectResources(projects);
   
-        const collaborators = await fetchCategoryResources();
-        console.log("[DEBUG] Collaboratori caricati:", collaborators); // Log per verificare i dati
-        setCategoryResources(collaborators); // Popola il menu Collaboratori
+        const collaboratorsData = await fetchCategoryResources();
+        console.log("[DEBUG] Tutti i collaboratori caricati:", collaboratorsData); // Log per verifica
+        setCollaborators(collaboratorsData); // Salva tutti i collaboratori
+        setCategoryResources(collaboratorsData); // Popola il menu Collaboratori filtrato inizialmente
   
         const events = await fetchEvents(projects);
         setEvents(events);
@@ -116,6 +116,9 @@ const App = () => {
     };
     loadData();
   }, []);
+
+
+
   
   
   
@@ -349,7 +352,7 @@ const App = () => {
   ganttData={filteredEventsForGantt}
   projectResources={projectResources} // Per il menu delle commesse
   selectedCommesse={selectedCommesse} // Per gli ID delle commesse selezionabili
-  //categoryResources={categoryResources} // Per il menu collaboratori
+  allCollaborators={collaborators} // Tutti i collaboratori
   selectedCollaboratori={selectedCollaboratori}
   parentOptions={parentOptions} // Opzioni dei parent
   categoryResources={filteredCategoryResources}
