@@ -11,7 +11,7 @@ import {
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 
-const Gantt = ({ ganttData, selectedCommesse,projectResources, onUpdateEvent,categoryResources,allCollaborators }) => {
+const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, categoryResources, allCollaborators }) => {
   const ganttRef = useRef(null);
 
   useEffect(() => {
@@ -22,41 +22,41 @@ const Gantt = ({ ganttData, selectedCommesse,projectResources, onUpdateEvent,cat
 
 
   // Risorse per il menu delle risorse (tutti i collaboratori)
-  const resources = allCollaborators.map((collaborator) => ({
+  const editingResources = allCollaborators.map((collaborator) => ({
     resourceId: collaborator.id,
     resourceName: collaborator.text,
-    unit:50
+    unit: 50
   }));
   // Trasforma i dati in formato gerarchico
   const structuredData = selectedCommesse
-  .map((commessaId) => {
-    const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
+    .map((commessaId) => {
+      const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
 
-    if (commessaEvents.length === 0) return null;
+      if (commessaEvents.length === 0) return null;
 
-    const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
+      const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
 
-    return {
-      Id: commessaId,
-      CommessaName: commessaName,
-      CommessaId:commessaId,
-      StartTime: commessaEvents[0]?.StartTime || new Date(),
-      EndTime: commessaEvents[commessaEvents.length - 1]?.EndTime || new Date(),
-      subtasks: commessaEvents.map((event) => ({
-        Id: event.Id,
-        Subject: event.Subject,
-        StartTime: event.StartTime,
-        EndTime: event.EndTime,
-        Duration: event.Duration,
-        Progress: event.Progress,
-        IncaricatoName: event.IncaricatoName,
-        IncaricatoId: event.IncaricatoId,
-        CommessaId: commessaId,
+      return {
+        Id: commessaId,
         CommessaName: commessaName,
-      })),
-    };
-  })
-  .filter((commessa) => commessa !== null);
+        CommessaId: commessaId,
+        StartTime: commessaEvents[0]?.StartTime || new Date(),
+        EndTime: commessaEvents[commessaEvents.length - 1]?.EndTime || new Date(),
+        subtasks: commessaEvents.map((event) => ({
+          Id: event.Id,
+          Subject: event.Subject,
+          StartTime: event.StartTime,
+          EndTime: event.EndTime,
+          Duration: event.Duration,
+          Progress: event.Progress,
+          IncaricatoName: event.IncaricatoName,
+          IncaricatoId: event.IncaricatoId,
+          CommessaId: commessaId,
+          CommessaName: commessaName,
+        })),
+      };
+    })
+    .filter((commessa) => commessa !== null);
 
 
   console.log('Dati strutturati per il Gantt:', structuredData);
@@ -69,8 +69,8 @@ const Gantt = ({ ganttData, selectedCommesse,projectResources, onUpdateEvent,cat
           key={JSON.stringify(structuredData)} // Forza il render quando structuredData cambia
           ref={ganttRef}
           dataSource={structuredData}
-          resources={resources}
-          
+          resources={editingResources}
+
           resourceFields={{
             id: 'resourceId',
             name: 'resourceName',
@@ -87,9 +87,17 @@ const Gantt = ({ ganttData, selectedCommesse,projectResources, onUpdateEvent,cat
             duration: 'Duration',
             progress: 'Progress',
             child: 'subtasks',
+            notes: 'info',
             resourceInfo: 'resources',
-
           }}
+          editSettings={{
+            allowAdding: true,
+            allowEditing: true,
+            allowDeleting: true,
+            allowTaskbarEditing: true,
+            showDeleteConfirmDialog: true,
+          }}
+          toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
           columns={[
             { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
             {
@@ -107,13 +115,13 @@ const Gantt = ({ ganttData, selectedCommesse,projectResources, onUpdateEvent,cat
                 write: (args) => {
                   const select = args.element; // Ottieni il select
                   select.innerHTML = ''; // Resetta le opzioni per evitare duplicati
-          
+
                   // Ottieni le opzioni da `selectedCommesse` e `projectResources`
                   const commesseOptions = projectResources.map((commessa) => ({
                     value: commessa.id,
                     text: commessa.text,
                   }));
-          
+
                   // Popola il menu a tendina
                   commesseOptions.forEach((option) => {
                     const opt = document.createElement('option');
@@ -167,16 +175,10 @@ const Gantt = ({ ganttData, selectedCommesse,projectResources, onUpdateEvent,cat
               }
             }
           ]}
-           
+
           taskType="FixedWork"
-          editSettings={{
-            allowAdding: true,
-            allowEditing: true,
-            allowDeleting: true,
-            allowTaskbarEditing: true,
-            showDeleteConfirmDialog: true,
-          }}
-          toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
+
+
           toolbarClick={(args: ClickEventArgs) => {
             if (args.item.id === 'showhidebar') {
               ganttRef.current.showOverAllocation = ganttRef.current.showOverAllocation ? false : true;
