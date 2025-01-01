@@ -71,10 +71,6 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, c
           dataSource={structuredData}
           resources={editingResources}
 
-          resourceFields={{
-            id: 'resourceId',
-            name: 'resourceName',
-          }}
 
           viewType="ProjectView"
           taskFields={{
@@ -98,6 +94,14 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, c
             showDeleteConfirmDialog: true,
           }}
           toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
+            allowSelection = 'true'
+            gridLines= 'Both'
+            height= '450px'
+            treeColumnIndex = '1'
+            resourceFields={{
+              id: 'resourceId',
+              name: 'resourceName',
+            }}
           columns={[
             { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
             {
