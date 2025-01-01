@@ -56,8 +56,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
           CommessaId: commessaId,
           CommessaName: commessaName,
           resources: event.IncaricatoId,
-          info: 'Obtain an engineered soil test of lot where construction is planned.' +
-            'From an engineer or company specializing in soil testing'
+          info: event.info
 
         })),
       };
@@ -65,8 +64,8 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     .filter((commessa) => commessa !== null);
 
 
-  console.log('Dati strutturati per il Gantt:', structuredData);
-  console.log('Risorse calcolate:', allCollaborators);
+  //console.log('Dati strutturati per il Gantt:', structuredData);
+  //console.log('Risorse calcolate:', allCollaborators);
 
   return (
     <div>
@@ -116,14 +115,14 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
               width: 200,
               template: (data) => (data.subtasks ? '' : data.Subject),
             },
+            
             { field: 'Subject', headerText: 'Subject', width: 150 },
             { field: 'StartTime', headerText: 'Start Date', width: 150 },
             { field: 'EndTime', headerText: 'End Date', width: 150 },
             { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
             { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
             { field: 'Progress', headerText: 'Progress', width: 150 },
-            { field: 'CommessaId', headerText: 'CommessaId', width: 150, visible: false },
-            {
+            { field: 'CommessaId', headerText: 'CommessaId', width: 150, visible: false },{
               field: 'CommessaName',
               headerText: 'Commessa',
               width: 150,
@@ -137,12 +136,12 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
                 write: (args) => {
                   const select = args.element;
                   select.innerHTML = ''; // Resetta le opzioni
-
+                
                   const commesseOptions = projectResources.map((commessa) => ({
                     value: commessa.id,
                     text: commessa.text,
                   }));
-
+                
                   commesseOptions.forEach((option) => {
                     const opt = document.createElement('option');
                     opt.value = option.value;
@@ -150,16 +149,33 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
                     opt.selected = args.rowData.CommessaId === option.value; // Seleziona l'opzione
                     select.appendChild(opt);
                   });
-
-                  // Aggiorna CommessaId quando l'utente cambia valore
+                
+                  // Aggiorna `args.rowData` e `args.data` quando l'utente cambia valore
                   select.addEventListener('change', () => {
-                    console.log('STO CAMBIANDO...', args.rowData)
-                    args.rowData.CommessaId = parseInt(select.value, 10); // Valorizza CommessaId
-                    args.rowData.CommessaName = select.options[select.selectedIndex].text; // Valorizza CommessaName
+                    const newCommessaId = parseInt(select.value, 10);
+                    const newCommessaName = select.options[select.selectedIndex].text;
+                
+                    // Assicurati che args.data esista
+                    if (!args.data) {
+                      args.data = { ...args.rowData };
+                    }
+                
+                    // Aggiorna sia rowData che data
+                    args.rowData.CommessaId = newCommessaId;
+                    args.rowData.CommessaName = newCommessaName;
+                
+                    args.data.CommessaId = newCommessaId;
+                    args.data.CommessaName = newCommessaName;
+                
+                    console.log('STO CAMBIANDO...', args.rowData, args.data);
                   });
                 },
+                
+                
+                
               },
             }
+
 
           ]}
 
@@ -172,39 +188,35 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
             }
           }}
           actionBegin={(args) => {
-            console.log('DATA prima di aggiungere:', args);
-
-            if (args.requestType === 'save' || args.requestType === 'beforeSave') {
-              // Per modifiche
+            if (args.requestType === 'beforeSave') {
+              // Assicura che CommessaId e CommessaName siano presenti
+              if (args.rowData) {
+                args.data.CommessaId = args.rowData.CommessaId || args.data.CommessaId;
+                args.data.CommessaName = args.rowData.CommessaName || args.data.CommessaName;
+              }
+          
+              console.log('DATA prima di salvare:', args.data);
               onUpdateEvent(args.data);
             }
-            if (args.requestType === 'beforeDelete' ) {
-              // Per modifiche
-              onDeleteEvent(args.data[0].Id);
-            }
-            
-
-            if (args.requestType === 'beforeAdd') {
-              
           
-              // Inizializza `CommessaId` e `CommessaName` se non esistono
+            if (args.requestType === 'beforeDelete') {
+              onDeleteEvent(args.data[0].Id); // Elimina l'evento
+            }
+          
+            if (args.requestType === 'beforeAdd') {
               if (!args.data.CommessaId) {
-                const defaultCommessa = projectResources[0]; // Prendi la prima commessa come default, oppure personalizza
+                const defaultCommessa = projectResources[0];
                 if (defaultCommessa) {
                   args.data.CommessaId = defaultCommessa.id;
                   args.data.CommessaName = defaultCommessa.text;
                 }
               }
           
-              // Per aggiunta
               const commessa = projectResources.find(
                 (resource) => resource.id === args.data.CommessaId
               );
           
-              args.data.CommessaName = commessa ? commessa.text : null; // Associa il nome della commessa
-          
-              console.log('DATA dopo l\'inizializzazione:', args);
-          
+              args.data.CommessaName = commessa ? commessa.text : null;
               onSaveEvent(args.data);
             }
           
@@ -212,6 +224,9 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
               console.log('Apertura dialogo aggiunta evento:', args);
             }
           }}
+          
+          
+          
           
 
           labelSettings={{

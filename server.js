@@ -106,8 +106,8 @@ app.get('/api/eventi', async (req, res) => {
     const commesseQuery = 'SELECT Id, CommessaName FROM Commesse';
     const commesse = await getRecords(commesseQuery);
 
-    console.log("Collaboratori caricati:", collaboratori);
-    console.log("Commesse caricate:", commesse);
+    console.log("EVENTI:", eventi);
+  
 
     // Mappatura degli eventi
     const mappedEventi = eventi.map(evento => {
@@ -142,6 +142,7 @@ app.get('/api/eventi', async (req, res) => {
         CategoryColor: evento.Colore || "#000000",
         parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
         Description: evento.Descrizione || "",
+        info: evento.Info
       };
     });
 
@@ -166,7 +167,8 @@ app.put('/api/eventi/:id', async (req, res) => {
     CategoryColor,
     Description,
     parentID,
-    ganttProperties, // Proprietà aggiuntive dal Gantt
+    ganttProperties, 
+    info,// Proprietà aggiuntive dal Gantt
   } = req.body;
 
   try {
@@ -197,7 +199,8 @@ app.put('/api/eventi/:id', async (req, res) => {
         IncaricatoName = ?, 
         Colore = ?, 
         Descrizione = ?, 
-        parentID = ?
+        parentID = ?,
+        Info = ?
       WHERE Id = ?
     `;
 
@@ -213,7 +216,8 @@ app.put('/api/eventi/:id', async (req, res) => {
       IncaricatoName, 
       CategoryColor, 
       Description, 
-      parentID, 
+      parentID,
+      info, 
       req.params.id,
     ];
 
@@ -240,7 +244,8 @@ app.post('/api/eventi', async (req, res) => {
     CategoryColor,
     Description,
     parentID,
-    ganttProperties, // Proprietà aggiuntive dal Gantt
+    ganttProperties,
+    info, // Proprietà aggiuntive dal Gantt
   } = req.body;
 
 
@@ -261,8 +266,8 @@ app.post('/api/eventi', async (req, res) => {
 
     const query = `
       INSERT INTO Eventi 
-      (Titolo, Inizio, Fine,CommessaId, CommessaName,  Duration,Progress, IncaricatoId,IncaricatoName, Colore, Descrizione, parentID)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?) 
+      (Titolo, Inizio, Fine,CommessaId, CommessaName,  Duration,Progress, IncaricatoId,IncaricatoName, Colore, Descrizione, parentID,Info)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?) 
     `;
     const params = [
       Subject, 
@@ -276,7 +281,8 @@ app.post('/api/eventi', async (req, res) => {
       IncaricatoName, 
       CategoryColor, 
       Description, 
-      parentID, 
+      parentID,
+      info, 
       req.params.id,
     ];
 

@@ -24,7 +24,7 @@ const App = () => {
   
   
   const handleUpdateEvent = async (updatedEvent) => {
-    console.log("DATI in handleUpdateEvent:",updatedEvent)
+    console.log("DATI in handleUpdateEvent:", updatedEvent);
     try {
       console.log("Dati inviati per l'aggiornamento:", updatedEvent);
   
@@ -38,20 +38,24 @@ const App = () => {
         throw new Error(`Errore durante l'aggiornamento: ${response.statusText}`);
       }
   
-      // Leggi la risposta una sola volta
-      const updatedData = await response.json();
-      console.log("Evento aggiornato ricevuto dal server:", updatedData);
+      // Dopo l'aggiornamento, ricarica tutti gli eventi dal backend
+      const updatedEventsResponse = await fetch('http://localhost:3001/api/eventi', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
   
-      // Aggiorna lo stato locale
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.Id === updatedData.Id ? { ...event, ...updatedData } : event
-        )
-      );
+      if (!updatedEventsResponse.ok) {
+        throw new Error('Errore durante il caricamento degli eventi aggiornati.');
+      }
+  
+      const updatedEvents = await updatedEventsResponse.json();
+      setEvents(updatedEvents); // Aggiorna lo stato con gli eventi aggiornati
+      console.log("Eventi aggiornati ricevuti dal server:", updatedEvents);
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
   
   
 
