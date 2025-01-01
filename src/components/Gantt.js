@@ -11,6 +11,7 @@ import {
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 
+
 const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, categoryResources, allCollaborators }) => {
   const ganttRef = useRef(null);
 
@@ -53,6 +54,10 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, c
           IncaricatoId: event.IncaricatoId,
           CommessaId: commessaId,
           CommessaName: commessaName,
+          resources: event.IncaricatoId,
+          info: 'Obtain an engineered soil test of lot where construction is planned.' +
+                  'From an engineer or company specializing in soil testing'
+
         })),
       };
     })
