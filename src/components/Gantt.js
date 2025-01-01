@@ -12,7 +12,7 @@ import {
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 
 
-const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, categoryResources, allCollaborators }) => {
+const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, onSaveEvent, categoryResources, allCollaborators }) => {
   const ganttRef = useRef(null);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, c
           CommessaName: commessaName,
           resources: event.IncaricatoId,
           info: 'Obtain an engineered soil test of lot where construction is planned.' +
-                  'From an engineer or company specializing in soil testing'
+            'From an engineer or company specializing in soil testing'
 
         })),
       };
@@ -99,49 +99,16 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, c
             showDeleteConfirmDialog: true,
           }}
           toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
-            allowSelection = 'true'
-            gridLines= 'Both'
-            height= '450px'
-            treeColumnIndex = '1'
-            resourceFields={{
-              id: 'resourceId',
-              name: 'resourceName',
-            }}
+          allowSelection='true'
+          gridLines='Both'
+          height='450px'
+          treeColumnIndex='1'
+          resourceFields={{
+            id: 'resourceId',
+            name: 'resourceName',
+          }}
           columns={[
             { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
-            {
-              field: 'CommessaName',
-              headerText: 'Commessaaaaaaa',
-              width: 150,
-              edit: {
-                create: () => {
-                  // Crea un elemento select
-                  const select = document.createElement('select');
-                  select.className = 'e-field'; // Classe richiesta da Syncfusion
-                  return select;
-                },
-                read: (element) => element.value, // Legge il valore selezionato
-                write: (args) => {
-                  const select = args.element; // Ottieni il select
-                  select.innerHTML = ''; // Resetta le opzioni per evitare duplicati
-
-                  // Ottieni le opzioni da `selectedCommesse` e `projectResources`
-                  const commesseOptions = projectResources.map((commessa) => ({
-                    value: commessa.id,
-                    text: commessa.text,
-                  }));
-
-                  // Popola il menu a tendina
-                  commesseOptions.forEach((option) => {
-                    const opt = document.createElement('option');
-                    opt.value = option.value;
-                    opt.textContent = option.text;
-                    opt.selected = args.rowData.CommessaId === option.value; // Seleziona l'opzione corrispondente
-                    select.appendChild(opt);
-                  });
-                },
-              },
-            },
             {
               field: 'Subject',
               headerText: 'Evento',
@@ -165,24 +132,34 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, c
                   select.className = 'e-field';
                   return select;
                 },
-                read: (element) => element.value,
+                read: (element) => element.value, // Legge il valore selezionato
                 write: (args) => {
                   const select = args.element;
-                  select.innerHTML = '';
-                  const commesseOptions = selectedCommesse.map((commessaId) => {
-                    const commessa = projectResources.find((p) => p.id === commessaId);
-                    return { value: commessa.id, text: commessa.text };
-                  });
+                  select.innerHTML = ''; // Resetta le opzioni
+
+                  const commesseOptions = projectResources.map((commessa) => ({
+                    value: commessa.id,
+                    text: commessa.text,
+                  }));
+
                   commesseOptions.forEach((option) => {
                     const opt = document.createElement('option');
                     opt.value = option.value;
                     opt.textContent = option.text;
-                    opt.selected = args.rowData.CommessaId === option.value;
+                    opt.selected = args.rowData.CommessaId === option.value; // Seleziona l'opzione
                     select.appendChild(opt);
                   });
+
+                  // Aggiorna CommessaId quando l'utente cambia valore
+                  select.addEventListener('change', () => {
+                    console.log('STO CAMBIANDO...', args.rowData)
+                    args.rowData.CommessaId = parseInt(select.value, 10); // Valorizza CommessaId
+                    args.rowData.CommessaName = select.options[select.selectedIndex].text; // Valorizza CommessaName
+                  });
                 },
-              }
+              },
             }
+
           ]}
 
           taskType="FixedWork"
@@ -195,10 +172,40 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, c
           }}
           actionBegin={(args) => {
             if (args.requestType === 'save' || args.requestType === 'beforeSave') {
-              console.log('Dati modificati:', args.data);
+              // Per modifiche
               onUpdateEvent(args.data);
             }
+          
+            if (args.requestType === 'beforeAdd') {
+              console.log('DATA prima di aggiungere:', args);
+          
+              // Inizializza `CommessaId` e `CommessaName` se non esistono
+              if (!args.data.CommessaId) {
+                const defaultCommessa = projectResources[0]; // Prendi la prima commessa come default, oppure personalizza
+                if (defaultCommessa) {
+                  args.data.CommessaId = defaultCommessa.id;
+                  args.data.CommessaName = defaultCommessa.text;
+                }
+              }
+          
+              // Per aggiunta
+              const commessa = projectResources.find(
+                (resource) => resource.id === args.data.CommessaId
+              );
+          
+              args.data.CommessaName = commessa ? commessa.text : null; // Associa il nome della commessa
+          
+              console.log('DATA dopo l\'inizializzazione:', args);
+          
+              onSaveEvent(args.data);
+            }
+          
+            if (args.requestType === 'beforeOpenAddDialog') {
+              console.log('Apertura dialogo aggiunta evento:', args);
+            }
           }}
+          
+
           labelSettings={{
             taskLabel: 'Subject',
             rightLabel: 'IncaricatoName',

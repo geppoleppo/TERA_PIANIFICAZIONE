@@ -43,45 +43,7 @@ app.use(express.json());
 
 
 
-// Aggiungi un nuovo evento
-app.post('/api/eventi', async (req, res) => {
-  const {
-    Subject,
-    StartTime,
-    EndTime,
-    CommessaId,
-    CommessaName,
-    CollaboratoreId,
-    CategoryColor,
-    Description,
-    parentID,
-  } = req.body;
 
-  try {
-    const query = `
-      INSERT INTO Eventi 
-      (Titolo, Inizio, Fine,CommessaId, CommessaName, IncaricatoId, Colore, Descrizione, parentID)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
-    `;
-
-    const result = await runQuery(query, [
-      Subject,
-      StartTime,
-      EndTime,
-      CommessaId || null,
-      CommessaName,
-      Array.isArray(CollaboratoreId) ? CollaboratoreId.join(',') : null,
-      CategoryColor || '#000000',
-      Description || '',
-      parentID || null,
-    ]);
-
-    res.json({ message: 'Evento salvato con successo!', Id: result.insertId });
-  } catch (error) {
-    console.error('Errore durante il salvataggio del nuovo evento:', error);
-    res.status(500).json({ error: 'Errore durante il salvataggio del nuovo evento.' });
-  }
-});
 
 
 
@@ -113,14 +75,6 @@ app.put('/api/collaboratori/:id/aggiungi-commesse', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento delle commesse del collaboratore." });
   }
 });
-
-
-
-
-
-
-
-
 
 // Modifica l’endpoint di DELETE
 app.delete('/api/eventi/:id', (req, res) => {
@@ -273,7 +227,67 @@ app.put('/api/eventi/:id', async (req, res) => {
 });
 
 
+// Aggiungi un nuovo evento
+app.post('/api/eventi', async (req, res) => {
+  const {
+    Subject,
+    StartTime,
+    EndTime,
+    CommessaId,
+    CommessaName,
+    Duration,
+    Progress,
+    CategoryColor,
+    Description,
+    parentID,
+    ganttProperties, // Proprietà aggiuntive dal Gantt
+  } = req.body;
 
+
+  try {
+    console.log("Dati ricevuti per aggiornamento evento:", req.body);
+
+    // Gestisci il caso in cui resourceInfo sia passato direttamente o tramite taskData
+    const resourceInfo = ganttProperties?.resourceInfo || req.body.taskData?.resources || [];
+
+    // Estrarre gli ID e i nomi dei collaboratori
+    const collaboratorIds = Array.isArray(resourceInfo)
+      ? resourceInfo.map((resource) => resource.resourceId || resource.id)
+      : [];
+
+    const IncaricatoName = Array.isArray(resourceInfo)
+      ? resourceInfo.map((resource) => resource.resourceName || resource.text).join(', ')
+      : '';
+
+    const query = `
+      INSERT INTO Eventi 
+      (Titolo, Inizio, Fine,CommessaId, CommessaName,  Duration,Progress, IncaricatoId,IncaricatoName, Colore, Descrizione, parentID)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?) 
+    `;
+    const params = [
+      Subject, 
+      StartTime, 
+      EndTime, 
+      CommessaId, 
+      CommessaName,
+      Duration, 
+      Progress, 
+      collaboratorIds.join(','), // Concatena gli ID in una stringa
+      IncaricatoName, 
+      CategoryColor, 
+      Description, 
+      parentID, 
+      req.params.id,
+    ];
+
+    await runQuery(query, params);
+
+    res.json({ message: 'Evento salvato con successo!'});
+  } catch (error) {
+    console.error('Errore durante il salvataggio del nuovo evento:', error);
+    res.status(500).json({ error: 'Errore durante il salvataggio del nuovo evento.' });
+  }
+});
 
 
 
