@@ -10,9 +10,10 @@ import {
   Inject,
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
+import { deleteEvent } from '../functions/Functions';
 
 
-const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, onSaveEvent, categoryResources, allCollaborators }) => {
+const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, onSaveEvent, onDeleteEvent, allCollaborators }) => {
   const ganttRef = useRef(null);
 
   useEffect(() => {
@@ -171,13 +172,20 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
             }
           }}
           actionBegin={(args) => {
+            console.log('DATA prima di aggiungere:', args);
+
             if (args.requestType === 'save' || args.requestType === 'beforeSave') {
               // Per modifiche
               onUpdateEvent(args.data);
             }
-          
+            if (args.requestType === 'beforeDelete' ) {
+              // Per modifiche
+              onDeleteEvent(args.data[0].Id);
+            }
+            
+
             if (args.requestType === 'beforeAdd') {
-              console.log('DATA prima di aggiungere:', args);
+              
           
               // Inizializza `CommessaId` e `CommessaName` se non esistono
               if (!args.data.CommessaId) {
