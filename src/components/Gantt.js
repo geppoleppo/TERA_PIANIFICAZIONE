@@ -11,7 +11,7 @@ import {
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 
-const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEvent,categoryResources,allCollaborators }) => {
+const Gantt = ({ ganttData, selectedCommesse,projectResources, onUpdateEvent,categoryResources,allCollaborators }) => {
   const ganttRef = useRef(null);
 
   useEffect(() => {
@@ -25,6 +25,7 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
   const resources = allCollaborators.map((collaborator) => ({
     resourceId: collaborator.id,
     resourceName: collaborator.text,
+    unit:50
   }));
   // Trasforma i dati in formato gerarchico
   const structuredData = selectedCommesse
@@ -78,6 +79,7 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
           viewType="ProjectView"
           taskFields={{
             id: 'Id',
+            Subject: 'Subject',
             CommessaName: 'CommessaName',
             CommessaId: 'CommessaId',
             startDate: 'StartTime',
@@ -92,31 +94,80 @@ const Gantt = ({ ganttData, selectedCommesse,selectedCollaboratori, onUpdateEven
             { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
             {
               field: 'CommessaName',
-              headerText: 'Commessa',
+              headerText: 'Commessaaaaaaa',
               width: 150,
-              visible: true,
-              template: (data) => {
-                // Mostra il nome della commessa solo per il parent task
-                return data.IncaricatoId ? '': data.CommessaName;
+              edit: {
+                create: () => {
+                  // Crea un elemento select
+                  const select = document.createElement('select');
+                  select.className = 'e-field'; // Classe richiesta da Syncfusion
+                  return select;
+                },
+                read: (element) => element.value, // Legge il valore selezionato
+                write: (args) => {
+                  const select = args.element; // Ottieni il select
+                  select.innerHTML = ''; // Resetta le opzioni per evitare duplicati
+          
+                  // Ottieni le opzioni da `selectedCommesse` e `projectResources`
+                  const commesseOptions = projectResources.map((commessa) => ({
+                    value: commessa.id,
+                    text: commessa.text,
+                  }));
+          
+                  // Popola il menu a tendina
+                  commesseOptions.forEach((option) => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    opt.selected = args.rowData.CommessaId === option.value; // Seleziona l'opzione corrispondente
+                    select.appendChild(opt);
+                  });
+                },
               },
             },
             {
               field: 'Subject',
               headerText: 'Evento',
               width: 200,
-              visible: false,
-              template: (data) => {
-                // Mostra il nome dell'evento solo per le subtasks
-                return data.subtasks ? '' : data.Subject;
-              },
+              template: (data) => (data.subtasks ? '' : data.Subject),
             },
+            { field: 'Subject', headerText: 'Subject', width: 150 },
             { field: 'StartTime', headerText: 'Start Date', width: 150 },
             { field: 'EndTime', headerText: 'End Date', width: 150 },
-            { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200,visible: false,},
-            { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150,visible: false, },
+            { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
+            { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
             { field: 'Progress', headerText: 'Progress', width: 150 },
-            { field: 'CommessaId', headerText: 'CommessaId', width: 150,visible: false, },
+            { field: 'CommessaId', headerText: 'CommessaId', width: 150, visible: false },
+            {
+              field: 'CommessaName',
+              headerText: 'Commessa',
+              width: 150,
+              edit: {
+                create: () => {
+                  const select = document.createElement('select');
+                  select.className = 'e-field';
+                  return select;
+                },
+                read: (element) => element.value,
+                write: (args) => {
+                  const select = args.element;
+                  select.innerHTML = '';
+                  const commesseOptions = selectedCommesse.map((commessaId) => {
+                    const commessa = projectResources.find((p) => p.id === commessaId);
+                    return { value: commessa.id, text: commessa.text };
+                  });
+                  commesseOptions.forEach((option) => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    opt.selected = args.rowData.CommessaId === option.value;
+                    select.appendChild(opt);
+                  });
+                },
+              }
+            }
           ]}
+           
           taskType="FixedWork"
           editSettings={{
             allowAdding: true,

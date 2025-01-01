@@ -218,16 +218,16 @@ app.put('/api/eventi/:id', async (req, res) => {
   try {
     console.log("Dati ricevuti per aggiornamento evento:", req.body);
 
-    // Estrarre resourceInfo da ganttProperties
-    const resourceInfo = ganttProperties?.resourceInfo || [];
+    // Gestisci il caso in cui resourceInfo sia passato direttamente o tramite taskData
+    const resourceInfo = ganttProperties?.resourceInfo || req.body.taskData?.resources || [];
 
-    // Estrarre gli ID e i nomi dei collaboratori da resourceInfo
+    // Estrarre gli ID e i nomi dei collaboratori
     const collaboratorIds = Array.isArray(resourceInfo)
-      ? resourceInfo.map((resource) => resource.resourceId)
+      ? resourceInfo.map((resource) => resource.resourceId || resource.id)
       : [];
 
     const IncaricatoName = Array.isArray(resourceInfo)
-      ? resourceInfo.map((resource) => resource.resourceName).join(', ')
+      ? resourceInfo.map((resource) => resource.resourceName || resource.text).join(', ')
       : '';
 
     const query = `
@@ -271,6 +271,7 @@ app.put('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
+
 
 
 
