@@ -161,18 +161,27 @@ app.put('/api/eventi/:id', async (req, res) => {
     StartTime,
     EndTime,
     CommessaId,
-    CommessaName,
     Duration,
     Progress,
     CategoryColor,
     Description,
     parentID,
-    ganttProperties, 
-    info,// Proprietà aggiuntive dal Gantt
+    ganttProperties,
+    info, // Proprietà aggiuntive dal Gantt
   } = req.body;
 
   try {
     console.log("Dati ricevuti per aggiornamento evento:", req.body);
+
+    // Recupera il nome della commessa dal database usando l'ID
+    const commessaQuery = 'SELECT CommessaName FROM Commesse WHERE Id = ?';
+    const commessaResult = await getRecords(commessaQuery, [CommessaId]);
+
+    if (commessaResult.length === 0) {
+      return res.status(400).json({ error: 'Commessa non trovata' });
+    }
+
+    const CommessaName = commessaResult[0].CommessaName;
 
     // Gestisci il caso in cui resourceInfo sia passato direttamente o tramite taskData
     const resourceInfo = ganttProperties?.resourceInfo || req.body.taskData?.resources || [];
@@ -205,19 +214,19 @@ app.put('/api/eventi/:id', async (req, res) => {
     `;
 
     const params = [
-      Subject, 
-      StartTime, 
-      EndTime, 
-      CommessaId, 
-      CommessaName,
-      Duration, 
-      Progress, 
+      Subject,
+      StartTime,
+      EndTime,
+      CommessaId,
+      CommessaName, // Usa il nome recuperato
+      Duration,
+      Progress,
       collaboratorIds.join(','), // Concatena gli ID in una stringa
-      IncaricatoName, 
-      CategoryColor, 
-      Description, 
+      IncaricatoName,
+      CategoryColor,
+      Description,
       parentID,
-      info, 
+      info,
       req.params.id,
     ];
 
@@ -229,6 +238,7 @@ app.put('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
+
 
 
 // Aggiungi un nuovo evento
@@ -290,7 +300,7 @@ app.post('/api/eventi', async (req, res) => {
 
     res.json({ message: 'Evento salvato con successo!'});
   } catch (error) {
-    console.error('Errore durante il salvataggio del nuovo evento:', error);
+    console.error('Errore durante il salvataggio del nuovo eventoooo:', error);
     res.status(500).json({ error: 'Errore durante il salvataggio del nuovo evento.' });
   }
 });

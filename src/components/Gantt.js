@@ -10,7 +10,7 @@ import {
   Inject,
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
-import { deleteEvent } from '../functions/Functions';
+import { DropDownList } from '@syncfusion/ej2-dropdowns';
 
 
 const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, onSaveEvent, onDeleteEvent, allCollaborators }) => {
@@ -65,7 +65,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
 
   //console.log('Dati strutturati per il Gantt:', structuredData);
-  //console.log('Risorse calcolate:', allCollaborators);
+  //console.log('Risorse calcolate:', projectResources);
 
   return (
     <div>
@@ -115,67 +115,64 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
               width: 200,
               template: (data) => (data.subtasks ? '' : data.Subject),
             },
-            
+
             { field: 'Subject', headerText: 'Subject', width: 150 },
             { field: 'StartTime', headerText: 'Start Date', width: 150 },
             { field: 'EndTime', headerText: 'End Date', width: 150 },
             { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
             { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
             { field: 'Progress', headerText: 'Progress', width: 150 },
-            { field: 'CommessaId', headerText: 'CommessaId', width: 150, visible: false },{
-              field: 'CommessaName',
+            { field: 'CommessaName', headerText: 'CommessaName', width: 150 },
+            {
+              field: 'CommessaId',
               headerText: 'Commessa',
               width: 150,
               edit: {
                 create: () => {
-                  const select = document.createElement('select');
-                  select.className = 'e-field';
-                  return select;
+                  const dropdown = document.createElement('input');
+                  dropdown.className = 'e-field';
+                  return dropdown;
                 },
-                read: (element) => element.value, // Legge il valore selezionato
+                read: (element) => {
+                  return element.ej2_instances?.[0]?.value || '';
+                },
                 write: (args) => {
-                  const select = args.element;
-                  select.innerHTML = ''; // Resetta le opzioni
-                
-                  const commesseOptions = projectResources.map((commessa) => ({
-                    value: commessa.id,
-                    text: commessa.text,
-                  }));
-                
-                  commesseOptions.forEach((option) => {
-                    const opt = document.createElement('option');
-                    opt.value = option.value;
-                    opt.textContent = option.text;
-                    opt.selected = args.rowData.CommessaId === option.value; // Seleziona l'opzione
-                    select.appendChild(opt);
+                  const commesseOptions = projectResources
+                    .filter((commessa) => selectedCommesse.includes(commessa.id))
+                    .map((commessa) => ({
+                      value: commessa.id,
+                      text: commessa.text,
+                    }));
+            
+                  const dropdown = new DropDownList({
+                    dataSource: commesseOptions,
+                    fields: { text: 'text', value: 'value' },
+                    value: args.rowData.CommessaId || null,
+                    placeholder: 'Seleziona una commessa',
+                    change: (e) => {
+                      args.rowData.CommessaId = e.value;
+                      args.rowData.CommessaName = e.itemData.text;
+                      console.log('Selezione aggiornata:', {
+                        CommessaId: e.value,
+                        CommessaName: e.itemData.text,
+                      });
+                    },
                   });
-                
-                  // Aggiorna `args.rowData` e `args.data` quando l'utente cambia valore
-                  select.addEventListener('change', () => {
-                    const newCommessaId = parseInt(select.value, 10);
-                    const newCommessaName = select.options[select.selectedIndex].text;
-                
-                    // Assicurati che args.data esista
-                    if (!args.data) {
-                      args.data = { ...args.rowData };
-                    }
-                
-                    // Aggiorna sia rowData che data
-                    args.rowData.CommessaId = newCommessaId;
-                    args.rowData.CommessaName = newCommessaName;
-                
-                    args.data.CommessaId = newCommessaId;
-                    args.data.CommessaName = newCommessaName;
-                
-                    console.log('STO CAMBIANDO...', args.rowData, args.data);
-                  });
+            
+                  dropdown.appendTo(args.element);
+                  args.column.dropdownInstance = dropdown;
                 },
-                
-                
-                
+                destroy: (args) => {
+                  // Verifica che args e le sue proprietà siano definite
+                  if (args?.column?.dropdownInstance) {
+                    args.column.dropdownInstance.destroy();
+                    args.column.dropdownInstance = null;
+                  }
+                },
               },
             }
-
+            
+            
 
           ]}
 
@@ -188,22 +185,29 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
             }
           }}
           actionBegin={(args) => {
+            console.log("EVENTOOO", args.requestType)
+
             if (args.requestType === 'beforeSave') {
-              // Assicura che CommessaId e CommessaName siano presenti
+              console.log('Valori aggiornati:', {
+                CommessaId: args,
+
+              });
               if (args.rowData) {
                 args.data.CommessaId = args.rowData.CommessaId || args.data.CommessaId;
                 args.data.CommessaName = args.rowData.CommessaName || args.data.CommessaName;
               }
-          
-              console.log('DATA prima di salvare:', args.data);
-              onUpdateEvent(args.data);
+
+
+              console.log('Dati aggiornati prima del salvataggio:', args.data);
+              onUpdateEvent(args.data); // Assicurati che `onUpdateEvent` riceva i dati corretti
             }
-          
+
             if (args.requestType === 'beforeDelete') {
               onDeleteEvent(args.data[0].Id); // Elimina l'evento
             }
-          
+
             if (args.requestType === 'beforeAdd') {
+              console.log('DATA prima di AGGIUNGERE:', args);
               if (!args.data.CommessaId) {
                 const defaultCommessa = projectResources[0];
                 if (defaultCommessa) {
@@ -211,23 +215,23 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
                   args.data.CommessaName = defaultCommessa.text;
                 }
               }
-          
+
               const commessa = projectResources.find(
                 (resource) => resource.id === args.data.CommessaId
               );
-          
+
               args.data.CommessaName = commessa ? commessa.text : null;
               onSaveEvent(args.data);
             }
-          
+
             if (args.requestType === 'beforeOpenAddDialog') {
               console.log('Apertura dialogo aggiunta evento:', args);
             }
           }}
-          
-          
-          
-          
+
+
+
+
 
           labelSettings={{
             taskLabel: 'Subject',
