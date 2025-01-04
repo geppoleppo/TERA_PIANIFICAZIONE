@@ -156,45 +156,37 @@ app.get('/api/eventi', async (req, res) => {
 
 
 app.put('/api/eventi/:id', async (req, res) => {
-  const {
-    Subject,
-    StartTime,
-    EndTime,
-    CommessaId,
-    Duration,
-    Progress,
-    CategoryColor,
-    Description,
-    parentID,
-    ganttProperties,
-    info, // Proprietà aggiuntive dal Gantt
-  } = req.body;
-
   try {
-    console.log("Dati ricevuti per aggiornamento evento:", req.body);
+    const {
+      Subject,
+      StartTime,
+      EndTime,
+      CommessaId,
+      IncaricatoId,
+      Duration,
+      Progress,
+      CategoryColor,
+      Description,
+      parentID,
+      info,
+    } = req.body;
 
-    // Recupera il nome della commessa dal database usando l'ID
+    // Imposta i valori di default
+    const updatedCommessaId = CommessaId || 1; // Default CommessaId = 1
+    const updatedIncaricatoId = Array.isArray(IncaricatoId) && IncaricatoId.length > 0
+      ? IncaricatoId
+      : [1]; // Default CollaboratoreId = 1
+
+    // Recupera il nome della commessa e del collaboratore dal database
     const commessaQuery = 'SELECT CommessaName FROM Commesse WHERE Id = ?';
-    const commessaResult = await getRecords(commessaQuery, [CommessaId]);
+    const commessaResult = await getRecords(commessaQuery, [updatedCommessaId]);
+    const updatedCommessaName = commessaResult[0]?.CommessaName || 'Commessa sconosciuta';
 
-    if (commessaResult.length === 0) {
-      return res.status(400).json({ error: 'Commessa non trovata' });
-    }
+    const collaboratoreQuery = 'SELECT Nome FROM Collaboratori WHERE Id = ?';
+    const collaboratoreResult = await getRecords(collaboratoreQuery, [updatedIncaricatoId[0]]);
+    const updatedIncaricatoName = collaboratoreResult[0]?.Nome || 'Collaboratore sconosciuto';
 
-    const CommessaName = commessaResult[0].CommessaName;
-
-    // Gestisci il caso in cui resourceInfo sia passato direttamente o tramite taskData
-    const resourceInfo = ganttProperties?.resourceInfo || req.body.taskData?.resources || [];
-
-    // Estrarre gli ID e i nomi dei collaboratori
-    const collaboratorIds = Array.isArray(resourceInfo)
-      ? resourceInfo.map((resource) => resource.resourceId || resource.id)
-      : [];
-
-    const IncaricatoName = Array.isArray(resourceInfo)
-      ? resourceInfo.map((resource) => resource.resourceName || resource.text).join(', ')
-      : '';
-
+    // Query per aggiornare l'evento
     const query = `
       UPDATE Eventi SET
         Titolo = ?, 
@@ -214,96 +206,114 @@ app.put('/api/eventi/:id', async (req, res) => {
     `;
 
     const params = [
+      Subject || 'Nuovo Evento',
+      StartTime || new Date(),
+      EndTime || new Date(),
+      updatedCommessaId,
+      updatedCommessaName,
+      Duration || 0,
+      Progress || 0,
+      updatedIncaricatoId.join(','),
+      updatedIncaricatoName,
+      CategoryColor || '#000000',
+      Description || '',
+      parentID || null,
+      info || '',
+      req.params.id,
+    ];
+
+    await runQuery(query, params);
+
+    // Invia un messaggio di avviso se sono stati usati valori di default
+    const defaultMessage =
+      updatedCommessaId === 1 || updatedIncaricatoId.includes(1)
+        ? 'Attenzione: l\'evento è stato aggiornato con impostazioni di default per CommessaId o CollaboratoreId.'
+        : null;
+
+    res.json({
+      message: 'Evento aggiornato con successo!',
+      warning: defaultMessage,
+    });
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento dell\'evento:', error);
+    res.status(500).json({ error: 'Errore durante l\'aggiornamento dell\'evento.' });
+  }
+});
+
+app.post('/api/eventi', async (req, res) => {
+  try {
+    const {
       Subject,
       StartTime,
       EndTime,
       CommessaId,
-      CommessaName, // Usa il nome recuperato
+      IncaricatoId,
       Duration,
       Progress,
-      collaboratorIds.join(','), // Concatena gli ID in una stringa
-      IncaricatoName,
       CategoryColor,
       Description,
       parentID,
       info,
-      req.params.id,
-    ];
+    } = req.body;
 
-    await runQuery(query, params);
+    // Imposta i valori di default
+    const updatedCommessaId = CommessaId || 1; // Default CommessaId = 1
+    const updatedIncaricatoId = Array.isArray(IncaricatoId) && IncaricatoId.length > 0
+      ? IncaricatoId
+      : [1]; // Default CollaboratoreId = 1
 
-    res.json({ message: "Evento aggiornato con successo!" });
-  } catch (error) {
-    console.error("Errore durante l'aggiornamento dell'evento:", error);
-    res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
-  }
-});
+    // Recupera il nome della commessa e del collaboratore dal database
+    const commessaQuery = 'SELECT CommessaName FROM Commesse WHERE Id = ?';
+    const commessaResult = await getRecords(commessaQuery, [updatedCommessaId]);
+    const updatedCommessaName = commessaResult[0]?.CommessaName || 'Commessa sconosciuta';
 
+    const collaboratoreQuery = 'SELECT Nome FROM Collaboratori WHERE Id = ?';
+    const collaboratoreResult = await getRecords(collaboratoreQuery, [updatedIncaricatoId[0]]);
+    const updatedIncaricatoName = collaboratoreResult[0]?.Nome || 'Collaboratore sconosciuto';
 
-
-// Aggiungi un nuovo evento
-app.post('/api/eventi', async (req, res) => {
-  const {
-    Subject,
-    StartTime,
-    EndTime,
-    CommessaId,
-    CommessaName,
-    Duration,
-    Progress,
-    CategoryColor,
-    Description,
-    parentID,
-    ganttProperties,
-    info, // Proprietà aggiuntive dal Gantt
-  } = req.body;
-
-
-  try {
-    console.log("Dati ricevuti per aggiornamento evento:", req.body);
-
-    // Gestisci il caso in cui resourceInfo sia passato direttamente o tramite taskData
-    const resourceInfo = ganttProperties?.resourceInfo || req.body.taskData?.resources || [];
-
-    // Estrarre gli ID e i nomi dei collaboratori
-    const collaboratorIds = Array.isArray(resourceInfo)
-      ? resourceInfo.map((resource) => resource.resourceId || resource.id)
-      : [];
-
-    const IncaricatoName = Array.isArray(resourceInfo)
-      ? resourceInfo.map((resource) => resource.resourceName || resource.text).join(', ')
-      : '';
-
+    // Query per inserire l'evento
     const query = `
-      INSERT INTO Eventi 
-      (Titolo, Inizio, Fine,CommessaId, CommessaName,  Duration,Progress, IncaricatoId,IncaricatoName, Colore, Descrizione, parentID,Info)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?) 
+      INSERT INTO Eventi
+      (Titolo, Inizio, Fine, CommessaId, CommessaName, Duration, Progress, IncaricatoId, IncaricatoName, Colore, Descrizione, parentID, Info)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
     const params = [
-      Subject, 
-      StartTime, 
-      EndTime, 
-      CommessaId, 
-      CommessaName,
-      Duration, 
-      Progress, 
-      collaboratorIds.join(','), // Concatena gli ID in una stringa
-      IncaricatoName, 
-      CategoryColor, 
-      Description, 
-      parentID,
-      info, 
-      req.params.id,
+      Subject || 'Nuovo Evento',
+      StartTime || new Date(),
+      EndTime || new Date(),
+      updatedCommessaId,
+      updatedCommessaName,
+      Duration || 0,
+      Progress || 0,
+      updatedIncaricatoId.join(','),
+      updatedIncaricatoName,
+      CategoryColor || '#000000',
+      Description || '',
+      parentID || null,
+      info || '',
     ];
 
     await runQuery(query, params);
 
-    res.json({ message: 'Evento salvato con successo!'});
+    // Invia un messaggio di avviso se sono stati usati valori di default
+    const defaultMessage =
+      updatedCommessaId === 1 || updatedIncaricatoId.includes(1)
+        ? 'Attenzione: l\'evento è stato creato con impostazioni di default per CommessaId o CollaboratoreId.'
+        : null;
+
+    res.json({
+      message: 'Nuovo evento creato con successo!',
+      warning: defaultMessage,
+    });
   } catch (error) {
-    console.error('Errore durante il salvataggio del nuovo eventoooo:', error);
-    res.status(500).json({ error: 'Errore durante il salvataggio del nuovo evento.' });
+    console.error('Errore durante la creazione dell\'evento:', error);
+    res.status(500).json({ error: 'Errore durante la creazione dell\'evento.' });
   }
 });
+
+
+
 
 
 

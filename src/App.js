@@ -219,29 +219,28 @@ const App = () => {
 
   const handleSaveEvent = async (newEvent) => {
     try {
-      console.log("Salvataggio del nuovo evento:", newEvent);
-  
       const response = await fetch('http://localhost:3001/api/eventi', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEvent),
       });
   
-      if (!response.ok) {
-        throw new Error('Errore durante il salvataggio del nuovo evento.');
+      const result = await response.json();
+  
+      if (result.warning) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Impostazioni di Default',
+          text: result.warning,
+        });
       }
   
-      const savedEvent = await response.json();
-      console.log("Nuovo evento salvato:", savedEvent);
-  
-      // Aggiungi il nuovo evento allo stato locale
-      setEvents((prevEvents) => [...prevEvents, { ...newEvent, Id: savedEvent.Id }]);
+      console.log('Evento creato:', result.message);
     } catch (error) {
-      console.error('Errore durante il salvataggio del nuovo evento:', error);
+      console.error('Errore durante il salvataggio dell\'evento:', error);
     }
   };
+  
   
 
   const handleSaveAssociations = () => {

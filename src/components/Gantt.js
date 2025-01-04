@@ -114,18 +114,19 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
               headerText: 'Evento',
               width: 200,
               template: (data) => (data.subtasks ? '' : data.Subject),
+              visible: false
             },
-
-            { field: 'Subject', headerText: 'Subject', width: 150 },
-            { field: 'StartTime', headerText: 'Start Date', width: 150 },
-            { field: 'EndTime', headerText: 'End Date', width: 150 },
+            { field: 'CommessaName', headerText: 'CommessaName', width: 150 },
+            { field: 'Subject', headerText: 'Subject', width: 150, visible: false },
+            { field: 'StartTime', headerText: 'Start Date', width: 150, visible: false },
+            { field: 'EndTime', headerText: 'End Date', width: 150, visible: false },
             { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
             { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
             { field: 'Progress', headerText: 'Progress', width: 150 },
-            { field: 'CommessaName', headerText: 'CommessaName', width: 150 },
+            
             {
               field: 'CommessaId',
-              headerText: 'Commessa',
+              headerText: 'Commessa',visible: false,
               width: 150,
               edit: {
                 create: () => {
@@ -188,17 +189,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
             console.log("EVENTOOO", args.requestType)
 
             if (args.requestType === 'beforeSave') {
-              console.log('Valori aggiornati:', {
-                CommessaId: args,
 
-              });
-              if (args.rowData) {
-                args.data.CommessaId = args.rowData.CommessaId || args.data.CommessaId;
-                args.data.CommessaName = args.rowData.CommessaName || args.data.CommessaName;
-              }
-
-
-              console.log('Dati aggiornati prima del salvataggio:', args.data);
               onUpdateEvent(args.data); // Assicurati che `onUpdateEvent` riceva i dati corretti
             }
 
@@ -208,6 +199,23 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
             if (args.requestType === 'beforeAdd') {
               console.log('DATA prima di AGGIUNGERE:', args);
+          
+              // Assegna un collaboratore predefinito se non è specificato
+              if (!args.data.IncaricatoId || args.data.IncaricatoId.length === 0) {
+                const defaultCollaboratore = allCollaborators.find((c) => c.id === 1); // Collaboratore con ID 1
+                if (defaultCollaboratore) {
+                  args.data.IncaricatoId = [defaultCollaboratore.id];
+                  args.data.IncaricatoName = defaultCollaboratore.text;
+                  args.data.resources = [
+                    {
+                      resourceId: defaultCollaboratore.id,
+                      resourceName: defaultCollaboratore.text,
+                      unit: 50,
+                    },
+                  ];
+                }
+              }
+          
               if (!args.data.CommessaId) {
                 const defaultCommessa = projectResources[0];
                 if (defaultCommessa) {
@@ -215,12 +223,14 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
                   args.data.CommessaName = defaultCommessa.text;
                 }
               }
-
+          
               const commessa = projectResources.find(
                 (resource) => resource.id === args.data.CommessaId
               );
-
+          
               args.data.CommessaName = commessa ? commessa.text : null;
+              console.log('Dati predefiniti per il nuovo evento:', args.data);
+          
               onSaveEvent(args.data);
             }
 
