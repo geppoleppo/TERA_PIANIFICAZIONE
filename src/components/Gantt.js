@@ -187,6 +187,16 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
     if (args.requestType === 'beforeSave') {
 
+      // Mappa i nomi delle risorse in base agli ID
+    if (args.data.taskData.resources) {
+      args.data.resources = args.data.taskData.resources.map((res) => ({
+        resourceId: res.resourceId,
+        resourceName: allCollaborators.find((collab) => collab.id === res.resourceId)?.text || '',
+        unit: 50, // Mantieni il valore predefinito
+      }));
+    }
+    console.log('Dati aggiornati prima del salvataggio:', args.data);
+
       onUpdateEvent(args.data); // Assicurati che `onUpdateEvent` riceva i dati corretti
     }
 

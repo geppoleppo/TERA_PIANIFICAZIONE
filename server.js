@@ -146,7 +146,7 @@ app.get('/api/eventi', async (req, res) => {
       };
     });
 
-    console.log("EVENTI MAPPATI:", mappedEventi);
+    //console.log("EVENTI MAPPATI:", mappedEventi);
     res.json(mappedEventi);
   } catch (error) {
     console.error('Errore durante il recupero degli eventi:', error);
