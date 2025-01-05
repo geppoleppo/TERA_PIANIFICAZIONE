@@ -108,7 +108,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     {
       field: 'CommessaId',
       headerText: 'Commessa',
-      width: 150,
+      width: 250,
       allowFiltering: true, // Abilita il filtro
       template: (data) => {
         // Mostra il nome della commessa nella colonna
@@ -170,7 +170,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
   splitterSettings={{
     columnIndex: 1, // Colonna per la struttura gerarchica
   }}
-  height="450px"
+  height="650px"
   projectStartDate={new Date('12/15/2024')}
   projectEndDate={new Date('12/31/2025')}
 
