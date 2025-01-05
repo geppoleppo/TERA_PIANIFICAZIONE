@@ -110,23 +110,8 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
           columns={[
             { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
             {
-              field: 'Subject',
-              headerText: 'Evento',
-              width: 200,
-              template: (data) => (data.subtasks ? '' : data.Subject),
-              visible: false
-            },
-            { field: 'CommessaName', headerText: 'CommessaName', width: 150 },
-            { field: 'Subject', headerText: 'Subject', width: 150, visible: false },
-            { field: 'StartTime', headerText: 'Start Date', width: 150, visible: false },
-            { field: 'EndTime', headerText: 'End Date', width: 150, visible: false },
-            { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
-            { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
-            { field: 'Progress', headerText: 'Progress', width: 150 },
-            
-            {
               field: 'CommessaId',
-              headerText: 'Commessa',visible: false,
+              headerText: 'Commessa',
               width: 150,
               edit: {
                 create: () => {
@@ -164,14 +149,34 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
                   args.column.dropdownInstance = dropdown;
                 },
                 destroy: (args) => {
-                  // Verifica che args e le sue proprietà siano definite
                   if (args?.column?.dropdownInstance) {
                     args.column.dropdownInstance.destroy();
                     args.column.dropdownInstance = null;
                   }
                 },
               },
-            }
+              template: (data) => {
+                // Mostra il nome della commessa anziché l'ID nella colonna
+                const commessa = projectResources.find((res) => res.id === data.CommessaId);
+                return commessa ? commessa.text : 'Commessa non trovata';
+              },
+            },
+            {
+              field: 'Subject',
+              headerText: 'Evento',
+              width: 200,
+              template: (data) => (data.subtasks ? '' : data.Subject), visible: false
+            },
+            { field: 'CommessaName', headerText: 'CommessaName', width: 150, visible: false },
+            { field: 'Subject', headerText: 'Subject', width: 150, visible: false },
+            { field: 'StartTime', headerText: 'Start Date', width: 150, visible: false },
+            { field: 'EndTime', headerText: 'End Date', width: 150, visible: false },
+            { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
+            { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
+            { field: 'Progress', headerText: 'Progress', width: 150 },
+            
+
+            
             
             
 
