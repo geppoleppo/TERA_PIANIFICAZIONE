@@ -309,7 +309,7 @@ app.post('/api/eventi', async (req, res) => {
     // Invia un messaggio di avviso se sono stati usati valori di default
     const defaultMessage =
       updatedCommessaId === 1 || updatedIncaricatoId.includes(1)
-        ? 'Attenzione: l\'evento è stato creato con impostazioni di default per CommessaId o CollaboratoreId.'
+        ? 'Atenzione creato nuovo evento.'
         : null;
 
     res.json({

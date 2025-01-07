@@ -249,7 +249,7 @@ const App = () => {
       if (result.warning) {
         Swal.fire({
           icon: 'info',
-          title: 'Impostazioni di Default',
+          title: 'NUOVO EVENTO',
           text: result.warning,
         });
       }
