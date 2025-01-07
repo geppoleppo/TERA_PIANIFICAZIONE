@@ -101,13 +101,23 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
     {
       field: 'CommessaId',
-      headerText: 'Commessa',
+      headerText: 'Commessa / Subject',
       width: 250,
-      allowFiltering: true, // Abilita il filtro
+      allowFiltering: true,
       template: (data) => {
-        // Mostra il nome della commessa nella colonna
-        const commessa = projectResources.find((res) => res.id === data.CommessaId);
-        return commessa ? commessa.text : 'Commessa non trovata';
+        // Verifica se l'evento è un figlio
+        const isChild = data.parentID !== null;
+        // Verifica se l'evento ha figli
+        const hasChildren = ganttData.some((task) => task.parentID === data.Id);
+    
+        // Logica per la visualizzazione
+        if (isChild) {
+          return data.Subject || 'Nessun Subject'; // Evento figlio mostra il Subject
+        } else if (hasChildren) {
+          return data.CommessaName || 'Nessuna Commessa'; // Evento genitore mostra la commessa
+        } else {
+          return data.CommessaName || 'Nessuna Commessa'; // Evento senza figli mostra la commessa
+        }
       },
       edit: {
         create: () => {
@@ -125,7 +135,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
               value: commessa.id,
               text: commessa.text,
             }));
-
+    
           const dropdown = new DropDownList({
             dataSource: commesseOptions,
             fields: { text: 'text', value: 'value' },
@@ -140,7 +150,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
               });
             },
           });
-
+    
           dropdown.appendTo(args.element);
           args.column.dropdownInstance = dropdown;
         },
@@ -152,6 +162,9 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
         },
       },
     },
+    
+    
+    
     { field: 'Subject', headerText: 'Evento', width: 200 },
     { field: 'Progress', headerText: 'Progress', width: 150 },
     { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
