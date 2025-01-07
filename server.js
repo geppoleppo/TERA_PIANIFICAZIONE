@@ -130,21 +130,23 @@ app.get('/api/eventi', async (req, res) => {
 
       return {
         Id: evento.Id,
-        Subject: evento.Titolo,
-        StartTime: evento.Inizio,
-        EndTime: evento.Fine,
-        CommessaId: evento.CommessaId || null, // ID della commessa
-        CommessaName: commessa ? commessa.CommessaName : "Commessa sconosciuta", // Nome della commessa
-        Duration: evento.Duration || 0,
-        Progress: evento.Progress || 0,
-        IncaricatoId: incaricatoIds, // Array di ID
-        IncaricatoName: incaricatoNames || "Nessuno", // Stringa con nomi
-        CategoryColor: evento.Colore || "#000000",
-        parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
-        Description: evento.Descrizione || "",
-        info: evento.Info
+  Subject: evento.Titolo,
+  StartTime: evento.Inizio,
+  EndTime: evento.Fine,
+  CommessaId: evento.CommessaId || null,
+  CommessaName: commessa ? commessa.CommessaName : "Commessa sconosciuta",
+  Duration: evento.Duration || 0,
+  Progress: evento.Progress || 0,
+  IncaricatoId: incaricatoIds,
+  IncaricatoName: incaricatoNames || "Nessuno",
+  CategoryColor: evento.Colore || "#000000",
+  parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
+  Description: evento.Descrizione || "",
+  info: evento.Info,
+  predecessorsName: evento.Dipendenza || "", // Aggiungi la dipendenza
       };
     });
+    
 
     //console.log("EVENTI MAPPATI:", mappedEventi);
     res.json(mappedEventi);
@@ -195,7 +197,9 @@ app.put('/api/eventi/:id', async (req, res) => {
       ? resourceInfo.map((resource) => resource.resourceName || resource.text).join(', ')
       : '';
 
-    const query = `
+      const predecessorsName = ganttProperties.predecessorsName;
+
+      const query = `
       UPDATE Eventi SET
         Titolo = ?, 
         Inizio = ?, 
@@ -208,27 +212,31 @@ app.put('/api/eventi/:id', async (req, res) => {
         IncaricatoName = ?, 
         Colore = ?, 
         Descrizione = ?, 
-        parentID = ?,
-        Info = ?
+        parentID = ?, 
+        Info = ?, 
+        Dipendenza = ?  -- Aggiorna il campo Dipendenza
       WHERE Id = ?
     `;
-
+    
     const params = [
       Subject,
       StartTime,
       EndTime,
       CommessaId,
-      CommessaName, // Usa il nome recuperato
+      CommessaName,
       Duration,
       Progress,
-      collaboratorIds.join(','), // Concatena gli ID in una stringa
+      collaboratorIds.join(','), 
       IncaricatoName,
       CategoryColor,
       Description,
       parentID,
       info,
+      predecessorsName, // Valore della dipendenza
       req.params.id,
     ];
+    await runQuery(query, params);
+    
 
     await runQuery(query, params);
 
@@ -254,6 +262,8 @@ app.post('/api/eventi', async (req, res) => {
       Description,
       parentID,
       info,
+      predecessorsName
+      
     } = req.body;
 
     // Imposta i valori di default
@@ -273,9 +283,9 @@ app.post('/api/eventi', async (req, res) => {
 
     // Query per inserire l'evento
     const query = `
-      INSERT INTO Eventi
-      (Titolo, Inizio, Fine, CommessaId, CommessaName, Duration, Progress, IncaricatoId, IncaricatoName, Colore, Descrizione, parentID, Info)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     INSERT INTO Eventi
+      (Titolo, Inizio, Fine, CommessaId, CommessaName, Duration, Progress, IncaricatoId, IncaricatoName, Colore, Descrizione, parentID, Info,Dipendenza)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
     `;
 
     const params = [
@@ -292,8 +302,10 @@ app.post('/api/eventi', async (req, res) => {
       Description || '',
       parentID || null,
       info || '',
+      predecessorsName || '', // Dipendenza
     ];
-
+  await runQuery(query, params);
+  
     await runQuery(query, params);
 
     // Invia un messaggio di avviso se sono stati usati valori di default

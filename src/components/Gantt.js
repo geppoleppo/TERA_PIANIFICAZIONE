@@ -52,6 +52,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
       parentID: event.parentID || null, // Gestisce la relazione gerarchica
       resources: event.IncaricatoId || [],
       info: event.info || '',
+      predecessorsName:event.predecessorsName
     }));
   });
 
@@ -79,7 +80,8 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     child: 'subtasks',
     notes: 'info',
     resourceInfo: 'resources',
-    parentID:'parentID'
+    parentID:'parentID',
+    dependency: 'predecessorsName',
   }}
   editSettings={{
     allowAdding: true,
@@ -98,7 +100,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     name: 'resourceName',
   }}
   columns={[
-    { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
+    { field: 'Id', headerText: 'ID', visible: true, isPrimaryKey: true },
     {
       field: 'CommessaId',
       headerText: 'Commessa / Subject',
@@ -169,6 +171,47 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     { field: 'Progress', headerText: 'Progress', width: 150 },
     { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
     { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
+    {
+      field: 'predecessorsName',
+      headerText: 'Dipendenze',
+      width: 200,
+      edit: {
+        create: () => {
+          const dropdown = document.createElement('input');
+          dropdown.className = 'e-field';
+          return dropdown;
+        },
+        read: (element) => element.ej2_instances?.[0]?.value || '',
+        write: (args) => {
+          const options = ganttData
+            .filter(task => task.Id !== args.rowData.Id) // Escludi l'evento stesso
+            .map(task => ({
+              value: `${task.Id}SS`, // Esempio: ID con tipo SS (Start-Start)
+              text: `${task.Subject} (ID: ${task.Id})`,
+            }));
+          
+          const dropdown = new DropDownList({
+            dataSource: options,
+            fields: { text: 'text', value: 'value' },
+            value: args.rowData.predecessorsName || '',
+            placeholder: 'Seleziona una dipendenza',
+            change: (e) => {
+              args.rowData.predecessorsName = e.value;
+            },
+          });
+    
+          dropdown.appendTo(args.element);
+          args.column.dropdownInstance = dropdown;
+        },
+        destroy: (args) => {
+          if (args?.column?.dropdownInstance) {
+            args.column.dropdownInstance.destroy();
+            args.column.dropdownInstance = null;
+          }
+        },
+      },
+    },
+    
     {
       field: 'parentID',
       headerText: 'Parent Task',
