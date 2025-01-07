@@ -225,6 +225,10 @@ const App = () => {
         body: JSON.stringify(newEvent),
       });
   
+      if (!response.ok) {
+        throw new Error('Errore durante il salvataggio dell\'evento.');
+      }
+  
       const result = await response.json();
   
       if (result.warning) {
@@ -236,10 +240,31 @@ const App = () => {
       }
   
       console.log('Evento creato:', result.message);
+  
+      // Ricarica gli eventi dal backend dopo aver aggiunto un nuovo evento
+      const updatedEventsResponse = await fetch('http://localhost:3001/api/eventi', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+  
+      if (!updatedEventsResponse.ok) {
+        throw new Error('Errore durante il caricamento degli eventi aggiornati.');
+      }
+  
+      const updatedEvents = await updatedEventsResponse.json();
+      setEvents(updatedEvents); // Aggiorna lo stato con gli eventi aggiornati
+      console.log("Eventi aggiornati ricevuti dal server:", updatedEvents);
+  
     } catch (error) {
       console.error('Errore durante il salvataggio dell\'evento:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Errore!',
+        text: 'Si è verificato un errore durante il salvataggio dell\'evento.',
+      });
     }
   };
+  
   
   
 
