@@ -306,8 +306,6 @@ app.post('/api/eventi', async (req, res) => {
     ];
   await runQuery(query, params);
   
-    await runQuery(query, params);
-
     // Invia un messaggio di avviso se sono stati usati valori di default
     const defaultMessage =
       updatedCommessaId === 1 || updatedIncaricatoId.includes(1)
