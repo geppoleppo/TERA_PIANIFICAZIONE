@@ -31,37 +31,30 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
   }));
   // Trasforma i dati in formato gerarchico
   const structuredData = selectedCommesse
-    .map((commessaId) => {
-      const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
+  .flatMap((commessaId) => {
+    const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
 
-      if (commessaEvents.length === 0) return null;
+    if (commessaEvents.length === 0) return [];
 
-      const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
+    const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
 
-      return {
-        Id: commessaId,
-        CommessaName: commessaName,
-        CommessaId: commessaId,
-        StartTime: commessaEvents[0]?.StartTime || new Date(),
-        EndTime: commessaEvents[commessaEvents.length - 1]?.EndTime || new Date(),
-        subtasks: commessaEvents.map((event) => ({
-          Id: event.Id,
-          Subject: event.Subject,
-          StartTime: event.StartTime,
-          EndTime: event.EndTime,
-          Duration: event.Duration,
-          Progress: event.Progress,
-          IncaricatoName: event.IncaricatoName,
-          IncaricatoId: event.IncaricatoId,
-          CommessaId: commessaId,
-          CommessaName: commessaName,
-          resources: event.IncaricatoId,
-          info: event.info
+    return commessaEvents.map((event) => ({
+      Id: event.Id,
+      Subject: event.Subject,
+      StartTime: event.StartTime || new Date(),
+      EndTime: event.EndTime || new Date(),
+      Duration: event.Duration || 0,
+      Progress: event.Progress || 0,
+      IncaricatoName: event.IncaricatoName || '',
+      IncaricatoId: event.IncaricatoId || [],
+      CommessaId: commessaId,
+      CommessaName: commessaName,
+      parentID: event.parentID || null, // Gestisce la relazione gerarchica
+      resources: event.IncaricatoId || [],
+      info: event.info || '',
+    }));
+  });
 
-        })),
-      };
-    })
-    .filter((commessa) => commessa !== null);
 
 
   console.log('Dati strutturati per il Gantt:', structuredData);
@@ -86,6 +79,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     child: 'subtasks',
     notes: 'info',
     resourceInfo: 'resources',
+    parentID:'parentID'
   }}
   editSettings={{
     allowAdding: true,
@@ -162,6 +156,56 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     { field: 'Progress', headerText: 'Progress', width: 150 },
     { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
     { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
+    {
+      field: 'parentID',
+      headerText: 'Parent Task',
+      width: 200,
+      edit: {
+        create: () => {
+          const dropdown = document.createElement('input');
+          dropdown.className = 'e-field';
+          return dropdown;
+        },
+        read: (element) => {
+          return element.ej2_instances?.[0]?.value || null;
+        },
+        write: (args) => {
+          // Filtra le opzioni del parent per includere solo eventi della stessa commessa e escludere l'evento stesso
+          const parentOptions = ganttData
+            .filter(
+              (task) =>
+                task.Id !== args.rowData.Id && // Escludi l'evento stesso
+                task.CommessaId === args.rowData.CommessaId // Includi solo eventi con lo stesso CommessaId
+            )
+            .map((task) => ({
+              value: task.Id,
+              text: task.Subject || `Task ${task.Id}`, // Mostra il Subject o un testo predefinito
+            }));
+    
+          const dropdown = new DropDownList({
+            dataSource: parentOptions,
+            fields: { text: 'text', value: 'value' },
+            value: args.rowData.parentID || null,
+            placeholder: 'Seleziona un Parent Task della stessa commessa',
+            change: (e) => {
+              args.rowData.parentID = e.value;
+              console.log('Parent ID aggiornato:', e.value);
+            },
+          });
+    
+          dropdown.appendTo(args.element);
+          args.column.dropdownInstance = dropdown;
+        },
+        destroy: (args) => {
+          if (args?.column?.dropdownInstance) {
+            args.column.dropdownInstance.destroy();
+            args.column.dropdownInstance = null;
+          }
+        },
+      },
+    },
+    
+    
   ]}
   labelSettings={{
     taskLabel: 'Subject',
@@ -186,6 +230,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     console.log("EVENTOOO", args.requestType)
 
     if (args.requestType === 'beforeSave') {
+      args.data.parentID = args.data.parentID || null; // Gestione del parentID
 
       // Mappa i nomi delle risorse in base agli ID
     if (args.data.taskData.resources) {
