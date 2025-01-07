@@ -240,30 +240,28 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     }
   }}
   actionBegin={(args) => {
-    console.log("EVENTOOO", args.requestType)
-
     if (args.requestType === 'beforeSave') {
-      args.data.parentID = args.data.parentID || null; // Gestione del parentID
-
-      // Mappa i nomi delle risorse in base agli ID
-    if (args.data.taskData.resources) {
-      args.data.resources = args.data.taskData.resources.map((res) => ({
-        resourceId: res.resourceId,
-        resourceName: allCollaborators.find((collab) => collab.id === res.resourceId)?.text || '',
-        unit: 50, // Mantieni il valore predefinito
-      }));
-    }
-    console.log('Dati aggiornati prima del salvataggio:', args.data);
-
+      // Se l'evento è un figlio
+      if (args.data.parentID !== null) {
+        const originalEvent = ganttData.find((event) => event.Id === args.data.Id);
+  
+        // Controlla se la CommessaId è cambiata
+        if (originalEvent && originalEvent.CommessaId !== args.data.CommessaId) {
+          console.log(`Commessa cambiata per evento figlio ${args.data.Id}`);
+          args.data.parentID = null; // Rimuovi il parentID
+        }
+      }
+  
+      // Gestione della modifica generale
       onUpdateEvent(args.data); // Assicurati che `onUpdateEvent` riceva i dati corretti
     }
-
+  
     if (args.requestType === 'beforeDelete') {
       onDeleteEvent(args.data[0].Id); // Elimina l'evento
     }
-
+  
     if (args.requestType === 'beforeAdd') {
-      console.log('DATA prima di AGGIUNGERE:', args);
+      console.log('Dati prima di aggiungere:', args);
   
       // Assegna un collaboratore predefinito se non è specificato
       if (!args.data.IncaricatoId || args.data.IncaricatoId.length === 0) {
@@ -298,11 +296,8 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
   
       onSaveEvent(args.data);
     }
-
-    if (args.requestType === 'beforeOpenAddDialog') {
-      console.log('Apertura dialogo aggiunta evento:', args);
-    }
   }}
+  
 
 
 
