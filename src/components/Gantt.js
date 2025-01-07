@@ -100,7 +100,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     name: 'resourceName',
   }}
   columns={[
-    { field: 'Id', headerText: 'ID', visible: true, isPrimaryKey: true },
+    { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
     {
       field: 'CommessaId',
       headerText: 'Commessa / Subject',
@@ -226,23 +226,26 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
           return element.ej2_instances?.[0]?.value || null;
         },
         write: (args) => {
-          // Filtra le opzioni del parent per includere solo eventi della stessa commessa e escludere l'evento stesso
-          const parentOptions = ganttData
-            .filter(
-              (task) =>
-                task.Id !== args.rowData.Id && // Escludi l'evento stesso
-                task.CommessaId === args.rowData.CommessaId // Includi solo eventi con lo stesso CommessaId
-            )
-            .map((task) => ({
-              value: task.Id,
-              text: task.Subject || `Task ${task.Id}`, // Mostra il Subject o un testo predefinito
-            }));
+          // Opzione "nessun parent"
+          const parentOptions = [
+            { value: null, text: 'Nessun Genitore...' },
+            ...ganttData
+              .filter(
+                (task) =>
+                  task.Id !== args.rowData.Id && // Escludi l'evento stesso
+                  task.CommessaId === args.rowData.CommessaId // Includi solo eventi della stessa commessa
+              )
+              .map((task) => ({
+                value: task.Id,
+                text: task.Subject || `Task ${task.Id}`,
+              })),
+          ];
     
           const dropdown = new DropDownList({
             dataSource: parentOptions,
             fields: { text: 'text', value: 'value' },
             value: args.rowData.parentID || null,
-            placeholder: 'Seleziona un Parent Task della stessa commessa',
+            placeholder: 'Seleziona un Parent Task',
             change: (e) => {
               args.rowData.parentID = e.value;
               console.log('Parent ID aggiornato:', e.value);
@@ -260,6 +263,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
         },
       },
     },
+    
     
     
   ]}
