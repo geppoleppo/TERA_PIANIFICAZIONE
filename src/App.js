@@ -280,6 +280,19 @@ const App = () => {
     }
   };
   
+  // Funzione per sincronizzare le commesse con il database MySQL
+  const sincronizzaCommesse = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/sincronizza-commesse');
+      const data = await response.json();
+      console.log(data.message);
+      // Aggiorna la tabella delle commesse nel frontend, se necessario
+    } catch (error) {
+      console.error('Errore durante la sincronizzazione delle commesse:', error);
+    }
+  };
+  
+
   
   
 
@@ -387,6 +400,7 @@ const App = () => {
       <Sidebar
         setProjectResources={setProjectResources}
         filteredProjectResources={filteredProjectResources}
+        onSyncCommesse={sincronizzaCommesse}
       />
 <Gantt
   ganttData={filteredEventsForGantt}

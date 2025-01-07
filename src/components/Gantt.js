@@ -103,7 +103,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     { field: 'Id', headerText: 'ID', visible: false, isPrimaryKey: true },
     {
       field: 'CommessaId',
-      headerText: 'Commessa / Subject',
+      headerText: 'Commessa',
       width: 250,
       allowFiltering: true,
       template: (data) => {
@@ -167,12 +167,13 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     
     
     
-    { field: 'Subject', headerText: 'Evento', width: 200 },
-    { field: 'Progress', headerText: 'Progress', width: 150 },
+    { field: 'Subject', headerText: 'Evento', width: 200,visible: false, },
+    { field: 'Progress', headerText: 'Progress', width: 150,visible: false,},
     { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
     { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
     {
       field: 'predecessorsName',
+      visible: false,
       headerText: 'Dipendenze',
       width: 200,
       edit: {
@@ -215,6 +216,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     {
       field: 'parentID',
       headerText: 'Parent Task',
+      visible: false,
       width: 200,
       edit: {
         create: () => {
