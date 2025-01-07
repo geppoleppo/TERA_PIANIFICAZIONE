@@ -8,6 +8,7 @@ import {
   Resize,
   RowDD,
   Inject,
+  Filter,
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
@@ -52,12 +53,13 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
       parentID: event.parentID || null, // Gestisce la relazione gerarchica
       resources: event.IncaricatoId || [],
       info: event.info || '',
-      predecessorsName:event.predecessorsName
+      predecessorsName:event.predecessorsName,
+      CategoryColor:event.CategoryColor
     }));
   });
 
 
-
+  console.log('GanttData:', ganttData);
   console.log('Dati strutturati per il Gantt:', structuredData);
   //console.log('Risorse calcolate:', projectResources);
 
@@ -90,7 +92,10 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     allowTaskbarEditing: true,
     showDeleteConfirmDialog: true,
   }}
-  toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
+  toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', { text: 'Quick Filter', tooltipText: 'Quick Filter', id: 'Quick Filter', prefixIcon: 'e-quickfilter' },
+  { text: 'Clear Filter', tooltipText: 'Clear Filter', id: 'Clear Filter' }
+
+  ]}
   allowSelection={true}
   gridLines="Both"
   height="450px"
@@ -156,6 +161,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
           dropdown.appendTo(args.element);
           args.column.dropdownInstance = dropdown;
         },
+        
         destroy: (args) => {
           if (args?.column?.dropdownInstance) {
             args.column.dropdownInstance.destroy();
@@ -167,9 +173,9 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     
     
     
-    { field: 'Subject', headerText: 'Evento', width: 200,visible: false, },
+    { field: 'Subject', headerText: 'Evento', width: 200,visible: true, allowFiltering: true,},
     { field: 'Progress', headerText: 'Progress', width: 150,visible: false,},
-    { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false },
+    { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: true,allowFiltering: true, },
     { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
     {
       field: 'predecessorsName',
@@ -279,6 +285,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
   height="650px"
   projectStartDate={new Date('12/15/2024')}
   projectEndDate={new Date('12/31/2025')}
+  
 
   taskType="FixedWork"
 
@@ -352,7 +359,11 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
 
 >
-  <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD]} />
+  
+  <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD,Filter]} />
+
+
+
 </GanttComponent>
 
       ) : (

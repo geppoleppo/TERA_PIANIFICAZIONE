@@ -139,7 +139,7 @@ app.get('/api/eventi', async (req, res) => {
   Progress: evento.Progress || 0,
   IncaricatoId: incaricatoIds,
   IncaricatoName: incaricatoNames || "Nessuno",
-  CategoryColor: evento.Colore || "#000000",
+  CategoryColor: evento.Colore || "#9889c2",
   parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
   Description: evento.Descrizione || "",
   info: evento.Info,
@@ -173,7 +173,7 @@ app.put('/api/eventi/:id', async (req, res) => {
   } = req.body;
 
   try {
-    console.log("Dati ricevuti per aggiornamento evento:", req.body);
+    //console.log("Dati ricevuti per aggiornamento evento:", req.body);
 
     // Recupera il nome della commessa dal database usando l'ID
     const commessaQuery = 'SELECT CommessaName FROM Commesse WHERE Id = ?';
@@ -197,8 +197,12 @@ app.put('/api/eventi/:id', async (req, res) => {
       ? resourceInfo.map((resource) => resource.resourceName || resource.text).join(', ')
       : '';
 
-      const predecessorsName = ganttProperties.predecessorsName;
+      
 
+      const predecessorsName = ganttProperties.predecessorsName;
+      
+      const CategoryColor = ganttProperties?.CategoryColor || req.body.taskData?.CategoryColor;
+      console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:",CategoryColor );
       const query = `
       UPDATE Eventi SET
         Titolo = ?, 
@@ -215,6 +219,7 @@ app.put('/api/eventi/:id', async (req, res) => {
         parentID = ?, 
         Info = ?, 
         Dipendenza = ?  -- Aggiorna il campo Dipendenza
+        
       WHERE Id = ?
     `;
     
@@ -232,7 +237,8 @@ app.put('/api/eventi/:id', async (req, res) => {
       Description,
       parentID,
       info,
-      predecessorsName, // Valore della dipendenza
+      predecessorsName,
+       // Valore della dipendenza
       req.params.id,
     ];
     await runQuery(query, params);
@@ -298,7 +304,7 @@ app.post('/api/eventi', async (req, res) => {
       Progress || 0,
       updatedIncaricatoId.join(','),
       updatedIncaricatoName,
-      CategoryColor || '#000000',
+      CategoryColor || '#9889c2',
       Description || '',
       parentID || null,
       info || '',
@@ -425,7 +431,7 @@ app.put('/api/commesse/:id', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento della commessa." });
   }
 });
-// Endpoint per ottenere un singolo evento tramite il suo ID
+
 // Endpoint per ottenere un singolo evento tramite il suo ID
 app.get('/api/eventi/:id', async (req, res) => {
   const { id } = req.params;
@@ -448,7 +454,7 @@ app.get('/api/eventi/:id', async (req, res) => {
       EndTime: evento[0].Fine,
       CommessaIdId:  evento[0].CommessaId,
       CollaboratoreId: evento[0].IncaricatoId.split(',').map(id => parseInt(id, 10)),
-      CategoryColor: evento[0].Colore || "#000000",
+      CategoryColor: evento[0].Colore || "#9889c2",
       Description: evento[0].Descrizione, // Includi altri campi necessari
       parentID: evento[0].parentID ? parseInt(evento[0].parentID, 10) : null // Includi e converti parentID
     };
@@ -495,7 +501,7 @@ app.get('/api/commesse-mysql', (req, res) => {
 
 // Endpoint per sincronizzare le commesse da MySQL a SQLite
 app.get('/api/sincronizza-commesse', (req, res) => {
-  const queryMySQL = 'SELECT NOME AS CommessaName, Descrizione, "#FFFFFF" AS Colore FROM COMMESSE';
+  const queryMySQL = 'SELECT NOME AS CommessaName, Descrizione, "#9889c2" AS Colore FROM COMMESSE';
 
   db.query(queryMySQL, (err, results) => {
     if (err) {
