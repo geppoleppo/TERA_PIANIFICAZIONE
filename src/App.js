@@ -26,8 +26,6 @@ const App = () => {
   const handleUpdateEvent = async (updatedEvent) => {
     console.log("DATI in handleUpdateEvent:", updatedEvent);
     try {
-      console.log("Dati inviati per l'aggiornamento:", updatedEvent);
-  
       const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -38,23 +36,20 @@ const App = () => {
         throw new Error(`Errore durante l'aggiornamento: ${response.statusText}`);
       }
   
-      // Dopo l'aggiornamento, ricarica tutti gli eventi dal backend
-      const updatedEventsResponse = await fetch('http://localhost:3001/api/eventi', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const updatedEventData = await response.json();
   
-      if (!updatedEventsResponse.ok) {
-        throw new Error('Errore durante il caricamento degli eventi aggiornati.');
-      }
-  
-      const updatedEvents = await updatedEventsResponse.json();
-      setEvents(updatedEvents); // Aggiorna lo stato con gli eventi aggiornati
-      console.log("Eventi aggiornati ricevuti dal server:", updatedEvents);
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.Id === updatedEventData.Id ? updatedEventData : event
+        )
+      );
+      console.log("Evento aggiornato:", updatedEventData);
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
+  
   
   
   
@@ -176,7 +171,7 @@ const App = () => {
       const selectedIds = uniqueCommesse.map((res) => res.id);
       setSelectedCommesse(selectedIds);
     }
-  }, [selectedCollaboratori, projectResources, categoryResources, events]);
+  }, [selectedCollaboratori, projectResources, categoryResources]);
   
   
   
@@ -191,25 +186,45 @@ const App = () => {
         ? event.IncaricatoId.split(',').map(Number)
         : [];
   
-      console.log('Event:', event);
-      console.log('IncaricatoIdArray:', incaricatoIdArray);
-  
       const isCollaboratorMatch =
         selectedCollaboratori.length === 0 ||
         incaricatoIdArray.some((id) => selectedCollaboratori.includes(id));
-      console.log('Collaborator Match:', isCollaboratorMatch);
   
       const isCommessaMatch =
         selectedCommesse.length === 0 ||
-        selectedCommesse.includes(Number(event.CommessaId)); // Conversione per sicurezza
-      console.log('Commessa Match:', isCommessaMatch);
+        selectedCommesse.includes(Number(event.CommessaId));
   
       return isCollaboratorMatch && isCommessaMatch;
     });
   
-    console.log('Eventi filtrati per il Gantt:', filteredEvents);
-    setFilteredEventsForGantt(filteredEvents);
+    setFilteredEventsForGantt(filteredEvents); // Aggiorna solo gli eventi filtrati
   }, [selectedCollaboratori, selectedCommesse, events]);
+  
+  
+  useEffect(() => {
+    console.log('USE EFFECT - Aggiornamento Commesse Selezionate', selectedCollaboratori);
+  
+    if (selectedCollaboratori.length === 0) {
+      setFilteredProjectResources([]);
+      setSelectedCommesse([]);
+    } else {
+      const associatedCommesseFromCollaboratori = projectResources.filter((commessa) =>
+        selectedCollaboratori.some((collabId) => {
+          const collaboratore = categoryResources.find((c) => c.id === collabId);
+          return collaboratore?.groupIds.includes(commessa.id);
+        })
+      );
+  
+      const uniqueCommesse = Array.from(
+        new Set(associatedCommesseFromCollaboratori.map((c) => c.id))
+      ).map((id) => associatedCommesseFromCollaboratori.find((c) => c.id === id));
+  
+      setFilteredProjectResources(uniqueCommesse);
+  
+      const selectedIds = uniqueCommesse.map((res) => res.id);
+      setSelectedCommesse(selectedIds); // Aggiorna solo qui
+    }
+  }, [selectedCollaboratori, projectResources, categoryResources]);
   
 
   const handleCommesseSelection = (selectedOptions) => {
