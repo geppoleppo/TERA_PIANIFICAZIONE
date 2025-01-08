@@ -30,7 +30,7 @@ app.get('/api/collaboratori', async (req, res) => {
       Immagine: collaboratore.Immagine,
       groupIds: collaboratore.groupIds ? collaboratore.groupIds.split(',').map(id => parseInt(id, 10)) : []
     }));
-
+//console.log("COLLABORATORI",formattedCollaboratori)
     res.json(formattedCollaboratori);
   } catch (error) {
     res.status(500).json({ error: "Errore nel recupero dei collaboratori" });
@@ -99,15 +99,12 @@ app.get('/api/eventi', async (req, res) => {
     const eventi = await getRecords(eventiQuery);
 
     // Query per recuperare i collaboratori
-    const collaboratoriQuery = 'SELECT Id, Nome FROM Collaboratori';
+    const collaboratoriQuery = 'SELECT Id, Nome, Immagine FROM Collaboratori';
     const collaboratori = await getRecords(collaboratoriQuery);
 
     // Query per recuperare le commesse
     const commesseQuery = 'SELECT Id, CommessaName FROM Commesse';
     const commesse = await getRecords(commesseQuery);
-
-    console.log("EVENTI:", eventi);
-  
 
     // Mappatura degli eventi
     const mappedEventi = eventi.map(evento => {
@@ -116,45 +113,47 @@ app.get('/api/eventi', async (req, res) => {
         ? evento.IncaricatoId.split(',').map(id => parseInt(id.trim(), 10))
         : [];
 
-      // Mappa gli ID ai nomi usando i collaboratori dal database
-      const incaricatoNames = incaricatoIds
-        .map(id => {
-          const collaboratore = collaboratori.find(collab => collab.Id === id);
-          return collaboratore ? collaboratore.Nome : null;
-        })
-        .filter(Boolean) // Rimuove eventuali valori null o undefined
-        .join(", "); // Concatena i nomi con virgole
+      // Mappa gli ID ai nomi e ai percorsi immagine usando i collaboratori dal database
+      const incaricatoData = incaricatoIds.map(id => {
+        const collaboratore = collaboratori.find(collab => collab.Id === id);
+        return collaboratore
+          ? { Nome: collaboratore.Nome, Immagine: collaboratore.Immagine }
+          : null;
+      }).filter(Boolean); // Rimuove valori null
+
+      const incaricatoNames = incaricatoData.map(c => c.Nome).join(", ");
+      const incaricatoImages = incaricatoData.map(c => c.Immagine);
 
       // Trova il nome della commessa usando CommessaId
       const commessa = commesse.find(c => c.Id === evento.CommessaId);
 
       return {
         Id: evento.Id,
-  Subject: evento.Titolo,
-  StartTime: evento.Inizio,
-  EndTime: evento.Fine,
-  CommessaId: evento.CommessaId || null,
-  CommessaName: commessa ? commessa.CommessaName : "Commessa sconosciuta",
-  Duration: evento.Duration || 0,
-  Progress: evento.Progress || 0,
-  IncaricatoId: incaricatoIds,
-  IncaricatoName: incaricatoNames || "Nessuno",
-  CategoryColor: evento.Colore || "#9889c2",
-  parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
-  Description: evento.Descrizione || "",
-  info: evento.Info,
-  predecessorsName: evento.Dipendenza || "", // Aggiungi la dipendenza
+        Subject: evento.Titolo,
+        StartTime: evento.Inizio,
+        EndTime: evento.Fine,
+        CommessaId: evento.CommessaId || null,
+        CommessaName: commessa ? commessa.CommessaName : "Commessa sconosciuta",
+        Duration: evento.Duration || 0,
+        Progress: evento.Progress || 0,
+        IncaricatoId: incaricatoIds,
+        IncaricatoName: incaricatoNames || "Nessuno",
+        IncaricatoImages: incaricatoImages, // Percorsi immagine
+        CategoryColor: evento.Colore || "#9889c2",
+        parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
+        Description: evento.Descrizione || "",
+        info: evento.Info,
+        predecessorsName: evento.Dipendenza || "", // Dipendenza
       };
     });
-    
 
-    //console.log("EVENTI MAPPATI:", mappedEventi);
     res.json(mappedEventi);
   } catch (error) {
     console.error('Errore durante il recupero degli eventi:', error);
     res.status(500).json({ error: 'Errore durante il recupero degli eventi.' });
   }
 });
+
 
 
 app.put('/api/eventi/:id', async (req, res) => {
@@ -202,7 +201,7 @@ app.put('/api/eventi/:id', async (req, res) => {
       const predecessorsName = ganttProperties.predecessorsName;
       
       const CategoryColor = ganttProperties?.CategoryColor || req.body.taskData?.CategoryColor;
-      console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:",CategoryColor );
+      
       const query = `
       UPDATE Eventi SET
         Titolo = ?, 
