@@ -30,11 +30,15 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     resourceName: collaborator.text,
     unit: 50
   }));
+
+
+
+
   // Trasforma i dati in formato gerarchico
   const structuredData = selectedCommesse
   .flatMap((commessaId) => {
     const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
-
+    const commessa = projectResources.find((pr) => pr.id === commessaId);
     if (commessaEvents.length === 0) return [];
 
     const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
@@ -54,10 +58,9 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
       resources: event.IncaricatoId || [],
       info: event.info || '',
       predecessorsName:event.predecessorsName,
-      CategoryColor:event.CategoryColor
+      CategoryColor: commessa ? commessa.color : '#000000', // Default colore nero
     }));
   });
-
 
   console.log('GanttData:', ganttData);
   console.log('Dati strutturati per il Gantt:', structuredData);
@@ -85,6 +88,31 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     parentID:'parentID',
     dependency: 'predecessorsName',
   }}
+
+/*   queryTaskbarInfo={(args) => {
+    console.log('ARRRRGSSS',args)
+    // Ottieni il colore della commessa dall'evento
+    const commessaColor = args.data.taskData.CategoryColor || '#000000'; // Default nero
+
+    // Calcola una tonalità più scura per il colore di progresso
+    const darkenColor = (color, amount) => {
+      const usePound = color[0] === '#';
+      let col = usePound ? color.slice(1) : color;
+      const num = parseInt(col, 16);
+
+      const r = Math.max((num >> 16) - amount, 0);
+      const g = Math.max(((num >> 8) & 0x00ff) - amount, 0);
+      const b = Math.max((num & 0x0000ff) - amount, 0);
+
+      return `#${(usePound ? '' : '#') + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    };
+
+    //args.taskbarBgColor= commessaColor;
+    args.progressBarBgColor = darkenColor(commessaColor, 20); // Rende il colore più scuro
+   
+    //args.taskbarElement = darkenColor(commessaColor, 40);
+  }} */
+
   editSettings={{
     allowAdding: true,
     allowEditing: true,
@@ -92,10 +120,10 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     allowTaskbarEditing: true,
     showDeleteConfirmDialog: true,
   }}
-  toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', { text: 'Quick Filter', tooltipText: 'Quick Filter', id: 'Quick Filter', prefixIcon: 'e-quickfilter' },
-  { text: 'Clear Filter', tooltipText: 'Clear Filter', id: 'Clear Filter' }
 
-  ]}
+
+  toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll' ]}
+
   allowSelection={true}
   gridLines="Both"
   height="450px"
@@ -175,7 +203,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     
     { field: 'Subject', headerText: 'Evento', width: 200,visible: true, allowFiltering: true,},
     { field: 'Progress', headerText: 'Progress', width: 150,visible: false,},
-    { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: true,allowFiltering: true, },
+    { field: 'IncaricatoName', headerText: 'Collaboratori', width: 200, visible: false,allowFiltering: true, },
     { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
     {
       field: 'predecessorsName',
@@ -222,7 +250,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     {
       field: 'parentID',
       headerText: 'Parent Task',
-      visible: false,
+      visible: true,
       width: 200,
       edit: {
         create: () => {
