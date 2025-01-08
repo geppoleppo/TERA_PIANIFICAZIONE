@@ -31,9 +31,6 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     unit: 50
   }));
 
-
-
-
   // Trasforma i dati in formato gerarchico
   const structuredData = selectedCommesse
   .flatMap((commessaId) => {
@@ -61,6 +58,26 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
       CategoryColor: commessa ? commessa.color : '#000000', // Default colore nero
     }));
   });
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   console.log('GanttData:', ganttData);
   console.log('Dati strutturati per il Gantt:', structuredData);
@@ -204,37 +221,37 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     { field: 'Subject', headerText: 'Evento', width: 200,visible: true, allowFiltering: true,},
     { field: 'Progress', headerText: 'Progress', width: 150,visible: false,},
     {
-      field: 'IncaricatoName',
-      headerText: 'Collaboratori',
-      width: 250,
-      template: (data) => {
-        if (!data.taskData.IncaricatoImages || data.taskData.IncaricatoImages.length === 0) {
-          return (
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
-              <img
-                src="/images/default.png"
-                alt="Nessun collaboratore"
-                style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '8px' }}
-              />
-            </div>
-          );
-        }
-    
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
-            {data.taskData.IncaricatoImages.map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                alt={`Collaboratore ${index + 1}`}
-                style={{ width: '25px', height: '25px', borderRadius: '50%', marginRight: '4px' }}
-              />
-            ))}
-          </div>
-        );
-      },
-    },
-    
+  field: 'IncaricatoName',
+  headerText: 'Collaboratori',
+  width: 250,
+  template: (data) => {
+    if (!data.taskData.IncaricatoImages || data.taskData.IncaricatoImages.length === 0) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
+          <img
+            src="/images/default.png"
+            alt="Nessun collaboratore"
+            style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '8px' }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
+        {data.taskData.IncaricatoImages.map((img, index) => (
+          <img
+            key={index}
+            src={img}
+            alt={`Collaboratore ${index + 1}`}
+            style={{ width: '25px', height: '25px', borderRadius: '50%', marginRight: '4px' }}
+          />
+        ))}
+      </div>
+    );
+  },
+},
+
     { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
     {
       field: 'predecessorsName',
