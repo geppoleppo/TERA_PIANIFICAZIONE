@@ -31,16 +31,25 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     unit: 50
   }));
 
+  
   // Trasforma i dati in formato gerarchico
-  const structuredData = selectedCommesse
-  .flatMap((commessaId) => {
-    const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
-    const commessa = projectResources.find((pr) => pr.id === commessaId);
-    if (commessaEvents.length === 0) return [];
+// Trasforma i dati in formato gerarchico
+// Trasforma i dati in formato gerarchico
+const structuredData = selectedCommesse.flatMap((commessaId) => {
+  const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
+  const commessa = projectResources.find((pr) => pr.id === commessaId);
 
-    const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
+  if (commessaEvents.length === 0) return [];
 
-    return commessaEvents.map((event) => ({
+  const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
+
+  return commessaEvents.map((event) => {
+    const immagini = (event.IncaricatoImages || []).map((img, index) => ({
+      image: img,
+      name: (event.IncaricatoName || '').split(', ')[index] || 'Collaboratore sconosciuto',
+    }));
+
+    return {
       Id: event.Id,
       Subject: event.Subject,
       StartTime: event.StartTime || new Date(),
@@ -51,31 +60,15 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
       IncaricatoId: event.IncaricatoId || [],
       CommessaId: commessaId,
       CommessaName: commessaName,
-      parentID: event.parentID || null, // Gestisce la relazione gerarchica
+      parentID: event.parentID || null,
       resources: event.IncaricatoId || [],
       info: event.info || '',
-      predecessorsName:event.predecessorsName,
-      CategoryColor: commessa ? commessa.color : '#000000', // Default colore nero
-    }));
+      predecessorsName: event.predecessorsName,
+      CategoryColor: commessa ? commessa.color : '#000000',
+      immagini,
+    };
   });
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
+});
 
 
 
@@ -137,8 +130,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     allowTaskbarEditing: true,
     showDeleteConfirmDialog: true,
   }}
-
-
+  rowHeight={40} // Aumenta la larghezza delle righe
   toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll' ]}
 
   allowSelection={true}
@@ -215,42 +207,55 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
         },
       },
     },
+    {
+      field: 'IncaricatoName',
+      headerText: 'Collaboratori',
+      width: 250,
+      template: (data) => {
+        if (!data.taskData.immagini || data.taskData.immagini.length === 0) {
+          return (
+            <div
+              style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}
+              dangerouslySetInnerHTML={{
+                __html: `
+                  <img
+                    src="/images/default.png"
+                    alt="Nessun collaboratore"
+                    style="width: 25px; height: 25px; border-radius: 50%; margin-right: 4px;"
+                  />
+                `,
+              }}
+            />
+          );
+        }
     
+        const imagesHTML = data.taskData.immagini
+          .map(
+            (img, index) => `
+              <img
+                key="${index}"
+                src="${img.image}"
+                alt="${img.name}"
+                style="width: 35px; height: 35px; border-radius: 50%; margin-right: 4px;"
+              />
+            `
+          )
+          .join('');
+    
+        return (
+          <div
+            style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}
+            dangerouslySetInnerHTML={{ __html: imagesHTML }}
+          />
+        );
+      },
+    },
     
     
     { field: 'Subject', headerText: 'Evento', width: 200,visible: true, allowFiltering: true,},
     { field: 'Progress', headerText: 'Progress', width: 150,visible: false,},
-    {
-  field: 'IncaricatoName',
-  headerText: 'Collaboratori',
-  width: 250,
-  template: (data) => {
-    if (!data.taskData.IncaricatoImages || data.taskData.IncaricatoImages.length === 0) {
-      return (
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
-          <img
-            src="/images/default.png"
-            alt="Nessun collaboratore"
-            style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '8px' }}
-          />
-        </div>
-      );
-    }
 
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
-        {data.taskData.IncaricatoImages.map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            alt={`Collaboratore ${index + 1}`}
-            style={{ width: '25px', height: '25px', borderRadius: '50%', marginRight: '4px' }}
-          />
-        ))}
-      </div>
-    );
-  },
-},
+    
 
     { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
     {
@@ -361,7 +366,13 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
   height="650px"
   projectStartDate={new Date('12/15/2024')}
   projectEndDate={new Date('12/31/2025')}
-  
+  actionComplete={(args) => {
+    if (args.requestType === 'save') {
+      console.log('Aggiornamento completato:', args.data);
+      onUpdateEvent(args.data); // Aggiorna il backend
+      ganttRef.current.refresh(); // Forza il refresh visivo
+    }
+  }}
 
   taskType="FixedWork"
 
@@ -430,10 +441,6 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     }
   }}
   
-
-
-
-
 >
   
   <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD,Filter]} />
