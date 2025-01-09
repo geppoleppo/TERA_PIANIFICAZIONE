@@ -168,81 +168,41 @@ app.put('/api/eventi/:id', async (req, res) => {
     Description,
     parentID,
     ganttProperties,
-    info, // Proprietà aggiuntive dal Gantt
+    info,
+    predecessorsName = "", // Default vuoto se assente
   } = req.body;
 
   try {
-    //console.log("Dati ricevuti per aggiornamento evento:", req.body);
-
-    // Recupera il nome della commessa dal database usando l'ID
-    const commessaQuery = 'SELECT CommessaName FROM Commesse WHERE Id = ?';
-    const commessaResult = await getRecords(commessaQuery, [CommessaId]);
-
-    if (commessaResult.length === 0) {
-      return res.status(400).json({ error: 'Commessa non trovata' });
-    }
-
-    const CommessaName = commessaResult[0].CommessaName;
-
-    // Gestisci il caso in cui resourceInfo sia passato direttamente o tramite taskData
-    const resourceInfo = ganttProperties?.resourceInfo || req.body.taskData?.resources || [];
-
-    // Estrarre gli ID e i nomi dei collaboratori
-    const collaboratorIds = Array.isArray(resourceInfo)
-      ? resourceInfo.map((resource) => resource.resourceId || resource.id)
-      : [];
-
-    const IncaricatoName = Array.isArray(resourceInfo)
-      ? resourceInfo.map((resource) => resource.resourceName || resource.text).join(', ')
-      : '';
-
-      
-
-      const predecessorsName = ganttProperties.predecessorsName;
-      
-      const CategoryColor = ganttProperties?.CategoryColor || req.body.taskData?.CategoryColor;
-      
-      const query = `
+    const query = `
       UPDATE Eventi SET
         Titolo = ?, 
         Inizio = ?, 
         Fine = ?, 
         CommessaId = ?, 
-        CommessaName = ?, 
         Duration = ?, 
         Progress = ?, 
-        IncaricatoId = ?, 
-        IncaricatoName = ?, 
         Colore = ?, 
         Descrizione = ?, 
         parentID = ?, 
         Info = ?, 
-        Dipendenza = ?  -- Aggiorna il campo Dipendenza
-        
+        Dipendenza = ? 
       WHERE Id = ?
     `;
-    
+
     const params = [
       Subject,
       StartTime,
       EndTime,
       CommessaId,
-      CommessaName,
       Duration,
       Progress,
-      collaboratorIds.join(','), 
-      IncaricatoName,
       CategoryColor,
       Description,
       parentID,
       info,
-      predecessorsName,
-       // Valore della dipendenza
+      predecessorsName, // Campo aggiornato con valore predefinito
       req.params.id,
     ];
-    await runQuery(query, params);
-    
-
     await runQuery(query, params);
 
     res.json({ message: "Evento aggiornato con successo!" });
@@ -251,6 +211,7 @@ app.put('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
+
 
 
 app.post('/api/eventi', async (req, res) => {

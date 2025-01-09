@@ -24,9 +24,20 @@ const App = () => {
   
   const handleRefresh = async () => {
     try {
-      const updatedEvents = await fetchEvents(projectResources);
+      const updatedEvents = await fetchEvents(projectResources); // Rilegge i dati dal backend
       setEvents(updatedEvents); // Aggiorna lo stato globale degli eventi
       setFilteredEventsForGantt(updatedEvents); // Aggiorna i dati filtrati per il Gantt
+  
+      // Simula un'operazione di aggiornamento per sincronizzare immediatamente il Gantt
+      if (updatedEvents.length > 0) {
+        const fakeUpdate = {
+          ...updatedEvents[0], // Prendi il primo evento come esempio
+          Subject: updatedEvents[0].Subject + " (sincronizzato)",
+          predecessorsName: updatedEvents[0].predecessorsName || "", // Assicura che il campo sia presente
+        };
+        handleUpdateEvent(fakeUpdate);
+      }
+  
       Swal.fire({
         icon: 'success',
         title: 'Aggiornato!',
@@ -42,10 +53,11 @@ const App = () => {
     }
   };
   
-
+  
 
   const handleUpdateEvent = async (updatedEvent) => {
     console.log("DATI in handleUpdateEvent:", updatedEvent);
+  
     try {
       const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
         method: 'PUT',
@@ -64,11 +76,19 @@ const App = () => {
           event.Id === updatedEventData.Id ? updatedEventData : event
         )
       );
+  
+      setFilteredEventsForGantt((prevFilteredEvents) =>
+        prevFilteredEvents.map((event) =>
+          event.Id === updatedEventData.Id ? updatedEventData : event
+        )
+      );
+  
       console.log("Evento aggiornato:", updatedEventData);
     } catch (error) {
       console.error("Errore durante l'aggiornamento dell'evento:", error);
     }
   };
+  
   
   
   
@@ -122,14 +142,12 @@ const App = () => {
         setProjectResources(projects);
   
         const collaboratorsData = await fetchCategoryResources();
-        console.log("[DEBUG] Tutti i collaboratori caricati:", collaboratorsData); // Log per verifica
-        setCollaborators(collaboratorsData); // Salva tutti i collaboratori
-        setCategoryResources(collaboratorsData); // Popola il menu Collaboratori filtrato inizialmente
+        setCollaborators(collaboratorsData);
+        setCategoryResources(collaboratorsData);
   
         const events = await fetchEvents(projects);
         setEvents(events);
-  
-        setFilteredEventsForGantt(events); // Inizialmente tutti gli eventi
+        setFilteredEventsForGantt(events); // Assicura che `filteredEventsForGantt` sia popolato
       } catch (error) {
         console.error("Errore nel caricamento dei dati:", error);
       }
