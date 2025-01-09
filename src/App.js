@@ -32,7 +32,7 @@ const App = () => {
       if (updatedEvents.length > 0) {
         const fakeUpdate = {
           ...updatedEvents[0], // Prendi il primo evento come esempio
-          Subject: updatedEvents[0].Subject + " (sincronizzato)",
+          Subject: updatedEvents[0].Subject ,
           predecessorsName: updatedEvents[0].predecessorsName || "", // Assicura che il campo sia presente
         };
         handleUpdateEvent(fakeUpdate);
@@ -99,27 +99,41 @@ const App = () => {
   const handleDeleteEvent = async (eventId) => {
     try {
       console.log(`Eliminazione evento con ID: ${eventId}`);
-
-      // Chiamata alla rotta DELETE del backend
+  
       const response = await fetch(`http://localhost:3001/api/eventi/${eventId}`, {
         method: 'DELETE',
       });
-
+  
       if (!response.ok) {
         throw new Error(`Errore durante l'eliminazione: ${response.statusText}`);
       }
-
+  
       console.log(`Evento con ID ${eventId} eliminato con successo.`);
-
-      // Aggiorna lo stato locale per riflettere la modifica
-      setEvents((prevEvents) => prevEvents.filter((event) => event.Id !== eventId));
-      setFilteredEventsForGantt((prevEvents) =>
-        prevEvents.filter((event) => event.Id !== eventId)
-      );
+  
+      // Aggiorna gli eventi dal backend
+      const updatedEventsResponse = await fetch('http://localhost:3001/api/eventi');
+      const updatedEvents = await updatedEventsResponse.json();
+      setEvents(updatedEvents);
+      setFilteredEventsForGantt(updatedEvents);
+  
+      // Chiamata farlocca
+      if (updatedEvents.length > 0) {
+        const fakeUpdate = {
+          ...updatedEvents[0], // Usa il primo evento come esempio
+          Subject: updatedEvents[0].Subject + " (sincronizzato)", // Modifica un campo
+        };
+        handleUpdateEvent(fakeUpdate);
+      }
     } catch (error) {
       console.error("Errore durante l'eliminazione dell'evento:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Errore!',
+        text: 'Si è verificato un errore durante l\'eliminazione dell\'evento.',
+      });
     }
   };
+  
 
 
   useEffect(() => {
@@ -284,31 +298,22 @@ const App = () => {
       }
   
       const result = await response.json();
-  
-      if (result.warning) {
-        Swal.fire({
-          icon: 'info',
-          title: 'NUOVO EVENTO',
-          text: result.warning,
-        });
-      }
-  
       console.log('Evento creato:', result.message);
   
-      // Ricarica gli eventi dal backend dopo aver aggiunto un nuovo evento
-      const updatedEventsResponse = await fetch('http://localhost:3001/api/eventi', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-  
-      if (!updatedEventsResponse.ok) {
-        throw new Error('Errore durante il caricamento degli eventi aggiornati.');
-      }
-  
+      // Aggiorna gli eventi dal backend
+      const updatedEventsResponse = await fetch('http://localhost:3001/api/eventi');
       const updatedEvents = await updatedEventsResponse.json();
-      setEvents(updatedEvents); // Aggiorna lo stato con gli eventi aggiornati
-      console.log("Eventi aggiornati ricevuti dal server:", updatedEvents);
+      setEvents(updatedEvents);
+      setFilteredEventsForGantt(updatedEvents);
   
+      // Chiamata farlocca
+      if (updatedEvents.length > 0) {
+        const fakeUpdate = {
+          ...updatedEvents[0], // Usa il primo evento come esempio
+          Subject: updatedEvents[0].Subject + " (sincronizzato)", // Modifica un campo
+        };
+        handleUpdateEvent(fakeUpdate);
+      }
     } catch (error) {
       console.error('Errore durante il salvataggio dell\'evento:', error);
       Swal.fire({
@@ -318,6 +323,7 @@ const App = () => {
       });
     }
   };
+  
   
   // Funzione per sincronizzare le commesse con il database MySQL
   const sincronizzaCommesse = async () => {

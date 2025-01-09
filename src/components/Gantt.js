@@ -352,8 +352,7 @@ const structuredData = selectedCommesse.flatMap((commessaId) => {
         },
       },
     },
-    
-    
+     
     
   ]}
   labelSettings={{
