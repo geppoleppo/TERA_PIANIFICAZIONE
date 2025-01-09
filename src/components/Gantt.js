@@ -17,11 +17,11 @@ import { DropDownList } from '@syncfusion/ej2-dropdowns';
 const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, onSaveEvent, onDeleteEvent, allCollaborators }) => {
   const ganttRef = useRef(null);
 
-  useEffect(() => {
+/*   useEffect(() => {
     if (ganttRef.current && ganttData.length > 0) {
       ganttRef.current.refresh(); // Forza l'aggiornamento dei dati
     }
-  }, [ganttData]);
+  }, [ganttData]); */
 
 
   // Risorse per il menu delle risorse (tutti i collaboratori)
@@ -130,7 +130,7 @@ const structuredData = selectedCommesse.flatMap((commessaId) => {
     allowTaskbarEditing: true,
     showDeleteConfirmDialog: true,
   }}
-  rowHeight={40} // Aumenta la larghezza delle righe
+  rowHeight={60} // Aumenta la larghezza delle righe
   toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll' ]}
 
   allowSelection={true}
@@ -236,7 +236,7 @@ const structuredData = selectedCommesse.flatMap((commessaId) => {
                 key="${index}"
                 src="${img.image}"
                 alt="${img.name}"
-                style="width: 35px; height: 35px; border-radius: 50%; margin-right: 4px;"
+                style="width: 55px; height: 55px; border-radius: 50%; margin-right: 4px;"
               />
             `
           )

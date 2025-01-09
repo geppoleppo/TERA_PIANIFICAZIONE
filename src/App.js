@@ -22,7 +22,28 @@ const App = () => {
   const [collaborators, setCollaborators] = useState([]); // Tutti i collaboratori
   
   
+  const handleRefresh = async () => {
+    try {
+      const updatedEvents = await fetchEvents(projectResources);
+      setEvents(updatedEvents); // Aggiorna lo stato globale degli eventi
+      setFilteredEventsForGantt(updatedEvents); // Aggiorna i dati filtrati per il Gantt
+      Swal.fire({
+        icon: 'success',
+        title: 'Aggiornato!',
+        text: 'I dati sono stati aggiornati correttamente.',
+      });
+    } catch (error) {
+      console.error('Errore durante l\'aggiornamento dei dati:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Errore!',
+        text: 'Non è stato possibile aggiornare i dati. Riprova più tardi.',
+      });
+    }
+  };
   
+
+
   const handleUpdateEvent = async (updatedEvent) => {
     console.log("DATI in handleUpdateEvent:", updatedEvent);
     try {
@@ -390,10 +411,14 @@ const App = () => {
       </div>
 
       <div>
-        <button onClick={handleSaveAssociations} className="btn btn-primary">
-          Memorizza
-        </button>
-      </div>
+  <button onClick={handleSaveAssociations} className="btn btn-primary">
+    Memorizza
+  </button>
+  <button onClick={handleRefresh} className="btn btn-primary" style={{ marginLeft: '10px' }}>
+    Aggiorna
+  </button>
+</div>
+
 
 
       {/* Sidebar e Gantt */}
