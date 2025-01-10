@@ -210,7 +210,7 @@ const structuredData = selectedCommesse.flatMap((commessaId) => {
     {
       field: 'IncaricatoName',
       headerText: 'Collaboratori',
-      width: 250,
+      width: 350,
       template: (data) => {
         if (!data.taskData.immagini || data.taskData.immagini.length === 0) {
           return (
@@ -236,7 +236,7 @@ const structuredData = selectedCommesse.flatMap((commessaId) => {
                 key="${index}"
                 src="${img.image}"
                 alt="${img.name}"
-                style="width: 55px; height: 55px; border-radius: 50%; margin-right: 4px;"
+                style="width: 35px; height: 35px; border-radius: 50%; margin-right: 4px;"
               />
             `
           )
@@ -260,7 +260,7 @@ const structuredData = selectedCommesse.flatMap((commessaId) => {
     { field: 'IncaricatoId', headerText: 'IncaricatoId', width: 150, visible: false },
     {
       field: 'predecessorsName',
-      visible: false,
+      visible: true,
       headerText: 'Dipendenze',
       width: 200,
       edit: {
@@ -361,6 +361,7 @@ const structuredData = selectedCommesse.flatMap((commessaId) => {
   }}
   splitterSettings={{
     columnIndex: 1, // Colonna per la struttura gerarchica
+    position: '25%', // Imposta la larghezza iniziale al 40% (puoi regolarlo a piacere)
   }}
   height="650px"
   projectStartDate={new Date('12/15/2024')}
