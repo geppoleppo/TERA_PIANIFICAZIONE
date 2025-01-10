@@ -120,7 +120,7 @@ const App = () => {
       if (updatedEvents.length > 0) {
         const fakeUpdate = {
           ...updatedEvents[0], // Usa il primo evento come esempio
-          Subject: updatedEvents[0].Subject + " (sincronizzato)", // Modifica un campo
+          Subject: updatedEvents[0].Subject, // Modifica un campo
         };
         handleUpdateEvent(fakeUpdate);
       }
@@ -223,8 +223,19 @@ const App = () => {
   
       const selectedIds = uniqueCommesse.map((res) => res.id);
       setSelectedCommesse(selectedIds);
+  
+      // **Aggiungi la chiamata farlocca qui**
+      if (filteredEvents.length > 0) {
+        const fakeUpdate = {
+          ...filteredEvents[0], // Prendi il primo evento come esempio
+          Subject: filteredEvents[0].Subject , // Modifica un campo
+          predecessorsName: filteredEvents[0].predecessorsName || '', // Assicura che sia presente
+        };
+        handleUpdateEvent(fakeUpdate); // Esegui la chiamata farlocca
+      }
     }
   }, [selectedCollaboratori, projectResources, categoryResources]);
+  
   
   
   

@@ -24,6 +24,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
   }, [ganttData]); */
 
 
+
   // Risorse per il menu delle risorse (tutti i collaboratori)
   const editingResources = allCollaborators.map((collaborator) => ({
     resourceId: collaborator.id,
