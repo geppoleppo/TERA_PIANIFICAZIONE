@@ -27,6 +27,7 @@ const App = () => {
       const updatedEvents = await fetchEvents(projectResources); // Rilegge i dati dal backend
       setEvents(updatedEvents); // Aggiorna lo stato globale degli eventi
       setFilteredEventsForGantt(updatedEvents); // Aggiorna i dati filtrati per il Gantt
+      console.log("EVENTI AGGIORNATI FAKE",updatedEvents)
   
       // Simula un'operazione di aggiornamento per sincronizzare immediatamente il Gantt
       if (updatedEvents.length > 0) {
@@ -34,7 +35,11 @@ const App = () => {
           ...updatedEvents[0], // Prendi il primo evento come esempio
           Subject: updatedEvents[0].Subject ,
           predecessorsName: updatedEvents[0].predecessorsName || "", // Assicura che il campo sia presente
+          IncaricatoId:updatedEvents[0].IncaricatoId,
+          IncaricatoName:updatedEvents[0].IncaricatoName
         };
+
+        console.log("EVENTI AGGIORNATI DOPO",fakeUpdate)
         handleUpdateEvent(fakeUpdate);
       }
   
@@ -120,7 +125,7 @@ const App = () => {
       if (updatedEvents.length > 0) {
         const fakeUpdate = {
           ...updatedEvents[0], // Usa il primo evento come esempio
-          Subject: updatedEvents[0].Subject + " (sincronizzato)", // Modifica un campo
+          Subject: updatedEvents[0].Subject , // Modifica un campo
         };
         handleUpdateEvent(fakeUpdate);
       }
@@ -310,7 +315,7 @@ const App = () => {
       if (updatedEvents.length > 0) {
         const fakeUpdate = {
           ...updatedEvents[0], // Usa il primo evento come esempio
-          Subject: updatedEvents[0].Subject + " (sincronizzato)", // Modifica un campo
+          Subject: updatedEvents[0].Subject , // Modifica un campo
         };
         handleUpdateEvent(fakeUpdate);
       }

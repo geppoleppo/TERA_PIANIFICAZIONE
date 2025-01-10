@@ -157,6 +157,8 @@ app.get('/api/eventi', async (req, res) => {
 
 
 app.put('/api/eventi/:id', async (req, res) => {
+  console.log("Dati ricevuti per aggiornamento evento:", req.body);
+
   const {
     Subject,
     StartTime,
@@ -169,10 +171,31 @@ app.put('/api/eventi/:id', async (req, res) => {
     parentID,
     ganttProperties,
     info,
-    predecessorsName = "", // Default vuoto se assente
+    predecessorsName = "",
   } = req.body;
 
   try {
+    // Estrai i collaboratori aggiornati da ganttProperties.resourceInfo, taskData.resources o direttamente da IncaricatoId/IncaricatoName
+    let resources = ganttProperties?.resourceInfo || req.body.taskData?.resources || [];
+    let IncaricatoId, IncaricatoName;
+
+    if (resources.length > 0) {
+      // Dati da resourceInfo o taskData.resources
+      IncaricatoId = resources.map(resource => resource.resourceId).join(',');
+      IncaricatoName = resources.map(resource => resource.resourceName).join(', ');
+    } else if (Array.isArray(req.body.IncaricatoId)) {
+      // Dati direttamente da IncaricatoId/IncaricatoName
+      IncaricatoId = req.body.IncaricatoId.join(',');
+      IncaricatoName = req.body.IncaricatoName || "Nessuno";
+    } else {
+      // Default per evitare errori
+      IncaricatoId = "";
+      IncaricatoName = "Nessuno";
+    }
+
+    console.log("Collaboratori aggiornati:", { IncaricatoId, IncaricatoName });
+
+    // Query per aggiornare i dati
     const query = `
       UPDATE Eventi SET
         Titolo = ?, 
@@ -185,7 +208,9 @@ app.put('/api/eventi/:id', async (req, res) => {
         Descrizione = ?, 
         parentID = ?, 
         Info = ?, 
-        Dipendenza = ? 
+        Dipendenza = ?, 
+        IncaricatoId = ?, 
+        IncaricatoName = ? 
       WHERE Id = ?
     `;
 
@@ -200,9 +225,12 @@ app.put('/api/eventi/:id', async (req, res) => {
       Description,
       parentID,
       info,
-      predecessorsName, // Campo aggiornato con valore predefinito
+      predecessorsName,
+      IncaricatoId, // IDs dei collaboratori aggiornati
+      IncaricatoName, // Nomi dei collaboratori aggiornati
       req.params.id,
     ];
+
     await runQuery(query, params);
 
     res.json({ message: "Evento aggiornato con successo!" });
@@ -211,6 +239,7 @@ app.put('/api/eventi/:id', async (req, res) => {
     res.status(500).json({ error: "Errore durante l'aggiornamento dell'evento." });
   }
 });
+
 
 
 
