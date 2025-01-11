@@ -194,42 +194,69 @@ const App = () => {
     console.log('USE EFFECT 3 - Selezione Collaboratori aggiornata:', selectedCollaboratori);
   
     if (selectedCollaboratori.length === 0) {
+      console.log('USE EFFECT 3: Nessun collaboratore selezionato, caricamento dati placeholder');
+      
+      // Aggiungi un evento farlocco per simulare un Gantt vuoto
+      setFilteredEventsForGantt([
+        {
+          Id: 0,
+          Subject: "Nessun evento disponibile",
+          StartTime: new Date(),
+          EndTime: new Date(),
+          Duration: 0,
+          Progress: 0,
+          IncaricatoName: "",
+          IncaricatoId: [],
+          CommessaId: null,
+          CommessaName: "Nessuna commessa",
+          parentID: null,
+          resources: [],
+          info: "",
+          predecessorsName: "",
+          CategoryColor: "#CCCCCC",
+          immagini: [],
+        },
+      ]);
+  
+      // Effettua un refresh farlocco
+      setTimeout(() => {
+        console.log('USE EFFECT 3: Refresh farlocco eseguito');
+      }, 100);
+  
       setFilteredProjectResources([]);
       setSelectedCommesse([]);
-      setFilteredEventsForGantt([]); // Nessun evento mostrato se nessun collaboratore selezionato
-    } else {
-      // Filtra le commesse associate ai collaboratori selezionati
-      const associatedCommesseFromCollaboratori = projectResources.filter((commessa) =>
-        selectedCollaboratori.some((collabId) => {
-          const collaboratore = categoryResources.find((c) => c.id === collabId);
-          return collaboratore?.groupIds.includes(commessa.id);
-        })
-      );
-  
-      // Filtra gli eventi associati ai collaboratori selezionati
-      const filteredEvents = events.filter((event) => {
-        const incaricatoIds = Array.isArray(event.IncaricatoId)
-          ? event.IncaricatoId
-          : typeof event.IncaricatoId === 'string'
-          ? event.IncaricatoId.split(',').map(Number)
-          : [];
-        return selectedCollaboratori.some((collabId) => incaricatoIds.includes(collabId));
-      });
-  
-      setFilteredEventsForGantt(filteredEvents);
-  
-      // Aggiorna le commesse da visualizzare
-      const uniqueCommesse = Array.from(
-        new Set(associatedCommesseFromCollaboratori.map((c) => c.id))
-      ).map((id) => associatedCommesseFromCollaboratori.find((c) => c.id === id));
-  
-      console.log('Commesse filtrate:', uniqueCommesse);
-      setFilteredProjectResources(uniqueCommesse);
-  
-      const selectedIds = uniqueCommesse.map((res) => res.id);
-      setSelectedCommesse(selectedIds);
+      return;
     }
-  }, [selectedCollaboratori, projectResources, categoryResources]);
+  
+    const associatedCommesseFromCollaboratori = projectResources.filter((commessa) =>
+      selectedCollaboratori.some((collabId) => {
+        const collaboratore = categoryResources.find((c) => c.id === collabId);
+        return collaboratore?.groupIds.includes(commessa.id);
+      })
+    );
+  
+    const filteredEvents = events.filter((event) => {
+      const incaricatoIds = Array.isArray(event.IncaricatoId)
+        ? event.IncaricatoId
+        : typeof event.IncaricatoId === 'string'
+        ? event.IncaricatoId.split(',').map(Number)
+        : [];
+      return selectedCollaboratori.some((collabId) => incaricatoIds.includes(collabId));
+    });
+  
+    setFilteredEventsForGantt(filteredEvents);
+  
+    const uniqueCommesse = Array.from(
+      new Set(associatedCommesseFromCollaboratori.map((c) => c.id))
+    ).map((id) => associatedCommesseFromCollaboratori.find((c) => c.id === id));
+  
+    console.log('USE EFFECT 3 - Commesse filtrate:', uniqueCommesse);
+    setFilteredProjectResources(uniqueCommesse);
+    const selectedIds = uniqueCommesse.map((res) => res.id);
+    setSelectedCommesse(selectedIds);
+  }, [selectedCollaboratori, projectResources, categoryResources, events]);
+  
+  
   
   
   

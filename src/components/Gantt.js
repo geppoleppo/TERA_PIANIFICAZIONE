@@ -35,40 +35,61 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
   // Trasforma i dati in formato gerarchico
   // Trasforma i dati in formato gerarchico
   // Trasforma i dati in formato gerarchico
-  const structuredData = selectedCommesse.flatMap((commessaId) => {
-    const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
-    const commessa = projectResources.find((pr) => pr.id === commessaId);
+  const structuredData = selectedCommesse.length > 0 
+  ? selectedCommesse.flatMap((commessaId) => {
+      const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
+      const commessa = projectResources.find((pr) => pr.id === commessaId);
 
-    if (commessaEvents.length === 0) return [];
+      if (commessaEvents.length === 0) return [];
 
-    const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
+      const commessaName = commessaEvents[0]?.CommessaName || `Commessa ${commessaId}`;
 
-    return commessaEvents.map((event) => {
-      const immagini = (event.IncaricatoImages || []).map((img, index) => ({
-        image: img,
-        name: (event.IncaricatoName || '').split(', ')[index] || 'Collaboratore sconosciuto',
-      }));
+      return commessaEvents.map((event) => {
+        const immagini = (event.IncaricatoImages || []).map((img, index) => ({
+          image: img,
+          name: (event.IncaricatoName || '').split(', ')[index] || 'Collaboratore sconosciuto',
+        }));
 
-      return {
-        Id: event.Id,
-        Subject: event.Subject,
-        StartTime: event.StartTime || new Date(),
-        EndTime: event.EndTime || new Date(),
-        Duration: event.Duration || 0,
-        Progress: event.Progress || 0,
-        IncaricatoName: event.IncaricatoName || '',
-        IncaricatoId: event.IncaricatoId || [],
-        CommessaId: commessaId,
-        CommessaName: commessaName,
-        parentID: event.parentID || null,
-        resources: event.IncaricatoId || [],
-        info: event.info || '',
-        predecessorsName: event.predecessorsName,
-        CategoryColor: commessa ? commessa.color : '#000000',
-        immagini,
-      };
-    });
-  });
+        return {
+          Id: event.Id,
+          Subject: event.Subject,
+          StartTime: event.StartTime || new Date(),
+          EndTime: event.EndTime || new Date(),
+          Duration: event.Duration || 0,
+          Progress: event.Progress || 0,
+          IncaricatoName: event.IncaricatoName || '',
+          IncaricatoId: event.IncaricatoId || [],
+          CommessaId: commessaId,
+          CommessaName: commessaName,
+          parentID: event.parentID || null,
+          resources: event.IncaricatoId || [],
+          info: event.info || '',
+          predecessorsName: event.predecessorsName,
+          CategoryColor: commessa ? commessa.color : '#000000',
+          immagini,
+        };
+      });
+    })
+  : [
+      {
+        Id: 0,
+        Subject: "Nessun evento disponibile",
+        StartTime: '2000-12-18T07:00:00.000Z',
+        EndTime: '2000-12-18T07:00:00.000Z',
+        Duration: 0,
+        Progress: 0,
+        IncaricatoName: "",
+        IncaricatoId: [],
+        CommessaId: null,
+        CommessaName: "SELEZIONA UN COLLABORATORE!",
+        parentID: null,
+        resources: [],
+        info: "",
+        predecessorsName: "",
+        CategoryColor: "#CCCCCC",
+        immagini: [],
+      },
+    ];
 
 
 
@@ -361,11 +382,11 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
           }}
           splitterSettings={{
             columnIndex: 1, // Colonna per la struttura gerarchica
-            position: '25%', // Imposta la larghezza iniziale al 40% (puoi regolarlo a piacere)
+            position: '30%', // Imposta la larghezza iniziale al 40% (puoi regolarlo a piacere)
           }}
           height="650px"
           projectStartDate={new Date('12/15/2024')}
-          projectEndDate={new Date('12/31/2025')}
+          projectEndDate={new Date('12/31/2026')}
           actionComplete={(args) => {
             if (args.requestType === 'save') {
               console.log('Aggiornamento completato:', args.data);
