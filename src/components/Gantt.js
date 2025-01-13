@@ -9,6 +9,9 @@ import {
   RowDD,
   Inject,
   Filter,
+  ExcelExport,
+  PdfExport,
+  
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
@@ -151,9 +154,13 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
             showDeleteConfirmDialog: true,
           }}
           rowHeight={60} // Aumenta la larghezza delle righe
-          toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']}
-
+          toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll','ZoomIn', 'ZoomOut', 'ZoomToFit', 'ExcelExport', 'CsvExport', 'PdfExport']}
+          allowExcelExport={ true}
+          allowPdfExport={ true}
           allowSelection={true}
+
+
+          
           gridLines="Both"
           height="450px"
           treeColumnIndex={1} // Indice della colonna CommessaName
@@ -463,7 +470,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
         >
 
-          <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD, Filter]} />
+          <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD, Filter,ExcelExport, PdfExport,]} />
 
 
 
