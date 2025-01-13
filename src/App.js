@@ -189,14 +189,27 @@ const App = () => {
       projectResources
     );
   };
-
   useEffect(() => {
     console.log('USE EFFECT 3 - Selezione Collaboratori aggiornata:', selectedCollaboratori);
   
-    if (selectedCollaboratori.length === 0) {
-      console.log('USE EFFECT 3: Nessun collaboratore selezionato, caricamento dati placeholder');
-      
-      // Aggiungi un evento farlocco per simulare un Gantt vuoto
+    const associatedCommesseFromCollaboratori = projectResources.filter((commessa) =>
+      selectedCollaboratori.some((collabId) => {
+        const collaboratore = categoryResources.find((c) => c.id === collabId);
+        return collaboratore?.groupIds.includes(commessa.id);
+      })
+    );
+  
+    const filteredEvents = events.filter((event) => {
+      const incaricatoIds = Array.isArray(event.IncaricatoId)
+        ? event.IncaricatoId
+        : typeof event.IncaricatoId === 'string'
+        ? event.IncaricatoId.split(',').map(Number)
+        : [];
+      return selectedCollaboratori.some((collabId) => incaricatoIds.includes(collabId));
+    });
+  
+    if (filteredEvents.length === 0) {
+      console.log('USE EFFECT 3: Nessun evento trovato, caricamento dati placeholder');
       setFilteredEventsForGantt([
         {
           Id: 0,
@@ -217,34 +230,9 @@ const App = () => {
           immagini: [],
         },
       ]);
-  
-      // Effettua un refresh farlocco
-      setTimeout(() => {
-        console.log('USE EFFECT 3: Refresh farlocco eseguito');
-      }, 100);
-  
-      setFilteredProjectResources([]);
-      setSelectedCommesse([]);
-      return;
+    } else {
+      setFilteredEventsForGantt(filteredEvents);
     }
-  
-    const associatedCommesseFromCollaboratori = projectResources.filter((commessa) =>
-      selectedCollaboratori.some((collabId) => {
-        const collaboratore = categoryResources.find((c) => c.id === collabId);
-        return collaboratore?.groupIds.includes(commessa.id);
-      })
-    );
-  
-    const filteredEvents = events.filter((event) => {
-      const incaricatoIds = Array.isArray(event.IncaricatoId)
-        ? event.IncaricatoId
-        : typeof event.IncaricatoId === 'string'
-        ? event.IncaricatoId.split(',').map(Number)
-        : [];
-      return selectedCollaboratori.some((collabId) => incaricatoIds.includes(collabId));
-    });
-  
-    setFilteredEventsForGantt(filteredEvents);
   
     const uniqueCommesse = Array.from(
       new Set(associatedCommesseFromCollaboratori.map((c) => c.id))
@@ -255,6 +243,7 @@ const App = () => {
     const selectedIds = uniqueCommesse.map((res) => res.id);
     setSelectedCommesse(selectedIds);
   }, [selectedCollaboratori, projectResources, categoryResources, events]);
+  
   
   
   
