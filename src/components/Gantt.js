@@ -11,7 +11,7 @@ import {
   Filter,
   ExcelExport,
   PdfExport,
-  
+
 } from '@syncfusion/ej2-react-gantt';
 import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
@@ -37,8 +37,8 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
   // Trasforma i dati in formato gerarchico
   const structuredData =
-  selectedCommesse.length > 0
-    ? selectedCommesse.flatMap((commessaId) => {
+    selectedCommesse.length > 0
+      ? selectedCommesse.flatMap((commessaId) => {
         const commessaEvents = ganttData.filter((event) => event.CommessaId === commessaId);
         const commessa = projectResources.find((pr) => pr.id === commessaId);
 
@@ -72,7 +72,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
           };
         });
       })
-    : [
+      : [
         {
           Id: 0,
           Subject: "Nessun evento disponibile",
@@ -103,6 +103,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
     <div>
       {structuredData.length > 0 ? (
         <GanttComponent
+          id="ganttTera" // Nome univoco per il Gantt
           key={JSON.stringify(structuredData)}
           ref={ganttRef}
           dataSource={structuredData}
@@ -154,13 +155,53 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
             showDeleteConfirmDialog: true,
           }}
           rowHeight={60} // Aumenta la larghezza delle righe
-          toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll','ZoomIn', 'ZoomOut', 'ZoomToFit', 'ExcelExport', 'CsvExport', 'PdfExport']}
-          allowExcelExport={ true}
-          allowPdfExport={ true}
+          toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'PdfExport']}
+          allowExcelExport={true}
+          allowPdfExport={true}
           allowSelection={true}
+          toolbarClick={(args) => {
+            if (args.item.id === 'ganttTera_pdfexport') {
+              const pdfExportProperties = {
+                fileName: 'GanttChartExport.pdf',
+                pageSize: 'A2',
+                pageOrientation: 'Landscape',
+                fitToWidth: true,
+                header: {
+                  fromTop: 0,
+                  height: 50,
+                  contents: [
+                    {
+                      type: 'Text',
+                      value: 'TERA GANTT',
+                      position: { x: 200, y: 20 },
+                      style: { textBrushColor: '#000000', fontSize: 16 },
+                    },
+                  ],
+                },
+                footer: {
+                  fromBottom: 0,
+                  height: 30,
+                  contents: [
+                    {
+                      type: 'Text',
+                      value: 'Page ${currentPage} of ${totalPages}',
+                      position: { x: 250, y: 10 },
+                      style: { textBrushColor: '#808080', fontSize: 10 },
+                    },
+                  ],
+                },
+              };
+              
+              ganttRef.current.pdfExport(pdfExportProperties).catch((error) => {
+                console.error('Errore durante l\'esportazione PDF:', error);
+              });
+            }
+          }}
 
 
-          
+
+
+
           gridLines="Both"
           height="450px"
           treeColumnIndex={1} // Indice della colonna CommessaName
@@ -403,12 +444,6 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
           taskType="FixedWork"
 
-
-          toolbarClick={(args: ClickEventArgs) => {
-            if (args.item.id === 'showhidebar') {
-              ganttRef.current.showOverAllocation = ganttRef.current.showOverAllocation ? false : true;
-            }
-          }}
           actionBegin={(args) => {
             if (args.requestType === 'beforeSave') {
               // Se l'evento è un figlio
@@ -470,7 +505,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
         >
 
-          <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD, Filter,ExcelExport, PdfExport,]} />
+          <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD, Filter, ExcelExport, PdfExport,]} />
 
 
 
