@@ -4,6 +4,7 @@ import Gantt from './components/Gantt';
 import Sidebar from './sidebar/Sidebar';
 import Select from 'react-select';
 import Swal from 'sweetalert2'; // Assicurati di installare SweetAlert2 per i popup
+import MarkerForm from './components/MarkerForm';
 import {
   fetchProjectResources,
   fetchCategoryResources,
@@ -20,7 +21,28 @@ const App = () => {
   const [events, setEvents] = useState([]); // Eventi originali
   const [filteredEventsForGantt, setFilteredEventsForGantt] = useState([]); // Eventi filtrati
   const [collaborators, setCollaborators] = useState([]); // Tutti i collaboratori
+  const [markers, setMarkers] = useState([]);
   
+  const handleSaveMarker = async (newMarker) => {
+    try {
+        const response = await fetch('http://localhost:3001/api/markers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newMarker),
+        });
+
+        if (!response.ok) {
+            throw new Error('Errore durante il salvataggio del marker.');
+        }
+
+        const savedMarker = await response.json();
+        setMarkers((prevMarkers) => [...prevMarkers, savedMarker]);
+    } catch (error) {
+        console.error('Errore durante il salvataggio del marker:', error);
+    }
+};
+
+
   
   const handleRefresh = async () => {
     try {
@@ -157,24 +179,29 @@ const App = () => {
     console.log('USE EFFECT 2', events);
     const loadData = async () => {
       try {
-        const projects = await fetchProjectResources();
-        setProjectResources(projects);
-  
-        const collaboratorsData = await fetchCategoryResources();
-        setCollaborators(collaboratorsData);
-        setCategoryResources(collaboratorsData);
-  
-        const events = await fetchEvents(projects);
-        setEvents(events);
-        setFilteredEventsForGantt(events); // Assicura che `filteredEventsForGantt` sia popolato
-      } catch (error) {
-        console.error("Errore nel caricamento dei dati:", error);
-      }
-    };
-    loadData();
-  }, []);
+          const projects = await fetchProjectResources();
+          setProjectResources(projects);
 
- 
+          const collaboratorsData = await fetchCategoryResources();
+          setCollaborators(collaboratorsData);
+          setCategoryResources(collaboratorsData);
+
+          const events = await fetchEvents(projects);
+          setEvents(events);
+          setFilteredEventsForGantt(events);
+
+          // Fetch markers
+          const response = await fetch('http://localhost:3001/api/markers');
+          const markerData = await response.json();
+          setMarkers(markerData);
+      } catch (error) {
+          console.error('Errore nel caricamento dei dati:', error);
+      }
+  };
+
+  loadData();
+}, []);
+
   
 
 
@@ -467,6 +494,8 @@ const App = () => {
 
 
       {/* Sidebar e Gantt */}
+      <MarkerForm onSaveMarker={handleSaveMarker} events={events} />
+
       <Sidebar
         setProjectResources={setProjectResources}
         filteredProjectResources={filteredProjectResources}
@@ -474,6 +503,7 @@ const App = () => {
       />
 <Gantt
   ganttData={filteredEventsForGantt}
+  markers={markers} // Passa i marker al Gantt
   projectResources={projectResources} // Per il menu delle commesse
   selectedCommesse={selectedCommesse} // Per gli ID delle commesse selezionabili
   allCollaborators={collaborators} // Tutti i collaboratori

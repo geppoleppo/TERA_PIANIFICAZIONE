@@ -516,35 +516,31 @@ app.put('/api/collaboratori/:id', async (req, res) => {
 });
 
 // Aggiungi un nuovo marker
-app.post('/api/markers', (req, res) => {
-  const { label, day } = req.body;
-
-  const query = 'INSERT INTO Markers (Label, Day) VALUES (?, ?)';
-  runQuery(query, [label, day])
-    .then((result) => {
-      console.log("Risultato dell'inserimento:", result); // Log utile per il debug
-      if (!result.insertId) {
-        return res.status(500).json({ error: "Id non generato durante l'inserimento." });
-      }
-      res.status(201).json({ id: result.insertId, label, day });
-    })
-    .catch((err) => {
-      console.error("Errore durante il salvataggio del marker:", err);
-      res.status(500).json({ error: "Errore durante il salvataggio del marker." });
-    });
+app.post('/api/markers', async (req, res) => {
+  const { label, day, severity, eventId } = req.body;
+  try {
+      await runQuery('INSERT INTO Markers (Label, Day, Severity, EventId) VALUES (?, ?, ?, ?)', [label, day, severity, eventId]);
+      res.status(201).json({ message: 'Marker creato con successo.' });
+  } catch (error) {
+      res.status(500).json({ error: 'Errore durante la creazione del marker.' });
+  }
 });
+
+
+
 
 
 // Recupera tutti i marker
-app.get('/api/markers', (req, res) => {
-  const query = 'SELECT * FROM Markers';
-  getRecords(query)
-    .then((markers) => res.json(markers))
-    .catch((err) => {
-      console.error("Errore durante il recupero dei marker:", err);
-      res.status(500).json({ error: "Errore durante il recupero dei marker." });
-    });
+app.get('/api/markers', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM Markers';
+      const markers = await getRecords(query);
+      res.json(markers);
+  } catch (error) {
+      res.status(500).json({ error: 'Errore durante il recupero dei marker.' });
+  }
 });
+
 
 app.post('/api/memorizza', async (req, res) => {
   const { collaboratoreId, commesseIds } = req.body;

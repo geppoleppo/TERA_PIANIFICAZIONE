@@ -17,7 +17,7 @@ import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
 
 
-const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, onSaveEvent, onDeleteEvent, allCollaborators }) => {
+const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, onSaveEvent, onDeleteEvent, allCollaborators,markers }) => {
   const ganttRef = useRef(null);
 
   /*   useEffect(() => {
@@ -93,8 +93,25 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
         },
       ];
 
-
-
+      const groupedMarkers = markers.reduce((acc, marker) => {
+        const dateKey = new Date(marker.Day).toISOString().split('T')[0];
+        if (!acc[dateKey]) {
+            acc[dateKey] = { ...marker, Label: [marker.Label] }; // Crea il gruppo
+        } else {
+            acc[dateKey].Label.push(marker.Label); // Aggiungi l'etichetta al gruppo
+        }
+        return acc;
+    }, {});
+    
+    const formattedMarkers = Object.values(groupedMarkers).map((group) => ({
+        day: group.Day ? new Date(group.Day) : new Date(),
+        label: group.Label.join(", "), // Unisci le etichette
+        cssClass: group.Severity ? group.Severity.toLowerCase() + '-marker' : 'low-marker',
+    }));
+  
+  
+      console.log('markers:', markers);
+  console.log('formattedMarkers:', formattedMarkers);
   console.log('GanttData:', ganttData);
   console.log('Dati strutturati per il Gantt:', structuredData);
   //console.log('Risorse calcolate:', projectResources);
@@ -104,6 +121,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
       {structuredData.length > 0 ? (
         <GanttComponent
           id="ganttTera" // Nome univoco per il Gantt
+          eventMarkers={formattedMarkers} // Passa i marker formattati al Gantt
           key={JSON.stringify(structuredData)}
           ref={ganttRef}
           dataSource={structuredData}
@@ -505,7 +523,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
 
         >
 
-          <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize, RowDD, Filter, ExcelExport, PdfExport,]} />
+          <Inject services={[DayMarkers, Selection, DayMarkers, Toolbar, Edit, Resize, RowDD, Filter, ExcelExport, PdfExport,]} />
 
 
 
