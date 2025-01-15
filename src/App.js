@@ -496,11 +496,8 @@ const App = () => {
   </button>
 </div>
 
-
-
       {/* Sidebar e Gantt */}
-      <MarkerForm onSaveMarker={handleSaveMarker} events={events} />
-
+      
       <Sidebar
     setProjectResources={setProjectResources}
     filteredProjectResources={filteredProjectResources}

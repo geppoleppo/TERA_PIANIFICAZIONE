@@ -63,3 +63,23 @@ button {
 button:hover {
     background-color: #0056b3; /* Cambia colore al passaggio del mouse */
 }
+.low-marker {
+  background-color: green;
+  color: white;
+  padding: 3px;
+  border-radius: 2px;
+}
+
+.medium-marker {
+  background-color: orange;
+  color: white;
+  padding: 3px;
+  border-radius: 2px;
+}
+
+.high-marker {
+  background-color: red;
+  color: white;
+  padding: 3px;
+  border-radius: 2px;
+}

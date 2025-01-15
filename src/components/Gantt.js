@@ -106,11 +106,11 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
       const formattedMarkers = filteredMarkers.map((marker) => ({
           day: new Date(marker.Day),
           label: marker.Label,
+          visible: false,
           cssClass: marker.Severity.toLowerCase() + '-marker',
       }));
       
-      console.log('Marker formattati per il Gantt:', formattedMarkers);
-      
+      console.log('CSS Class per i Marker:', formattedMarkers.map(marker => marker.cssClass));
 
 
       const groupedMarkers = markers.reduce((acc, marker) => {
