@@ -63,23 +63,22 @@ button {
 button:hover {
     background-color: #0056b3; /* Cambia colore al passaggio del mouse */
 }
-.low-marker {
-  background-color: green;
+.low-marker, .medium-marker, .high-marker {
+  background-color: var(--marker-color, green); /* Cambia colore in base al tipo */
   color: white;
-  padding: 3px;
-  border-radius: 2px;
+  padding: 1px;
+  border-radius: 4px;
+  text-align: center;
+  white-space: pre-line; /* Interpreta \n come nuova riga */
+  word-wrap: break-word; /* Spezza le parole troppo lunghe */
 }
 
 .medium-marker {
-  background-color: orange;
-  color: white;
-  padding: 3px;
-  border-radius: 2px;
+  --marker-color: orange;
 }
 
 .high-marker {
-  background-color: red;
-  color: white;
-  padding: 3px;
-  border-radius: 2px;
+  --marker-color: red;
 }
+
+

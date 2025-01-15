@@ -20,11 +20,11 @@ import { DropDownList } from '@syncfusion/ej2-dropdowns';
 const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, onSaveEvent, onDeleteEvent, allCollaborators,markers }) => {
   const ganttRef = useRef(null);
 
-  /*   useEffect(() => {
-      if (ganttRef.current && ganttData.length > 0) {
-        ganttRef.current.refresh(); // Forza l'aggiornamento dei dati
-      }
-    }, [ganttData]); */
+useEffect(() => {
+    if (ganttRef.current) {
+        ganttRef.current.refresh(); // Forza il refresh visivo
+    }
+}, [markers]); // Esegui ogni volta che i marker cambiano
 
 
   // Risorse per il menu delle risorse (tutti i collaboratori)
@@ -94,21 +94,27 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
           immagini: [],
         },
       ];
-
       const visibleEventIds = structuredData.map((event) => Number(event.Id));
-      console.log('Eventi visibili in structuredData:', visibleEventIds);
-      
       const filteredMarkers = markers.filter((marker) =>
           visibleEventIds.includes(Number(marker.EventId))
       );
       console.log('Marker filtrati basati su structuredData:', filteredMarkers);
       
-      const formattedMarkers = filteredMarkers.map((marker) => ({
-          day: new Date(marker.Day),
-          label: marker.Label,
-          visible: false,
-          cssClass: marker.Severity.toLowerCase() + '-marker',
-      }));
+      const formattedMarkers = filteredMarkers.map((marker) => {
+        const associatedEvent = structuredData.find(event => event.Id === Number(marker.EventId));
+        const eventName = associatedEvent ? associatedEvent.CommessaName || associatedEvent.Subject : "Evento sconosciuto";
+    
+        return {
+            day: new Date(marker.Day),
+            label: marker.Label, // Mostra solo la label breve
+            cssClass: marker.Severity.toLowerCase() + '-marker',
+            tooltip: `${eventName}\n${marker.Label}`, // Testo completo nel tooltip
+        };
+    });
+    
+    
+    
+      
       
       console.log('CSS Class per i Marker:', formattedMarkers.map(marker => marker.cssClass));
 
@@ -197,7 +203,8 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
             if (args.item.id === 'ganttTera_pdfexport') {
               const pdfExportProperties = {
                 fileName: 'GanttChartExport.pdf',
-                pageSize: 'A2',
+                columns:[1],
+                pageSize: 'A1',
                 pageOrientation: 'Landscape',
                 fitToWidth: true,
                 header: {

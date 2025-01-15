@@ -3,9 +3,12 @@ import './Sidebar.css';
 import { TwitterPicker } from 'react-color';
 import MarkerForm from '../components/MarkerForm';
 
-const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources, markers, setMarkers, events,onSaveMarker, }) => {
+const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources, markers, setMarkers, events, onSaveMarker, }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showMarkerForm, setShowMarkerForm] = useState(false); // Dichiarazione corretta dello stato
+    const [isSelectingMarker, setIsSelectingMarker] = useState(false); // Modalità selezione marker
+    const [selectedMarkerId, setSelectedMarkerId] = useState(null); // ID del marker selezionato
+
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
@@ -33,14 +36,17 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
             });
     };
 
+
     const handleDeleteMarker = async (markerId) => {
         try {
             await fetch(`http://localhost:3001/api/markers/${markerId}`, { method: 'DELETE' });
-            setMarkers(markers.filter(marker => marker.id !== markerId));
+            setMarkers(markers.filter(marker => marker.Id !== markerId));
+            setIsSelectingMarker(false); // Esci dalla modalità di selezione
         } catch (error) {
             console.error('Errore durante l\'eliminazione del marker:', error);
         }
     };
+
 
     return (
         <>
@@ -51,33 +57,39 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
                 <button className="close-btn" onClick={toggleSidebar}>✕</button>
                 <div className="sidebar-buttons">
                     <button onClick={onSyncCommesse}>Sincronizza Commesse</button>
+
+
                     <button onClick={() => setShowMarkerForm(!showMarkerForm)}>
                         {showMarkerForm ? 'Chiudi Form Marker' : 'Aggiungi Marker'}
+                    </button>
+
+                    <button onClick={() => setIsSelectingMarker(!isSelectingMarker)}>
+                        {isSelectingMarker ? 'Annulla' : 'Elimina Marker'}
                     </button>
                 </div>
                 {showMarkerForm && (
                     <MarkerForm
-    onSaveMarker={(newMarker) => {
-        onSaveMarker(newMarker); // Chiama la funzione passata da App.js
-        setShowMarkerForm(false); // Chiudi il form
-    }}
-    events={events}
-/>
-)}
+                        onSaveMarker={(newMarker) => {
+                            onSaveMarker(newMarker); // Chiama la funzione passata da App.js
+                            setShowMarkerForm(false); // Chiudi il form
+                        }}
+                        events={events}
+                    />
+                )}
 
-                <div className="marker-list">
-                    <h4>Marker</h4>
-                    {markers.length > 0 ? (
-                        markers.map(marker => (
-                            <div key={marker.id} className="marker-item">
-                                <span>{marker.label} - {marker.day}</span>
-                                <button onClick={() => handleDeleteMarker(marker.id)}>Elimina</button>
+                {isSelectingMarker && (
+                    <div className="marker-select-list">
+                        {markers.map((marker) => (
+                            <div key={marker.Id} className="marker-item">
+                                <span>{marker.Label} - {marker.Day}</span>
+                                <button onClick={() => handleDeleteMarker(marker.Id)}>
+                                    Seleziona per Eliminare
+                                </button>
                             </div>
-                        ))
-                    ) : (
-                        <p>Nessun marker disponibile</p>
-                    )}
-                </div>
+                        ))}
+                    </div>
+                )}
+
             </div>
         </>
     );

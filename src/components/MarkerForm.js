@@ -7,9 +7,8 @@ const MarkerForm = ({ onSaveMarker, events }) => {
   const [eventId, setEventId] = useState(""); // Per selezionare l'evento
   
   const handleSubmit = (e) => {
-
     e.preventDefault();
-console.log("Dati inviati per il marker:", { label, day, severity, eventId });
+    console.log("Dati inviati per il marker:", { label, day, severity, eventId });
     if (!label || !day || !eventId) {
         alert("Compila tutti i campi richiesti!");
         return;
@@ -17,7 +16,10 @@ console.log("Dati inviati per il marker:", { label, day, severity, eventId });
 
     try {
         const formattedDay = new Date(day).toISOString().split("T")[0];
-        onSaveMarker({ label, day: formattedDay, severity, eventId }); // Qui viene invocata onSaveMarker
+        const associatedEvent = events.find(event => event.Id.toString() === eventId);
+        const eventName = associatedEvent ? associatedEvent.Subject : "Evento sconosciuto";
+
+        onSaveMarker({ label, day: formattedDay, severity, eventId, eventName }); // Includi il nome dell'evento
     } catch (err) {
         console.error("Errore nel form:", err);
     }

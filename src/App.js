@@ -24,7 +24,7 @@ const App = () => {
   const [markers, setMarkers] = useState([]);
   
   const handleSaveMarker = async (newMarker) => {
-    console.log("Tentativo di salvare il marker:", newMarker); // Log per debug
+    console.log("Tentativo di salvare il marker:", newMarker);
     try {
         const response = await fetch('http://localhost:3001/api/markers', {
             method: 'POST',
@@ -32,19 +32,19 @@ const App = () => {
             body: JSON.stringify(newMarker),
         });
 
-        console.log("Risposta dal server:", response); // Log della risposta grezza
-
         if (!response.ok) {
             throw new Error(`Errore durante il salvataggio del marker: ${response.statusText}`);
         }
 
         const savedMarker = await response.json();
-        console.log("Marker salvato con successo:", savedMarker); // Log per confermare
-        setMarkers((prevMarkers) => [...prevMarkers, savedMarker]);
+        console.log("Marker salvato con successo:", savedMarker);
+
+        setMarkers((prevMarkers) => [...prevMarkers, savedMarker]); // Aggiorna markers
     } catch (error) {
         console.error('Errore durante il salvataggio del marker:', error);
     }
 };
+
 
 
 
