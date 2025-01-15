@@ -168,24 +168,49 @@ app.put('/api/eventi/:id', async (req, res) => {
     Description,
     parentID,
     ganttProperties,
-    info,
-    predecessorsName = "", // Default vuoto se assente
+    info, // Proprietà aggiuntive dal Gantt
   } = req.body;
 
   try {
+    console.log("Dati ricevuti per aggiornamento evento:", req.body);
+
+    // Recupera il nome della commessa dal database usando l'ID
+    const commessaQuery = 'SELECT CommessaName FROM Commesse WHERE Id = ?';
+    const commessaResult = await getRecords(commessaQuery, [CommessaId]);
+
+    if (commessaResult.length === 0) {
+      return res.status(400).json({ error: 'Commessa non trovata' });
+    }
+
+    const CommessaName = commessaResult[0].CommessaName;
+
+    // Gestisci il caso in cui resourceInfo sia passato direttamente o tramite taskData
+    const resourceInfo = ganttProperties?.resourceInfo || req.body.taskData?.resources || [];
+
+    // Estrarre gli ID e i nomi dei collaboratori
+    const collaboratorIds = Array.isArray(resourceInfo)
+      ? resourceInfo.map((resource) => resource.resourceId || resource.id)
+      : [];
+
+    const IncaricatoName = Array.isArray(resourceInfo)
+      ? resourceInfo.map((resource) => resource.resourceName || resource.text).join(', ')
+      : '';
+
     const query = `
       UPDATE Eventi SET
         Titolo = ?, 
         Inizio = ?, 
         Fine = ?, 
         CommessaId = ?, 
+        CommessaName = ?, 
         Duration = ?, 
         Progress = ?, 
+        IncaricatoId = ?, 
+        IncaricatoName = ?, 
         Colore = ?, 
         Descrizione = ?, 
-        parentID = ?, 
-        Info = ?, 
-        Dipendenza = ? 
+        parentID = ?,
+        Info = ?
       WHERE Id = ?
     `;
 
@@ -194,15 +219,18 @@ app.put('/api/eventi/:id', async (req, res) => {
       StartTime,
       EndTime,
       CommessaId,
+      CommessaName, // Usa il nome recuperato
       Duration,
       Progress,
+      collaboratorIds.join(','), // Concatena gli ID in una stringa
+      IncaricatoName,
       CategoryColor,
       Description,
       parentID,
       info,
-      predecessorsName, // Campo aggiornato con valore predefinito
       req.params.id,
     ];
+
     await runQuery(query, params);
 
     res.json({ message: "Evento aggiornato con successo!" });
@@ -517,14 +545,24 @@ app.put('/api/collaboratori/:id', async (req, res) => {
 
 // Aggiungi un nuovo marker
 app.post('/api/markers', async (req, res) => {
+  console.log("Richiesta ricevuta per creare un marker:", req.body); // Log per monitorare la richiesta
   const { label, day, severity, eventId } = req.body;
+
+  if (!label || !day || !severity || !eventId) {
+      console.error("Dati incompleti ricevuti per il marker:", req.body);
+      return res.status(400).json({ error: "Dati incompleti per il marker." });
+  }
+
   try {
       await runQuery('INSERT INTO Markers (Label, Day, Severity, EventId) VALUES (?, ?, ?, ?)', [label, day, severity, eventId]);
-      res.status(201).json({ message: 'Marker creato con successo.' });
+      res.status(201).json({ message: 'Marker creato con successo.', label, day, severity, eventId });
   } catch (error) {
+      console.error('Errore durante la creazione del marker:', error);
       res.status(500).json({ error: 'Errore durante la creazione del marker.' });
   }
 });
+
+
 
 
 
@@ -538,6 +576,16 @@ app.get('/api/markers', async (req, res) => {
       res.json(markers);
   } catch (error) {
       res.status(500).json({ error: 'Errore durante il recupero dei marker.' });
+  }
+});
+
+app.delete('/api/markers/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+      await runQuery('DELETE FROM Markers WHERE id = ?', [id]);
+      res.json({ message: 'Marker eliminato con successo.' });
+  } catch (error) {
+      res.status(500).json({ error: 'Errore durante l\'eliminazione del marker.' });
   }
 });
 

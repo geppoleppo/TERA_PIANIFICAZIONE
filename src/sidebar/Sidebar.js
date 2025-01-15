@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 import { TwitterPicker } from 'react-color';
+import MarkerForm from '../components/MarkerForm';
 
-const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources }) => {
+const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources, markers, setMarkers, events,onSaveMarker, }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [showMarkerForm, setShowMarkerForm] = useState(false); // Dichiarazione corretta dello stato
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
@@ -31,6 +33,15 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
             });
     };
 
+    const handleDeleteMarker = async (markerId) => {
+        try {
+            await fetch(`http://localhost:3001/api/markers/${markerId}`, { method: 'DELETE' });
+            setMarkers(markers.filter(marker => marker.id !== markerId));
+        } catch (error) {
+            console.error('Errore durante l\'eliminazione del marker:', error);
+        }
+    };
+
     return (
         <>
             <button className="toggle-btn" onClick={toggleSidebar}>
@@ -40,21 +51,31 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
                 <button className="close-btn" onClick={toggleSidebar}>✕</button>
                 <div className="sidebar-buttons">
                     <button onClick={onSyncCommesse}>Sincronizza Commesse</button>
+                    <button onClick={() => setShowMarkerForm(!showMarkerForm)}>
+                        {showMarkerForm ? 'Chiudi Form Marker' : 'Aggiungi Marker'}
+                    </button>
                 </div>
-                <div className="commesse-container"> {/* Aggiunta della classe per la sezione scrollabile */}
-                    <h4>Assegna Colori Alle Commesse</h4>
-                    {filteredProjectResources && filteredProjectResources.length > 0 ? (
-                        filteredProjectResources.map((commessa, index) => (
-                            <div key={index}>
-                                <span>{commessa.text}</span>
-                                <TwitterPicker
-                                    color={commessa.color || '#000000'}
-                                    onChangeComplete={(color) => handleColorChange(color, commessa.id)}
-                                />
+                {showMarkerForm && (
+                    <MarkerForm
+    onSaveMarker={(newMarker) => {
+        onSaveMarker(newMarker); // Chiama la funzione passata da App.js
+        setShowMarkerForm(false); // Chiudi il form
+    }}
+    events={events}
+/>
+)}
+
+                <div className="marker-list">
+                    <h4>Marker</h4>
+                    {markers.length > 0 ? (
+                        markers.map(marker => (
+                            <div key={marker.id} className="marker-item">
+                                <span>{marker.label} - {marker.day}</span>
+                                <button onClick={() => handleDeleteMarker(marker.id)}>Elimina</button>
                             </div>
                         ))
                     ) : (
-                        <p>Nessuna commessa disponibile</p>
+                        <p>Nessun marker disponibile</p>
                     )}
                 </div>
             </div>

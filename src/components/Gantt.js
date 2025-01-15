@@ -35,6 +35,8 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
   }));
 
 
+
+
   // Trasforma i dati in formato gerarchico
   const structuredData =
     selectedCommesse.length > 0
@@ -93,8 +95,27 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
         },
       ];
 
+      const visibleEventIds = structuredData.map((event) => Number(event.Id));
+      console.log('Eventi visibili in structuredData:', visibleEventIds);
+      
+      const filteredMarkers = markers.filter((marker) =>
+          visibleEventIds.includes(Number(marker.EventId))
+      );
+      console.log('Marker filtrati basati su structuredData:', filteredMarkers);
+      
+      const formattedMarkers = filteredMarkers.map((marker) => ({
+          day: new Date(marker.Day),
+          label: marker.Label,
+          cssClass: marker.Severity.toLowerCase() + '-marker',
+      }));
+      
+      console.log('Marker formattati per il Gantt:', formattedMarkers);
+      
+
+
       const groupedMarkers = markers.reduce((acc, marker) => {
-        const dateKey = new Date(marker.Day).toISOString().split('T')[0];
+        const dateKey = marker.Day ? new Date(marker.Day).toISOString().split('T')[0] : null;
+    
         if (!acc[dateKey]) {
             acc[dateKey] = { ...marker, Label: [marker.Label] }; // Crea il gruppo
         } else {
@@ -103,15 +124,10 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
         return acc;
     }, {});
     
-    const formattedMarkers = Object.values(groupedMarkers).map((group) => ({
-        day: group.Day ? new Date(group.Day) : new Date(),
-        label: group.Label.join(", "), // Unisci le etichette
-        cssClass: group.Severity ? group.Severity.toLowerCase() + '-marker' : 'low-marker',
-    }));
+    
   
-  
-      console.log('markers:', markers);
-  console.log('formattedMarkers:', formattedMarkers);
+
+
   console.log('GanttData:', ganttData);
   console.log('Dati strutturati per il Gantt:', structuredData);
   //console.log('Risorse calcolate:', projectResources);
@@ -463,6 +479,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
           taskType="FixedWork"
 
           actionBegin={(args) => {
+            
             if (args.requestType === 'beforeSave') {
               // Se l'evento è un figlio
               if (args.data.parentID !== null) {
@@ -476,6 +493,7 @@ const Gantt = ({ ganttData, selectedCommesse, projectResources, onUpdateEvent, o
               }
 
               // Gestione della modifica generale
+              
               onUpdateEvent(args.data); // Assicurati che `onUpdateEvent` riceva i dati corretti
             }
 
