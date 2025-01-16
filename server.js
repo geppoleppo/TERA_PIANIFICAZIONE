@@ -397,8 +397,7 @@ app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
   }
 });
 
-
-  
+ 
 
 
 // Avvia server HTTPS
