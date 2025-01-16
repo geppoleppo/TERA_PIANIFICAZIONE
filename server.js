@@ -3,7 +3,12 @@ const { getRecords, runQuery } = require('./database');
 const cors = require('cors'); // Importa il pacchetto cors
 const app = express();
 const mysql = require('mysql2');
-
+const https = require('https');
+const fs = require('fs');
+const options = {
+  key: fs.readFileSync('server.key'),
+  cert: fs.readFileSync('server.crt')
+};
 
 
 
@@ -394,10 +399,13 @@ app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
 
 
   
-  const port = 3001; // Assicurati che questa sia la porta corretta e non in conflitto
-  app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-  });
+
+
+// Avvia server HTTPS
+https.createServer(options, app).listen(3001, () => {
+  console.log('Server HTTPS in esecuzione su https://localhost:3001');
+});
+
 
   // Aggiorna il colore di una commessa
 app.put('/api/commesse/:id', async (req, res) => {
