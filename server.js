@@ -7,9 +7,9 @@ const https = require('https');
 const fs = require('fs');
 const options = {
   key: fs.readFileSync('server.key'),
-  cert: fs.readFileSync('server.crt')
+  cert: fs.readFileSync('server.crt'),
+  rejectUnauthorized: false // Disabilita la verifica del certificato SSL
 };
-
 
 
 app.use(cors({
@@ -45,12 +45,6 @@ app.get('/api/collaboratori', async (req, res) => {
 
 app.use(cors()); // Abilita CORS per tutte le richieste
 app.use(express.json());
-
-
-
-
-
-
 
 
 
@@ -98,66 +92,40 @@ app.delete('/api/eventi/:id', (req, res) => {
 ;
     
 app.get('/api/eventi', async (req, res) => {
+  const userEmail = req.query.email; // Recupera l'email dall'utente corrente
+  if (!userEmail) {
+    return res.status(400).json({ error: 'Email utente non specificata.' });
+  }
+
   try {
-    // Query per recuperare gli eventi
+    // Recupera l'ID del collaboratore corrispondente all'email
+    const queryCollaboratore = 'SELECT Id FROM Collaboratori WHERE Email = ?';
+    const collaboratore = await getRecords(queryCollaboratore, [userEmail]);
+
+    if (collaboratore.length === 0) {
+      return res.status(404).json({ error: 'Collaboratore non trovato.' });
+    }
+
+    const collaboratoreId = collaboratore[0].Id;
+
+    // Recupera gli eventi in cui `IncaricatoId` contiene l'ID del collaboratore
     const eventiQuery = 'SELECT * FROM Eventi';
     const eventi = await getRecords(eventiQuery);
 
-    // Query per recuperare i collaboratori
-    const collaboratoriQuery = 'SELECT Id, Nome, Immagine FROM Collaboratori';
-    const collaboratori = await getRecords(collaboratoriQuery);
-
-    // Query per recuperare le commesse
-    const commesseQuery = 'SELECT Id, CommessaName FROM Commesse';
-    const commesse = await getRecords(commesseQuery);
-
-    // Mappatura degli eventi
-    const mappedEventi = eventi.map(evento => {
-      // Converti IncaricatoId in array di numeri
+    const filteredEventi = eventi.filter((evento) => {
       const incaricatoIds = evento.IncaricatoId
-        ? evento.IncaricatoId.split(',').map(id => parseInt(id.trim(), 10))
+        ? evento.IncaricatoId.split(',').map((id) => parseInt(id.trim(), 10))
         : [];
-
-      // Mappa gli ID ai nomi e ai percorsi immagine usando i collaboratori dal database
-      const incaricatoData = incaricatoIds.map(id => {
-        const collaboratore = collaboratori.find(collab => collab.Id === id);
-        return collaboratore
-          ? { Nome: collaboratore.Nome, Immagine: collaboratore.Immagine }
-          : null;
-      }).filter(Boolean); // Rimuove valori null
-
-      const incaricatoNames = incaricatoData.map(c => c.Nome).join(", ");
-      const incaricatoImages = incaricatoData.map(c => c.Immagine);
-
-      // Trova il nome della commessa usando CommessaId
-      const commessa = commesse.find(c => c.Id === evento.CommessaId);
-
-      return {
-        Id: evento.Id,
-        Subject: evento.Titolo,
-        StartTime: evento.Inizio,
-        EndTime: evento.Fine,
-        CommessaId: evento.CommessaId || null,
-        CommessaName: commessa ? commessa.CommessaName : "Commessa sconosciuta",
-        Duration: evento.Duration || 0,
-        Progress: evento.Progress || 0,
-        IncaricatoId: incaricatoIds,
-        IncaricatoName: incaricatoNames || "Nessuno",
-        IncaricatoImages: incaricatoImages, // Percorsi immagine
-        CategoryColor: evento.Colore || "#9889c2",
-        parentID: evento.parentID ? parseInt(evento.parentID, 10) : null,
-        Description: evento.Descrizione || "",
-        info: evento.Info,
-        predecessorsName: evento.Dipendenza || "", // Dipendenza
-      };
+      return incaricatoIds.includes(collaboratoreId);
     });
 
-    res.json(mappedEventi);
+    res.json(filteredEventi);
   } catch (error) {
     console.error('Errore durante il recupero degli eventi:', error);
     res.status(500).json({ error: 'Errore durante il recupero degli eventi.' });
   }
 });
+
 
 
 
@@ -398,13 +366,17 @@ app.put('/api/collaboratori/:id/rimuovi-commesse', async (req, res) => {
 });
 
  
+const http = require('http');
 
-
-// Avvia server HTTPS
-https.createServer(options, app).listen(3001, () => {
-  console.log('Server HTTPS in esecuzione su https://localhost:3001');
+// Configura il server HTTP
+http.createServer(app).listen(3003, () => {
+  console.log('Server HTTP in esecuzione su http://localhost:3003');
 });
 
+// Configura il server HTTPS
+https.createServer(options, app).listen(3004, () => {
+  console.log('Server HTTPS in esecuzione su https://localhost:3004');
+});
 
   // Aggiorna il colore di una commessa
 app.put('/api/commesse/:id', async (req, res) => {
