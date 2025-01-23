@@ -26,7 +26,7 @@ const App = () => {
   const handleSaveMarker = async (newMarker) => {
     console.log("Tentativo di salvare il marker:", newMarker);
     try {
-        const response = await fetch('http://localhost:3001/api/markers', {
+        const response = await fetch('https://93.49.98.201:3004/api/markers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newMarker),
@@ -91,7 +91,7 @@ const App = () => {
     console.log("DATI in handleUpdateEvent:", updatedEvent);
   
     try {
-      const response = await fetch(`http://localhost:3001/api/eventi/${updatedEvent.Id}`, {
+      const response = await fetch(`https://93.49.98.201:3004/api/eventi/${updatedEvent.Id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedEvent),
@@ -132,7 +132,7 @@ const App = () => {
     try {
       console.log(`Eliminazione evento con ID: ${eventId}`);
   
-      const response = await fetch(`http://localhost:3001/api/eventi/${eventId}`, {
+      const response = await fetch(`https://93.49.98.201:3004/api/eventi/${eventId}`, {
         method: 'DELETE',
       });
   
@@ -143,7 +143,7 @@ const App = () => {
       console.log(`Evento con ID ${eventId} eliminato con successo.`);
   
       // Aggiorna gli eventi dal backend
-      const updatedEventsResponse = await fetch('http://localhost:3001/api/eventi');
+      const updatedEventsResponse = await fetch('https://93.49.98.201:3004/api/eventi');
       const updatedEvents = await updatedEventsResponse.json();
       setEvents(updatedEvents);
       setFilteredEventsForGantt(updatedEvents);
@@ -196,7 +196,7 @@ const App = () => {
           setFilteredEventsForGantt(events);
 
           // Fetch markers
-          const response = await fetch('http://localhost:3001/api/markers');
+          const response = await fetch('https://93.49.98.201:3004/api/markers');
           const markerData = await response.json();
           setMarkers(markerData);
       } catch (error) {
@@ -340,7 +340,7 @@ const App = () => {
 
   const handleSaveEvent = async (newEvent) => {
     try {
-      const response = await fetch('http://localhost:3001/api/eventi', {
+      const response = await fetch('https://93.49.98.201:3004/api/eventi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEvent),
@@ -354,7 +354,7 @@ const App = () => {
       console.log('Evento creato:', result.message);
   
       // Aggiorna gli eventi dal backend
-      const updatedEventsResponse = await fetch('http://localhost:3001/api/eventi');
+      const updatedEventsResponse = await fetch('https://93.49.98.201:3004/api/eventi');
       const updatedEvents = await updatedEventsResponse.json();
       setEvents(updatedEvents);
       setFilteredEventsForGantt(updatedEvents);
@@ -381,7 +381,7 @@ const App = () => {
   // Funzione per sincronizzare le commesse con il database MySQL
   const sincronizzaCommesse = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/sincronizza-commesse');
+      const response = await fetch('https://93.49.98.201:3004/api/sincronizza-commesse');
       const data = await response.json();
       console.log(data.message);
       // Aggiorna la tabella delle commesse nel frontend, se necessario
@@ -409,7 +409,7 @@ const App = () => {
 
     console.log("Memorizzazione in corso per il collaboratore:", collaboratoreId, "con commesse:", commesseIds);
 
-    fetch('http://localhost:3001/api/memorizza', {
+    fetch('https://93.49.98.201:3004/api/memorizza', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

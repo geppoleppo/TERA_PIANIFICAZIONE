@@ -56,7 +56,7 @@ useEffect(() => {
 
           return {
             Id: event.Id,
-            Subject: event.Subject,
+            Subject: event.Subject || event.Titolo,
             StartTime: event.StartTime || new Date(),
             EndTime: event.EndTime || new Date(),
             Duration: event.Duration || 0,

@@ -20,7 +20,7 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
         );
         setProjectResources(updatedProjectResources);
 
-        fetch(`http://localhost:3001/api/commesse/${commessaId}`, {
+        fetch(`https://93.49.98.201:3004/api/commesse/${commessaId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ color: color.hex }),
@@ -39,7 +39,7 @@ const Sidebar = ({ onSyncCommesse, filteredProjectResources, setProjectResources
 
     const handleDeleteMarker = async (markerId) => {
         try {
-            await fetch(`http://localhost:3001/api/markers/${markerId}`, { method: 'DELETE' });
+            await fetch(`https://93.49.98.201:3004/api/markers/${markerId}`, { method: 'DELETE' });
             setMarkers(markers.filter(marker => marker.Id !== markerId));
             setIsSelectingMarker(false); // Esci dalla modalità di selezione
         } catch (error) {

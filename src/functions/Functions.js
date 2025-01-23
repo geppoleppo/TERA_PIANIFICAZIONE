@@ -98,7 +98,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
       //console.log('Dati evento normalizzati per il salvataggio:', normalizedEvent);
   
       try {
-          const response = await fetch('http://localhost:3001/api/eventi', {
+          const response = await fetch('https://93.49.98.201:3004/api/eventi', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(normalizedEvent),
@@ -122,7 +122,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
     // Funzione per eliminare un evento dal database
     export const deleteEvent = async (eventId,fetchEvents) => {
         try {
-          const response = await fetch(`http://localhost:3001/api/eventi/${eventId}`, {
+          const response = await fetch(`https://93.49.98.201:3004/api/eventi/${eventId}`, {
             method: 'DELETE'
           });
           const data = await response.json();
@@ -162,7 +162,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
   
       // Invio della richiesta al server
       const response = await fetch(
-        `http://localhost:3001/api/collaboratori/${collaboratoreId}`,
+        `https://93.49.98.201:3004/api/collaboratori/${collaboratoreId}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -199,7 +199,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
       : eventData.CollaboratoreId;
   
     try {
-      const response = await fetch(`http://localhost:3001/api/eventi/${eventData.Id}`, {
+      const response = await fetch(`https://93.49.98.201:3004/api/eventi/${eventData.Id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -221,7 +221,7 @@ export const removeCommessa = (index, selectedCommesse, setSelectedCommesse) => 
 // Funzione per caricare le commesse dal database
 export const fetchProjectResources = async () => {
   try {
-    const response = await fetch('http://localhost:3001/api/commesse');
+    const response = await fetch('https://93.49.98.201:3004/api/commesse');
     const data = await response.json();
     return data.map((commessa) => ({
       text: commessa.text,
@@ -237,7 +237,7 @@ export const fetchProjectResources = async () => {
 // Funzione per caricare i collaboratori dal database
 export const fetchCategoryResources = async () => {
   try {
-    const response = await fetch('http://localhost:3001/api/collaboratori');
+    const response = await fetch('https://93.49.98.201:3004/api/collaboratori');
     const data = await response.json();
     return data.map((collaboratore) => ({
       text: collaboratore.Nome,
@@ -254,7 +254,7 @@ export const fetchCategoryResources = async () => {
 // Funzione per caricare gli eventi dal database
 export const fetchEvents = async (projectResources) => {
   try {
-    const response = await fetch('http://localhost:3001/api/eventi');
+    const response = await fetch('https://93.49.98.201:3004/api/eventi');
     const data = await response.json();
     return data.map(event => ({
       ...event,

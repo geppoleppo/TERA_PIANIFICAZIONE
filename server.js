@@ -20,27 +20,51 @@ app.use(cors({
 app.use(express.json()); // Middleware per leggere JSON dal body
 
 
-
-
 // Funzione per ottenere i collaboratori duplicati in base ai loro groupIds
 app.get('/api/collaboratori', async (req, res) => {
   try {
-    const query = 'SELECT * FROM Collaboratori';
-    const collaboratori = await getRecords(query);
+    const { email } = req.query;
+
+    // Logga i parametri della richiesta
+    console.log("Richiesta ricevuta per /api/collaboratori con parametri:", { email });
+
+    let query = 'SELECT * FROM Collaboratori';
+    let params = [];
+
+    // Se viene fornita un'email, aggiungi un filtro alla query
+    if (email) {
+      query += ' WHERE Email = ?';
+      params.push(email);
+    }
+
+    // Logga la query e i parametri
+    console.log("Esecuzione della query:", query, "con parametri:", params);
+
+    const collaboratori = await getRecords(query, params);
+
+    // Logga i risultati grezzi
+    console.log("Risultati della query:", collaboratori);
 
     const formattedCollaboratori = collaboratori.map(collaboratore => ({
       Id: collaboratore.Id,
       Nome: collaboratore.Nome,
       Colore: collaboratore.Colore,
       Immagine: collaboratore.Immagine,
-      groupIds: collaboratore.groupIds ? collaboratore.groupIds.split(',').map(id => parseInt(id, 10)) : []
+      groupIds: collaboratore.groupIds ? collaboratore.groupIds.split(',').map(id => parseInt(id, 10)) : [],
+      Email:collaboratore.Email
     }));
-//console.log("COLLABORATORI",formattedCollaboratori)
+
+    // Logga i risultati formattati
+    console.log("Collaboratori formattati:", formattedCollaboratori);
+
     res.json(formattedCollaboratori);
   } catch (error) {
+    console.error("Errore nel recupero dei collaboratori:", error);
     res.status(500).json({ error: "Errore nel recupero dei collaboratori" });
   }
 });
+
+
 
 
 app.use(cors()); // Abilita CORS per tutte le richieste
@@ -93,11 +117,15 @@ app.delete('/api/eventi/:id', (req, res) => {
     
 app.get('/api/eventi', async (req, res) => {
   const userEmail = req.query.email; // Recupera l'email dall'utente corrente
-  if (!userEmail) {
-    return res.status(400).json({ error: 'Email utente non specificata.' });
-  }
 
   try {
+    // Se l'email non è specificata, restituisci tutti gli eventi
+    if (!userEmail) {
+      const eventiQuery = 'SELECT * FROM Eventi';
+      const eventi = await getRecords(eventiQuery);
+      return res.json(eventi);
+    }
+
     // Recupera l'ID del collaboratore corrispondente all'email
     const queryCollaboratore = 'SELECT Id FROM Collaboratori WHERE Email = ?';
     const collaboratore = await getRecords(queryCollaboratore, [userEmail]);
@@ -125,6 +153,7 @@ app.get('/api/eventi', async (req, res) => {
     res.status(500).json({ error: 'Errore durante il recupero degli eventi.' });
   }
 });
+
 
 
 
@@ -213,8 +242,6 @@ app.put('/api/eventi/:id', async (req, res) => {
   }
 });
 
-
-
 app.post('/api/eventi', async (req, res) => {
   try {
     const {
@@ -229,9 +256,12 @@ app.post('/api/eventi', async (req, res) => {
       Description,
       parentID,
       info,
-      predecessorsName
-      
+      predecessorsName,
+      IncaricatoName,
     } = req.body;
+
+    console.log("Dati ricevuti per nuovo evento", req.body);
+
 
     // Imposta i valori di default
     const updatedCommessaId = CommessaId || 1; // Default CommessaId = 1
@@ -289,21 +319,9 @@ app.post('/api/eventi', async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
 app.get('/api/commesse', async (req, res) => {
   try {
-    const query = 'SELECT Id, CommessaName AS text, Colore AS color FROM Commesse';
+    const query = 'SELECT Id, CommessaName AS text, Colore AS color FROM Commesse ORDER BY Id DESC';
     const commesse = await getRecords(query);
     res.json(commesse);
     //console.log("Commesse caricate dal database:", commesse);
@@ -312,6 +330,9 @@ app.get('/api/commesse', async (req, res) => {
     res.status(500).json({ error: 'Errore durante il caricamento delle commesse.' });
   }
 });
+
+
+
 
 // Endpoint per ottenere i dettagli di un singolo collaboratore
 app.get('/api/collaboratori/:id', async (req, res) => {
