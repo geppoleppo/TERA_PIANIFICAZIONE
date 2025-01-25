@@ -13,8 +13,8 @@ const options = {
 
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Imposta l'origine del frontend
-  methods: ['GET', 'POST', 'DELETE','PUT'], // Limita i metodi consentiti
+  origin: ['http://localhost:3000', 'http://93.49.98.201:666'], // Lista delle origini consentite
+  methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type']
 }));
 app.use(express.json()); // Middleware per leggere JSON dal body
