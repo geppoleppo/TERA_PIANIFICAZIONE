@@ -1,5 +1,5 @@
   // Gantt.js - Correzione basata sulle demo di Syncfusion
-  import React, { useRef, useEffect,forwardRef } from 'react';
+  import React, { useRef, useEffect,forwardRef  } from 'react';
   import {
     GanttComponent,
     Inject,
@@ -13,7 +13,7 @@
   } from '@syncfusion/ej2-react-gantt';
   import { DropDownList } from '@syncfusion/ej2-dropdowns';
 
-  const Gantt = forwardRef(({ ganttData = [], projectResources = [], onUpdateEvent, onSaveEvent, onDeleteEvent }) => {
+  const Gantt2 = forwardRef(({ ganttData = [], projectResources = [], onUpdateEvent, onSaveEvent, onDeleteEvent }) => {
     const ganttRef = useRef(null);
 
     // Dati di esempio per task e risorse
@@ -56,14 +56,11 @@
       <div>
         <GanttComponent
           id="ganttChart"
+          viewType= 'ResourceView'
           ref={ganttRef}
           dataSource={validatedGanttData}
           resources={validatedProjectResources}
-          resourceFields={{
-            id: 'resourceId',
-            name: 'resourceName',
-            unit: 'unit',
-          }}
+          
           height="450px"
           allowSorting={true}
           enableContextMenu={true}
@@ -78,7 +75,14 @@
             dependency: 'Predecessors',
             progress: 'Progress',
             resourceInfo: 'resources',
-            parentID: 'parentID',
+            work:'work',
+            child:'subtasks'
+          }}
+          resourceFields={{
+            id: 'resourceId',
+            name: 'resourceName',
+            unit: 'unit',
+            group: 'resourceGroup'
           }}
           toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
           columns={[
@@ -145,7 +149,7 @@
           splitterSettings={{
             position: '35%',
           }}
-         // projectStartDate={new Date('2025-01-01')}
+          //projectStartDate={new Date('2025-01-01')}
           //projectEndDate={new Date('2025-03-30')}
           actionBegin={(args) => {
             if (args.requestType === 'beforeSave') {
@@ -168,4 +172,5 @@
     );
   });
 
-  export default Gantt;
+
+  export default Gantt2;

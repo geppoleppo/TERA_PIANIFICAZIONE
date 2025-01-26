@@ -1,0 +1,131 @@
+/* Sidebar.css */
+
+.sidebar {
+    width: 320px;
+    background-color: #333;
+    color: white;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    right: 0;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto; /* Enable vertical scroll */
+}
+
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.toggle-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: #333;
+    cursor: pointer;
+    z-index: 1100; /* Sopra il resto della pagina */
+}
+
+.close-btn {
+    align-self: flex-end;
+    margin: 0 10px 20px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.sidebar-buttons button {
+    width: 80%;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #444;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.sidebar-buttons button:hover {
+    background-color: #555;
+}
+/* Contenitore scrollabile per le commesse */
+.commesse-container {
+    max-height: 400px; /* Altezza massima */
+    overflow-y: auto; /* Scroll verticale */
+    width: 300px; /* Larghezza completa */
+    padding: 10px;
+    background-color: #444; /* Sfondo per evidenziare */
+    border-radius: 4px; /* Bordi arrotondati */
+    margin-bottom: 10px; /* Spazio sotto la sezione */
+}
+
+.marker-list {
+    margin-top: 20px;
+    width: 80%;
+    padding: 10px;
+    background-color: #444;
+    border-radius: 4px;
+}
+
+.marker-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
+    padding: 5px;
+    background-color: #555;
+    border-radius: 4px;
+}
+
+.marker-item span {
+    flex-grow: 1;
+    color: white;
+}
+
+.marker-item button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.marker-item button:hover {
+    background-color: darkred;
+}
+input, select {
+    color: black; /* Testo visibile */
+    background-color: white; /* Sfondo leggibile */
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 5px 0;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #007bff; /* Blu */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3; /* Blu scuro */
+}
+
