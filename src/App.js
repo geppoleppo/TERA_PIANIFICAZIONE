@@ -101,14 +101,14 @@ const App = () => {
         ref={ganttRef1}
       />
 
-      <Gantt2
+      {/* <Gantt2
         ganttData={events}
         projectResources={projectResources}
         onUpdateEvent={handleUpdateEvent}
         onDeleteEvent={handleDeleteEvent}
         onSaveEvent={handleSaveEvent}
         ref={ganttRef2}
-      />
+      /> */}
     </div>
   );
 };

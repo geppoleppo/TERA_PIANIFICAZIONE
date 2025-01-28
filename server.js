@@ -63,13 +63,30 @@ app.get('/api/commesse-mysql', (req, res) => {
 });
 
 app.get('/api/collaboratori', (req, res) => {
-    try {
-        const collaboratori = db.getAllCollaboratori();
-        res.json(collaboratori);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+  try {
+      const collaboratori = db.getAllCollaboratori();
+      console.log("collaboratori:",collaboratori)
+
+      // Mappiamo i dati nel formato richiesto
+      const formattedCollaboratori = collaboratori.map((collaboratore) => ({
+          resourceId: collaboratore.Id, // Presumo che "id" sia il campo dell'ID
+          resourceName: collaboratore.Nome || "Unnamed", // Nome del collaboratore
+          unit: collaboratore.unit || 100, // Default al 100% di capacità
+          resourceGroup: collaboratore.resourceGroup || "Default Group", // Default se manca il gruppo
+      }));
+
+      res.json(formattedCollaboratori);
+  } catch (error) {
+      console.error("Errore durante il recupero dei collaboratori:", error);
+      res.status(500).json({ error: error.message });
+  }
 });
+
+
+
+
+
+
 
 app.post('/api/commesse-comuni', (req, res) => {
     const { collaboratoriIds } = req.body;
