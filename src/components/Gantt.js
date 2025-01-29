@@ -104,7 +104,7 @@ console.log("ganttData: ",tasks)
           unit: 'unit',
           group: 'resourceGroup',
         }}
-        height="450px"
+        height="800px"
         allowSorting={true}
         enableContextMenu={true}
         highlightWeekends={true}
@@ -119,16 +119,19 @@ console.log("ganttData: ",tasks)
           progress: 'Progress',
           resourceInfo: 'resources',
           parentID: 'parentID',
+          CommessaName: 'CommessaName'
         }}
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
         columns={[
           { field: 'Id', visible: false },
+          { field: 'CommessaName', headerText: 'Commessa', width: '250' },
           { field: 'Subject', headerText: 'Task Name', width: '250' },
-          { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit' },
+          { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit', visible: false  },
           { field: 'resources', headerText: 'Resources', width: '200', editType: 'dropdownedit' },
           {
             field: 'parentID',
             headerText: 'Parent Task',
+            visible: true, 
             width: '200',
             edit: {
               create: () => {
@@ -146,7 +149,7 @@ console.log("ganttData: ",tasks)
                     .filter(task => task.Id !== args.rowData.Id) // Esclude l'ID dell'evento stesso
                     .map(task => ({
                       value: task.Id,
-                      text: task.Subject,
+                      text: task.CommessaName +'-'+task.Subject,
                     }))
                 ];
                 

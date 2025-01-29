@@ -136,7 +136,8 @@ app.get('/api/eventi', (req, res) => {
             Progress: evento.Progresso || 0,
             resourceInfo: evento.CollaboratoreId ? [evento.CollaboratoreId] : [], // Associa collaboratori se presenti
             parentID: evento.ParentID || null,
-            CategoryColor: evento.Colore || '#1aaa55', 
+            CategoryColor: evento.Colore || '#1aaa55',
+            CommessaName: evento.CommessaName, 
         }));
 
         res.json(eventi);
