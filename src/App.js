@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import './App.css';
 import Gantt from './components/Gantt';
-import Gantt2 from './components/Gantt2';
+//import Gantt2 from './components/Gantt2';
 import Sidebar from './sidebar/Sidebar';
 
 const App = () => {
@@ -22,7 +22,10 @@ const App = () => {
       CategoryColor: '#FF0000',
       Progress: 30,
       work: 16,
-      resources: [1, 2],
+      //parentID: 2,
+     // resources: [1, 2],
+      
+      
     },
     {
       Id: 2,
@@ -33,7 +36,8 @@ const App = () => {
       CategoryColor: '#00FF00',
       Progress: 30,
       work: 16,
-      resources: [3],
+      //resources: [3],
+      
     },
     {
       Id: 3,
@@ -44,7 +48,7 @@ const App = () => {
       CategoryColor: '#00FF00',
       Progress: 30,
       work: 16,
-      resources: [1],
+      //parentID:2
     },
   ]);
 

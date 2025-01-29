@@ -63,6 +63,7 @@ const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDelete
     }
   };
 console.log("resourceDataManager: ",resources)
+console.log("ganttData: ",ganttData)
   return (
     <div>
       <GanttComponent
@@ -90,7 +91,7 @@ console.log("resourceDataManager: ",resources)
           dependency: 'Predecessors',
           progress: 'Progress',
           resourceInfo: 'resources',
-          parentId: 'parentId',
+          parentID: 'parentID',
         }}
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
         columns={[
@@ -99,7 +100,7 @@ console.log("resourceDataManager: ",resources)
           { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit' },
           { field: 'resources', headerText: 'Resources', width: '200', editType: 'dropdownedit' },
           {
-            field: 'parentId',
+            field: 'parentID',
             headerText: 'Parent Task',
             width: '200',
             edit: {
@@ -114,19 +115,22 @@ console.log("resourceDataManager: ",resources)
               write: (args) => {
                 const parentOptions = [
                   { value: null, text: 'No Parent' },
-                  ...ganttData.map((task) => ({
-                    value: task.Id,
-                    text: task.Subject,
-                  })),
+                  ...ganttData
+                    .filter(task => task.Id !== args.rowData.Id) // Esclude l'ID dell'evento stesso
+                    .map(task => ({
+                      value: task.Id,
+                      text: task.Subject,
+                    }))
                 ];
+                
 
                 const dropdown = new DropDownList({
                   dataSource: parentOptions,
                   fields: { text: 'text', value: 'value' },
-                  value: args.rowData.parentId || null,
+                  value: args.rowData.parentID || null,
                   placeholder: 'Select Parent Task',
                   change: (e) => {
-                    args.rowData.parentId = e.value;
+                    args.rowData.parentID = e.value;
                     console.log('Parent ID aggiornato:', e.value);
                   },
                 });
@@ -161,7 +165,9 @@ console.log("resourceDataManager: ",resources)
           console.log("AZIONE",args.requestType)
           if (args.requestType === 'beforeSave') {
             console.log('Intercepting beforeSave:', args.data);
-            args.data.ganttProperties.parentId = args.data.parentId;
+            args.data.ganttProperties.parentId = args.data.parentID;
+            args.data.ganttProperties.parentID = args.data.parentID;
+            args.data.taskData.parentId = args.data.parentID;
             // args.data.parentID = null; // Correggi parentID a null se non ha genitore
            // }
           }
@@ -169,7 +175,7 @@ console.log("resourceDataManager: ",resources)
         actionComplete={(args) => {
           if (args.requestType === 'save') {
             console.log('Salvataggio completato:', args.data);
-           // refreshGantt(); // Forza il refresh completo
+            refreshGantt(); // Forza il refresh completo
           }
         }}
       >
