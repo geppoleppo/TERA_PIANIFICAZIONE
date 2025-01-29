@@ -36,9 +36,10 @@ app.get('/api/sync-commesse', (req, res) => {
             res.status(500).json({ error: err.message });
         } else {
             try {
+               
                 // Aggiornare SQLite con le commesse ottenute da MySQL
                 results.forEach(commessa => {
-                    db.updateCommesse([commessa]);
+                   db.updateCommesse([commessa]);
                 });
                 res.json({ message: 'Commesse sincronizzate correttamente da MySQL a SQLite' });
             } catch (error) {

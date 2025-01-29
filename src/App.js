@@ -85,6 +85,21 @@ const App = () => {
     }
   };
 
+  const syncCommesse = async () => {
+    console.log("Sincronizzazione delle commesse in corso...");
+    try {
+      const response = await fetch('http://localhost:4443/api/sync-commesse');
+      const data = await response.json();
+      console.log("Risultato sincronizzazione:", data.message);
+
+      if (ganttRef1.current) ganttRef1.current.refresh();
+      if (ganttRef2.current) ganttRef2.current.refresh();
+    } catch (error) {
+      console.error("Errore nella sincronizzazione delle commesse:", error);
+    }
+  };
+
+
   return (
     <div className="App">
       <Sidebar
@@ -92,9 +107,11 @@ const App = () => {
         projectResources={projectResources}
       />
 
-      <button onClick={syncGanttData} style={{ margin: '20px', padding: '10px' }}>
-        Sincronizza Gantt 1 -> Gantt 2
-      </button>
+        <button onClick={syncCommesse} style={{ margin: '10px', padding: '10px' }}>
+          🔄 Sincronizza Commesse (MySQL → SQLite)
+        </button>
+
+
 
       <Gantt
         //ganttData={events}

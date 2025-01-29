@@ -156,19 +156,41 @@ const deleteEvento = (id) => {
 
 const updateCommesse = (commesse) => {
     try {
-        db.prepare(`DELETE FROM Commesse`).run();
-        const insert = db.prepare(`INSERT INTO Commesse (CommessaName, Descrizione, Colore) VALUES (?, ?, ?)`);
+        console.log("🔄 Updating commesse with:", commesse);
+        
+        const insert = db.prepare(`
+            INSERT INTO Commesse (CommessaName, Descrizione, Colore) 
+            VALUES (?, ?, ?)
+        `);
+
+        const checkExist = db.prepare(`
+            SELECT COUNT(*) AS count FROM Commesse WHERE CommessaName = ?
+        `);
+
         const insertMany = db.transaction((commesse) => {
             for (const commessa of commesse) {
-                insert.run(commessa.descrizione, commessa.descrizione, commessa.colore);
+                const exists = checkExist.get(commessa.NOME);
+                if (exists.count === 0) { // Se non esiste, la inseriamo
+                    insert.run(
+                        commessa.NOME,             // ✅ Usa `NOME` invece di `descrizione`
+                        commessa.Descrizione,      // ✅ Usa `Descrizione` corretto
+                        commessa.Colore || "#FFFFFF"  // ✅ Default a bianco se `NULL`
+                    );
+                    console.log(`✅ Aggiunta commessa: ${commessa.NOME}`);
+                } else {
+                    console.log(`⚠️ Commessa già presente, ignorata: ${commessa.NOME}`);
+                }
             }
         });
+
         insertMany(commesse);
+        console.log("✅ Commesse aggiornate correttamente!");
     } catch (error) {
-        console.error("Database error:", error);
+        console.error("❌ Database error:", error);
         throw new Error("Failed to update commesse.");
     }
 };
+
 
 const getSelectedCommesse = () => {
     try {

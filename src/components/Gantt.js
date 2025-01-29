@@ -17,6 +17,7 @@ const Gantt = forwardRef(({ onUpdateEvent, onSaveEvent, onDeleteEvent }, ref) =>
   const ganttRef = useRef(null);
   const [editingResources, setResources] = useState([]); // Stato per i dati delle risorse
   const [tasks, setTasks] = useState([]);
+  const [commesse, setCommesse] = useState([]); // Stato per le commesse disponibili
 
 
   const handleSaveEvent = async (eventData) => {
@@ -135,6 +136,21 @@ useEffect(() => {
     }
   }, [editingResources]);
 
+  // Carica le commesse disponibili
+  useEffect(() => {
+    console.log("Caricamento commesse...");
+    fetch('http://localhost:4443/api/commesse')
+      .then(response => response.json())
+      .then(data => {
+        setCommesse(data || []);
+        console.log('Commesse caricate:', data);
+      })
+      .catch(error => {
+        console.error('Errore nel caricamento delle commesse:', error);
+      });
+  }, []);
+
+
   const refreshGantt = () => {
     if (ganttRef.current) {
       console.log('Forzando il refresh completo del Gantt');
@@ -174,7 +190,45 @@ console.log("tasks: ",tasks)
         }}
         columns={[
           { field: 'Id', visible: false },
-          { field: 'CommessaName', headerText: 'Commessa', width: '250' },
+          {
+            field: 'CommessaName',
+            headerText: 'Commessa',
+            width: '250',
+            edit: {
+              create: () => {
+                const dropdown = document.createElement('input');
+                dropdown.className = 'e-field';
+                return dropdown;
+              },
+              read: (element) => {
+                return element.ej2_instances?.[0]?.value || null;
+              },
+              write: (args) => {
+                const dropdown = new DropDownList({
+                  dataSource: commesse, // Usa le commesse caricate
+                  fields: { text: 'CommessaName', value: 'CommessaName' },
+                  value: args.rowData.CommessaName || null,
+                  placeholder: 'Select Commessa',
+                  change: (e) => {
+                    args.rowData.CommessaName = e.value;
+                    console.log('Commessa selezionata:', e.value);
+                  },
+                });
+                dropdown.appendTo(args.element);
+                args.column.dropdownInstance = dropdown;
+              },
+              destroy: (args) => {
+                if (args?.column?.dropdownInstance) {
+                  console.log("Distruzione dropdown Commessa...");
+                  args.column.dropdownInstance.destroy();
+                  args.column.dropdownInstance = null;
+                } else {
+                  console.warn("Tentativo di distruggere una dropdown già distrutta o non inizializzata.");
+                }
+              }
+            }
+          },
+          
           { field: 'Subject', headerText: 'Task Name', width: '250' },
           { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit', visible: false  },
           { field: 'resources', headerText: 'Resources', width: '200', editType: 'dropdownedit' },
