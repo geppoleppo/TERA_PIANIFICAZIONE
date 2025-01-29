@@ -126,23 +126,26 @@ app.get('/api/commesse', (req, res) => {
 
 app.get('/api/eventi', (req, res) => {
     try {
-      const eventi = db.getAllEventi().map(evento => ({
-        Id: evento.Id,
-        Subject: evento.Descrizione || 'Nessun titolo', // Cambia 'Descrizione' in 'Subject'
-        Location: 'Nessuna posizione', // Aggiungi un campo Location se necessario
-        StartTime: new Date(evento.Inizio).toISOString(), // Converti la data a stringa ISO
-        EndTime: new Date(evento.Fine).toISOString(),     // Converti la data a stringa ISO
-        CategoryColor: evento.Colore || '#1aaa55', // Usa il colore dal DB o un default
-        CollaboratoreId:evento.CollaboratoreId 
+        const eventi = db.getAllEventi().map(evento => ({
+            Id: evento.Id,
+            Subject: evento.Descrizione || 'Nessun titolo',
+            StartTime: new Date(evento.Inizio).toISOString(),
+            EndTime: new Date(evento.Fine).toISOString(),
+            Duration: evento.Durata || null, // Se disponibile
+            Predecessors: evento.Dipendenza || '',
+            Progress: evento.Progresso || 0,
+            resourceInfo: evento.CollaboratoreId ? [evento.CollaboratoreId] : [], // Associa collaboratori se presenti
+            parentID: evento.ParentID || null,
+            CategoryColor: evento.Colore || '#1aaa55', 
+        }));
 
-      }));
-  
-      res.json(eventi);
+        res.json(eventi);
     } catch (error) {
-      console.error('Errore nel recupero degli eventi:', error);
-      res.status(500).send('Errore nel recupero degli eventi');
+        console.error('Errore nel recupero degli eventi:', error);
+        res.status(500).send('Errore nel recupero degli eventi');
     }
-  });
+});
+
   
 
   

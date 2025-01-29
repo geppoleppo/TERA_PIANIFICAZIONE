@@ -16,6 +16,7 @@ import { DropDownList } from '@syncfusion/ej2-dropdowns';
 const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDeleteEvent }, ref) => {
   const ganttRef = useRef(null);
   const [resources, setResources] = useState([]); // Stato per i dati delle risorse
+  const [tasks, setTasks] = useState([]);
 
   // Configura il DataManager per leggere i collaboratori
   const resourceDataManager = new DataManager({
@@ -36,8 +37,27 @@ const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDelete
     });
   }, []);
 
+// Carica gli eventi dal database
+useEffect(() => {
+  console.log("USE EFFECT 2")
+  const eventDataManager = new DataManager({
+    url: 'http://localhost:4443/api/eventi',
+    adaptor: new WebApiAdaptor(),
+    crossDomain: true,
+  });
+
+  eventDataManager.executeQuery(new Query()).then((response) => {
+    setTasks(response.result || []);
+    console.log('Eventi caricati:', response.result);
+  }).catch((error) => {
+    console.error('Errore nel caricamento degli eventi:', error);
+  });
+}, []);
+
+
+
   useEffect(() => {
-    console.log("USE EFFECT 2")
+    console.log("USE EFFECT 3")
     if (ref) {
       ref.current = ganttRef.current;
     }
@@ -47,7 +67,7 @@ const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDelete
   }, [ref]);
 
   useEffect(() => {
-    console.log("USE EFFECT 3")
+    console.log("USE EFFECT 4")
     if (ganttRef.current && resources.length > 0) {
       console.log('Aggiorno risorse nel Gantt.');
       ganttRef.current.resources = resources; // Passa le risorse direttamente al Gantt
@@ -58,18 +78,25 @@ const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDelete
   const refreshGantt = () => {
     if (ganttRef.current) {
       console.log('Forzando il refresh completo del Gantt');
-      ganttRef.current.dataBind();
-      ganttRef.current.refresh();
+  
+      try {
+        ganttRef.current.dataBind();
+        ganttRef.current.refresh();
+       
+      } catch (error) {
+        console.error("Errore durante il refresh del Gantt:", error);
+      }
     }
   };
+  
 console.log("resourceDataManager: ",resources)
-console.log("ganttData: ",ganttData)
+console.log("ganttData: ",tasks)
   return (
     <div>
       <GanttComponent
         id="ganttChart"
         ref={ganttRef}
-        dataSource={ganttData}
+        dataSource={tasks}
         resources={resources} // Usa le risorse caricate nello stato
         resourceFields={{
           id: 'resourceId',
@@ -115,7 +142,7 @@ console.log("ganttData: ",ganttData)
               write: (args) => {
                 const parentOptions = [
                   { value: null, text: 'No Parent' },
-                  ...ganttData
+                  ...tasks
                     .filter(task => task.Id !== args.rowData.Id) // Esclude l'ID dell'evento stesso
                     .map(task => ({
                       value: task.Id,
@@ -162,20 +189,38 @@ console.log("ganttData: ",ganttData)
           position: '35%',
         }}
         actionBegin={(args) => {
-          console.log("AZIONE",args.requestType)
+          console.log("AZIONE", args.requestType);
+        
           if (args.requestType === 'beforeSave') {
-            console.log('Intercepting beforeSave:', args.data);
-            args.data.ganttProperties.parentId = args.data.parentID;
-            args.data.ganttProperties.parentID = args.data.parentID;
-            args.data.taskData.parentId = args.data.parentID;
-            // args.data.parentID = null; // Correggi parentID a null se non ha genitore
-           // }
+            console.log('Intercepting beforeSave:', args.data.ganttProperties);
+        
+            // Usa un fallback più sicuro
+            const previousParentId = args.data.ganttProperties?.parentID ?? args.data.ganttProperties?.parentId ?? null;
+            const newParentId = args.data.parentID ?? args.data.parentId ?? null;
+        
+            if (previousParentId !== newParentId) {
+              console.log('Parent ID modificato:', previousParentId, '→', newParentId);
+        
+              // Verifica che il Gantt sia inizializzato prima di aggiornare
+              if (ganttRef.current) {
+                setTimeout(() => {
+                  refreshGantt();
+                }, 200); // Delay per evitare problemi di rendering
+              }
+            }
+        
+            // Assegna il nuovo valore al parentID
+            args.data.ganttProperties.parentID = newParentId;
+            args.data.ganttProperties.parentId = newParentId; // Copia anche in parentId per sicurezza
+            args.data.taskData.parentID = newParentId;
           }
         }}
+        
+        
         actionComplete={(args) => {
           if (args.requestType === 'save') {
             console.log('Salvataggio completato:', args.data);
-            refreshGantt(); // Forza il refresh completo
+            //refreshGantt(); // Forza il refresh completo
           }
         }}
       >
