@@ -107,31 +107,42 @@ const createEvento = (evento) => {
 };
 
 const updateEvento = (id, evento) => {
+    console.log('EVENTOOOO', JSON.stringify(evento.taskData));
+
     try {
+        // Estrai gli ID delle risorse come array di numeri
+        const incaricatiIds = evento.taskData.resources.map(res => res.resourceId).join(',');
+
         const query = `
             UPDATE Eventi
-            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?
+            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?, ParentID = ?
             WHERE Id = ?
         `;
         const params = [
-            evento.Descrizione || evento.Subject || 'No Description',
-            evento.Inizio || new Date().toISOString(),
-            evento.Fine || new Date().toISOString(),
-            evento.CommessaName,
-            evento.Colore || '',
-            evento.Progresso || 0,
-            evento.IncaricatoId,
-            evento.Dipendenza || '',
+            evento.taskData.Subject || evento.Subject || 'No Description',
+            evento.taskData.StartTime || new Date().toISOString(),
+            evento.taskData.EndTime || new Date().toISOString(),
+            evento.taskData.CommessaName,
+            evento.taskData.CategoryColor || '',
+            evento.taskData.Progress || 0,
+            incaricatiIds,  // 👈 Ora salva una stringa di ID separati da virgole
+            evento.taskData.Predecessors || '',
+            evento.taskData.parentID,
             id
         ];
+
         console.log('Update Event Params:', params);
-        const result = db.prepare(query).run(params);
-        return { ...evento, Id: id };
+
+        // Esegui la query
+        const result = db.prepare(query).run(...params);
+        return { ...evento.taskData, Id: id };
+
     } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to update event.");
     }
 };
+;
 
 const deleteEvento = (id) => {
     try {

@@ -97,11 +97,11 @@ const App = () => {
       </button>
 
       <Gantt
-        ganttData={events}
-        projectResources={projectResources}
-        onUpdateEvent={handleUpdateEvent}
-        onDeleteEvent={handleDeleteEvent}
-        onSaveEvent={handleSaveEvent}
+        //ganttData={events}
+        //projectResources={projectResources}
+       // onUpdateEvent={handleUpdateEvent}
+      //  onDeleteEvent={handleDeleteEvent}
+       // onSaveEvent={handleSaveEvent}
         ref={ganttRef1}
       />
 

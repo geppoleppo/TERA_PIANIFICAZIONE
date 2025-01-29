@@ -65,7 +65,7 @@ app.get('/api/commesse-mysql', (req, res) => {
 app.get('/api/collaboratori', (req, res) => {
   try {
       const collaboratori = db.getAllCollaboratori();
-      console.log("collaboratori:",collaboratori)
+      //console.log("collaboratori:",collaboratori)
 
       // Mappiamo i dati nel formato richiesto
       const formattedCollaboratori = collaboratori.map((collaboratore) => ({
@@ -126,26 +126,56 @@ app.get('/api/commesse', (req, res) => {
 
 app.get('/api/eventi', (req, res) => {
     try {
-        const eventi = db.getAllEventi().map(evento => ({
-            Id: evento.Id,
-            Subject: evento.Descrizione || 'Nessun titolo',
-            StartTime: new Date(evento.Inizio).toISOString(),
-            EndTime: new Date(evento.Fine).toISOString(),
-            Duration: evento.Durata || null, // Se disponibile
-            Predecessors: evento.Dipendenza || '',
-            Progress: evento.Progresso || 0,
-            resourceInfo: evento.CollaboratoreId ? [evento.CollaboratoreId] : [], // Associa collaboratori se presenti
-            parentID: evento.ParentID || null,
-            CategoryColor: evento.Colore || '#1aaa55',
-            CommessaName: evento.CommessaName, 
-        }));
+        // Recupera tutti gli eventi
+        const lista_eventi = db.getAllEventi();
 
+        // Recupera tutti i collaboratori per mappare ID -> Nome
+        const collaboratori = db.getAllCollaboratori();
+        const collaboratoriMap = {}; // Mappa { id: { resourceId, resourceName, unit, resourceGroup } }
+        
+        collaboratori.forEach(collab => {
+            collaboratoriMap[collab.Id] = {
+                resourceId: collab.Id,
+                resourceName: collab.Nome || "Unnamed",
+                unit: 100, // Default unit
+                resourceGroup: "Default Group"
+            };
+        });
+
+        // Trasforma gli eventi per includere `resourceInfo` nel formato corretto
+        const eventi = lista_eventi.map(evento => {
+            let resourceInfo = [];
+            let ids=[]
+       
+            if (evento.IncaricatoId) {
+                // Se ci sono più incaricati, separali e mappa i nomi
+                ids = evento.IncaricatoId.split(',').map(id => id.trim()).map(Number);
+                resourceInfo = ids.map(id => collaboratoriMap[id] || { resourceId: id, resourceName: "Unknown", unit: 100, resourceGroup: "Unknown" });
+            }
+            console.log("ids:", ids);
+            return {
+                Id: evento.Id,
+                Subject: evento.Descrizione || 'Nessun titolo',
+                StartTime: new Date(evento.Inizio).toISOString(),
+                EndTime: new Date(evento.Fine).toISOString(),
+                Duration: evento.Durata || null,
+                Predecessors: evento.Dipendenza || '',
+                Progress: evento.Progresso || 0,
+                resources: ids, // 👈 Ora è nel formato corretto!
+                parentID: evento.ParentID || null,
+                CategoryColor: evento.Colore || '#1aaa55',
+                CommessaName: evento.CommessaName
+            };
+        });
+
+        console.log("Eventi formattati:", eventi);
         res.json(eventi);
     } catch (error) {
         console.error('Errore nel recupero degli eventi:', error);
         res.status(500).send('Errore nel recupero degli eventi');
     }
 });
+
 
   
 
@@ -174,12 +204,27 @@ app.post('/api/eventi', (req, res) => {
 
 app.put('/api/eventi/:id', (req, res) => {
     try {
+        console.log('req.body:',req.body)
         const updatedEvento = db.updateEvento(req.params.id, req.body);
         res.json(updatedEvento);
     } catch (error) {
+        console.error("Errore nell'aggiornamento dell'evento:", error);
         res.status(500).json({ error: error.message });
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 app.delete('/api/eventi/:id', (req, res) => {
     try {

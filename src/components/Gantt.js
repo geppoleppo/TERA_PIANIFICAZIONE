@@ -13,10 +13,70 @@ import {
 import { DataManager, WebApiAdaptor, Query } from '@syncfusion/ej2-data';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
 
-const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDeleteEvent }, ref) => {
+const Gantt = forwardRef(({ onUpdateEvent, onSaveEvent, onDeleteEvent }, ref) => {
   const ganttRef = useRef(null);
-  const [resources, setResources] = useState([]); // Stato per i dati delle risorse
+  const [editingResources, setResources] = useState([]); // Stato per i dati delle risorse
   const [tasks, setTasks] = useState([]);
+
+
+  const handleSaveEvent = async (eventData) => {
+    try {
+      const response = await fetch(`http://localhost:4443/api/eventi/${eventData.Id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(eventData),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Errore aggiornamento evento: ${response.statusText}`);
+      }
+  
+      console.log(`Evento ${eventData.Id} aggiornato con successo!`);
+    } catch (error) {
+      console.error("Errore nel salvataggio dell'evento:", error);
+    }
+  };
+  
+  const handleCreateEvent = async (newEvent) => {
+    try {
+      const response = await fetch("http://localhost:4443/api/eventi", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newEvent),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Errore creazione evento: ${response.statusText}`);
+      }
+  
+      console.log("Nuovo evento creato con successo!");
+    } catch (error) {
+      console.error("Errore nella creazione dell'evento:", error);
+    }
+  };
+  
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      const response = await fetch(`http://localhost:4443/api/eventi/${eventId}`, {
+        method: "DELETE",
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Errore eliminazione evento: ${response.statusText}`);
+      }
+  
+      console.log(`Evento ${eventId} eliminato con successo!`);
+    } catch (error) {
+      console.error("Errore nell'eliminazione dell'evento:", error);
+    }
+  };
+  
+  
+
 
   // Configura il DataManager per leggere i collaboratori
   const resourceDataManager = new DataManager({
@@ -68,12 +128,12 @@ useEffect(() => {
 
   useEffect(() => {
     console.log("USE EFFECT 4")
-    if (ganttRef.current && resources.length > 0) {
+    if (ganttRef.current && editingResources.length > 0) {
       console.log('Aggiorno risorse nel Gantt.');
-      ganttRef.current.resources = resources; // Passa le risorse direttamente al Gantt
+      ganttRef.current.editingResources = editingResources; // Passa le risorse direttamente al Gantt
       ganttRef.current.dataBind();
     }
-  }, [resources]);
+  }, [editingResources]);
 
   const refreshGantt = () => {
     if (ganttRef.current) {
@@ -89,26 +149,17 @@ useEffect(() => {
     }
   };
   
-console.log("resourceDataManager: ",resources)
-console.log("ganttData: ",tasks)
+console.log("resourceDataManager: ",editingResources)
+console.log("tasks: ",tasks)
   return (
     <div>
       <GanttComponent
+      taskType="FixedDuration"  // 👈 Evita che la durata cambi automaticamente
+      validateManualTasksOnLinking={false}  // 👈 Disabilita modifiche automatiche alla durata
         id="ganttChart"
         ref={ganttRef}
         dataSource={tasks}
-        resources={resources} // Usa le risorse caricate nello stato
-        resourceFields={{
-          id: 'resourceId',
-          name: 'resourceName',
-          unit: 'unit',
-          group: 'resourceGroup',
-        }}
-        height="800px"
-        allowSorting={true}
-        enableContextMenu={true}
-        highlightWeekends={true}
-        allowFiltering={true}
+        risorse={tasks.resourceInfo}
         taskFields={{
           id: 'Id',
           name: 'Subject',
@@ -121,7 +172,6 @@ console.log("ganttData: ",tasks)
           parentID: 'parentID',
           CommessaName: 'CommessaName'
         }}
-        toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
         columns={[
           { field: 'Id', visible: false },
           { field: 'CommessaName', headerText: 'Commessa', width: '250' },
@@ -177,6 +227,23 @@ console.log("ganttData: ",tasks)
             },
           },
         ]}
+
+
+        resources={editingResources} // Usa le risorse caricate nello stato
+        resourceFields={{
+          id: 'resourceId',
+          name: 'resourceName',
+          unit: 'unit',
+          group: 'resourceGroup',
+        }}
+        height="800px"
+        allowSorting={true}
+        enableContextMenu={true}
+        highlightWeekends={true}
+        allowFiltering={true}
+
+        toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
+
         treeColumnIndex={1} 
         editSettings={{
           allowAdding: true,
@@ -222,9 +289,17 @@ console.log("ganttData: ",tasks)
         
         
         actionComplete={(args) => {
-          if (args.requestType === 'save') {
-            console.log('Salvataggio completato:', args.data);
-            //refreshGantt(); // Forza il refresh completo
+          if (args.requestType === "save") {
+            console.log("Salvataggio completato:", args.data);
+      
+            if (args.action === "add") {
+              handleCreateEvent(args.data);
+            } else {
+              handleSaveEvent(args.data);
+            }
+          } else if (args.requestType === "delete") {
+            console.log("Eliminazione evento:", args.data[0].Id);
+            handleDeleteEvent(args.data[0].Id);
           }
         }}
       >
