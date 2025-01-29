@@ -26,6 +26,7 @@ const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDelete
 
   // Carica i dati delle risorse
   useEffect(() => {
+    console.log("USE EFFECT 1")
     const query = new Query();
     resourceDataManager.executeQuery(query).then((response) => {
       setResources(response.result || []); // Salva i risultati nello stato
@@ -36,6 +37,7 @@ const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDelete
   }, []);
 
   useEffect(() => {
+    console.log("USE EFFECT 2")
     if (ref) {
       ref.current = ganttRef.current;
     }
@@ -45,6 +47,7 @@ const Gantt = forwardRef(({ ganttData = [], onUpdateEvent, onSaveEvent, onDelete
   }, [ref]);
 
   useEffect(() => {
+    console.log("USE EFFECT 3")
     if (ganttRef.current && resources.length > 0) {
       console.log('Aggiorno risorse nel Gantt.');
       ganttRef.current.resources = resources; // Passa le risorse direttamente al Gantt
@@ -87,7 +90,7 @@ console.log("resourceDataManager: ",resources)
           dependency: 'Predecessors',
           progress: 'Progress',
           resourceInfo: 'resources',
-          parentID: 'parentID',
+          parentId: 'parentId',
         }}
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
         columns={[
@@ -96,7 +99,7 @@ console.log("resourceDataManager: ",resources)
           { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit' },
           { field: 'resources', headerText: 'Resources', width: '200', editType: 'dropdownedit' },
           {
-            field: 'parentID',
+            field: 'parentId',
             headerText: 'Parent Task',
             width: '200',
             edit: {
@@ -120,10 +123,10 @@ console.log("resourceDataManager: ",resources)
                 const dropdown = new DropDownList({
                   dataSource: parentOptions,
                   fields: { text: 'text', value: 'value' },
-                  value: args.rowData.parentID || null,
+                  value: args.rowData.parentId || null,
                   placeholder: 'Select Parent Task',
                   change: (e) => {
-                    args.rowData.parentID = e.value;
+                    args.rowData.parentId = e.value;
                     console.log('Parent ID aggiornato:', e.value);
                   },
                 });
@@ -155,17 +158,18 @@ console.log("resourceDataManager: ",resources)
           position: '35%',
         }}
         actionBegin={(args) => {
+          console.log("AZIONE",args.requestType)
           if (args.requestType === 'beforeSave') {
             console.log('Intercepting beforeSave:', args.data);
-            if (args.data.parentID === 0) {
-              args.data.parentID = null; // Correggi parentID a null se non ha genitore
-            }
+            args.data.ganttProperties.parentId = args.data.parentId;
+            // args.data.parentID = null; // Correggi parentID a null se non ha genitore
+           // }
           }
         }}
         actionComplete={(args) => {
           if (args.requestType === 'save') {
             console.log('Salvataggio completato:', args.data);
-            refreshGantt(); // Forza il refresh completo
+           // refreshGantt(); // Forza il refresh completo
           }
         }}
       >
