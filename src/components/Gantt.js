@@ -174,6 +174,7 @@ console.log("ganttData: ",tasks)
             },
           },
         ]}
+        treeColumnIndex={1} 
         editSettings={{
           allowAdding: true,
           allowEditing: true,
