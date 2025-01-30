@@ -13,6 +13,8 @@ import {
 import { DataManager, WebApiAdaptor, Query } from '@syncfusion/ej2-data';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
 
+import { ComboBox } from '@syncfusion/ej2-dropdowns';
+
 const Gantt = forwardRef(({ onUpdateEvent, onSaveEvent, onDeleteEvent }, ref) => {
   const ganttRef = useRef(null);
   const [editingResources, setResources] = useState([]); // Stato per i dati delle risorse
@@ -204,30 +206,46 @@ console.log("tasks: ",tasks)
                 return element.ej2_instances?.[0]?.value || null;
               },
               write: (args) => {
+                if (!commesse.length) {
+                  console.warn("⚠️ Nessuna commessa trovata! Assicurati che l'API funzioni correttamente.");
+                }
+          
                 const dropdown = new DropDownList({
-                  dataSource: commesse, // Usa le commesse caricate
+                  dataSource: commesse,  // 📌 Usa le commesse caricate
                   fields: { text: 'CommessaName', value: 'CommessaName' },
                   value: args.rowData.CommessaName || null,
-                  placeholder: 'Select Commessa',
+                  placeholder: 'Seleziona una commessa...',
+                  allowFiltering: true,  // 🔥 Abilita AUTOCOMPLETAMENTO!
+                  filterType: 'Contains',  // 🔍 Consente la ricerca flessibile
                   change: (e) => {
                     args.rowData.CommessaName = e.value;
-                    console.log('Commessa selezionata:', e.value);
+                    console.log('Commessa aggiornata:', e.value);
                   },
+                  actionComplete: () => {
+                    console.log("📌 DropDownList aggiornato con le commesse:", commesse);
+                  }
                 });
+          
                 dropdown.appendTo(args.element);
                 args.column.dropdownInstance = dropdown;
+          
+                // 🔹 Se `commesse` non è ancora caricato, aggiorna il DropDownList dopo il caricamento
+                if (!commesse.length) {
+                  setTimeout(() => {
+                    dropdown.refresh();
+                    console.log("📌 DropDownList aggiornato post-caricamento.");
+                  }, 500);
+                }
               },
               destroy: (args) => {
                 if (args?.column?.dropdownInstance) {
-                  console.log("Distruzione dropdown Commessa...");
                   args.column.dropdownInstance.destroy();
                   args.column.dropdownInstance = null;
-                } else {
-                  console.warn("Tentativo di distruggere una dropdown già distrutta o non inizializzata.");
                 }
-              }
-            }
+              },
+            },
           },
+          
           
           { field: 'Subject', headerText: 'Task Name', width: '250' },
           { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit', visible: false  },
@@ -343,19 +361,23 @@ console.log("tasks: ",tasks)
         
         
         actionComplete={(args) => {
+          
           if (args.requestType === "save") {
             console.log("Salvataggio completato:", args.data);
-      
-            if (args.action === "add") {
-              handleCreateEvent(args.data);
-            } else {
-              handleSaveEvent(args.data);
-            }
-          } else if (args.requestType === "delete") {
-            console.log("Eliminazione evento:", args.data[0].Id);
-            handleDeleteEvent(args.data[0].Id);
+            handleSaveEvent(args.data);
+            
           }
-        }}
+          console.log("AGGIUNTAaaaaaaaaaaa",args.action)
+          if (args.action === "add") {
+            
+            handleCreateEvent(args.data);
+          } 
+         else if (args.requestType === "delete") {
+          console.log("Eliminazione evento:", args.data[0].Id);
+          handleDeleteEvent(args.data[0].Id);
+
+
+        }} }
       >
         <Inject services={[Edit, Toolbar, Selection, Resize, RowDD, DayMarkers, Filter]} />
       </GanttComponent>

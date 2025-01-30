@@ -178,23 +178,23 @@ app.get('/api/eventi', (req, res) => {
 });
 
 
-  
-
-  
-  
+   
 
 app.post('/api/eventi', (req, res) => {
-    const { Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza } = req.body;
+console.log("req.body",req.body.taskData)
+
+    const { Subject, StartTime, EndTime, CommessaName, resources, Progress, Predecessors ,parentID,Id} = req.body.taskData;
     try {
       const newEvento = db.createEvento({
-        Descrizione,
-        Inizio,
-        Fine,
+        Subject,
+        StartTime,
+        EndTime,
         CommessaName,
-        IncaricatoId,
-        Colore,
-        Progresso,
-        Dipendenza
+        resources,
+        Progress,
+        Predecessors,
+        parentID,
+        Id
       });
       res.status(201).json(newEvento);
     } catch (error) {

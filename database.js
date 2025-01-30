@@ -83,19 +83,24 @@ const getAllEventi = () => {
 
 const createEvento = (evento) => {
     try {
+
+        console.log("aggiungi",evento)
         const query = `
-            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId,Colore,Progresso, Dipendenza, ParentID)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
         `;
         const params = [
-            evento.Descrizione,
-            evento.Inizio,
-            evento.Fine,
-            evento.CommessaName,
-            evento.IncaricatoId,
-            evento.Colore || '',
-            evento.Progresso || 0,
-            evento.Dipendenza || ''
+            evento.Subject || 'No Description',
+            evento.StartTime || new Date().toISOString(),
+            evento.EndTime || new Date().toISOString(),
+            evento.CommessaName || 'COMMESSA DA ASSEGNARE',
+            evento.resources ? evento.resources.map(res => res.resourceId).join(',') : null,
+            evento.CategoryColor || '#abb8c3',
+            evento.Progress || 0,
+            evento.Predecessors || '',
+            evento.parentID,
+            
+            
         ];
         console.log('Create Event Params:', params);
         const result = db.prepare(query).run(params);
