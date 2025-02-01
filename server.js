@@ -3,11 +3,19 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./database');  // Importa tutte le funzioni dal modulo database
 const mysql = require('mysql');
-
+const https = require('https');
+const fs = require('fs');
+const options = {
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.crt'),
+    rejectUnauthorized: false // Disabilita la verifica del certificato SSL
+  };
+  
 const app = express();
 const port = 4443;
 
 app.use(cors());
+
 app.use(bodyParser.json());
 
 const mysqlConnection = mysql.createConnection({
@@ -266,6 +274,19 @@ app.post('/api/associate-commesse-collaboratore', (req, res) => {
     }
 });
 
+
+const http = require('http');
+
+// Configura il server HTTP
+http.createServer(app).listen(3003, () => {
+  console.log('Server HTTP in esecuzione su http://localhost:4443');
+});
+
+// Configura il server HTTPS
+https.createServer(options, app).listen(3004, '0.0.0.0', () => {
+    console.log('Server HTTPS in esecuzione su https://72.14.201.19:3004');
+  });
+  
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
