@@ -15,7 +15,7 @@ import { DropDownList } from '@syncfusion/ej2-dropdowns';
 
 import { ComboBox } from '@syncfusion/ej2-dropdowns';
 
-const Gantt = forwardRef(({ onUpdateEvent, onSaveEvent, onDeleteEvent }, ref) => {
+const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
   const ganttRef = useRef(null);
   const [editingResources, setResources] = useState([]); // Stato per i dati delle risorse
   const [tasks, setTasks] = useState([]);
@@ -112,11 +112,20 @@ useEffect(() => {
   eventDataManager.executeQuery(new Query()).then((response) => {
     setTasks(response.result || []);
     console.log('Eventi caricati:', response.result);
+
+    // 📌 Passiamo gli eventi aggiornati a App.js
+    if (typeof onEventsUpdate === "function") {
+      onEventsUpdate(response.result);
+    }
   }).catch((error) => {
     console.error('Errore nel caricamento degli eventi:', error);
   });
 }, []);
 
+
+useEffect(() => {
+  console.log("📢 Gantt ha ricevuto nuovi eventi:", tasks);
+}, [tasks]);
 
 
   useEffect(() => {
@@ -145,7 +154,7 @@ useEffect(() => {
       .then(response => response.json())
       .then(data => {
         setCommesse(data || []);
-        console.log('Commesse caricate:', data);
+        //console.log('Commesse caricate:', data);
       })
       .catch(error => {
         console.error('Errore nel caricamento delle commesse:', error);
@@ -167,8 +176,39 @@ useEffect(() => {
     }
   };
   
-console.log("resourceDataManager: ",editingResources)
-console.log("tasks: ",tasks)
+  const handleAddIndicator = (indicator) => {
+    console.log("📢 handleAddIndicator chiamato con:", indicator);
+  
+    setEvents((prevEvents) => {
+      const updatedEvents = prevEvents.map((event) =>
+        event.Id === indicator.taskId
+          ? {
+              ...event,
+              Indicators: [...(event.Indicators || []), indicator],
+            }
+          : event
+      );
+  
+      console.log("📢 Eventi aggiornati con gli indicatori:", updatedEvents);
+  
+      // 📢 Passiamo gli eventi aggiornati al Gantt
+      if (ganttRef1.current) {
+        console.log("🔄 Aggiornamento forzato del Gantt con i nuovi indicatori!");
+        ganttRef1.current.dataSource = updatedEvents;
+        ganttRef1.current.refresh();
+      }
+  
+      return updatedEvents;
+    });
+  
+    setShowIndicatorModal(false);
+  };
+  
+  
+  
+
+//console.log("commesse: ",commesse)
+
   return (
     <div>
       <GanttComponent
@@ -188,7 +228,8 @@ console.log("tasks: ",tasks)
           progress: 'Progress',
           resourceInfo: 'resources',
           parentID: 'parentID',
-          CommessaName: 'CommessaName'
+          CommessaName: 'CommessaName',
+          indicators: 'Indicators', // 👈 Aggiunto per supportare gli indicators
         }}
         columns={[
           { field: 'Id', visible: false },
@@ -233,8 +274,8 @@ console.log("tasks: ",tasks)
                 if (!commesse.length) {
                   setTimeout(() => {
                     dropdown.refresh();
-                    console.log("📌 DropDownList aggiornato post-caricamento.");
-                  }, 500);
+                    //console.log("📌 DropDownList aggiornato post-caricamento.");
+                  }, 700);
                 }
               },
               destroy: (args) => {
@@ -367,7 +408,7 @@ console.log("tasks: ",tasks)
             handleSaveEvent(args.data);
             
           }
-          console.log("AGGIUNTAaaaaaaaaaaa",args.action)
+          //console.log("AGGIUNTAaaaaaaaaaaa",args.action)
           if (args.action === "add") {
             
             handleCreateEvent(args.data);

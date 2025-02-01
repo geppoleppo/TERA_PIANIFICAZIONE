@@ -1,56 +1,61 @@
 // App.js - Sincronizzazione con tasto per aggiornare dati tra Gantt
 import React, { useState, useRef } from 'react';
+
 import './App.css';
 import Gantt from './components/Gantt';
+import IndicatorModal from './components/indicators';
 //import Gantt2 from './components/Gantt2';
 import Sidebar from './sidebar/Sidebar';
+//import '@syncfusion/ej2-icons/styles/material.css'; // Stili Syncfusion Icons
 
 const App = () => {
-  const [projectResources, setProjectResources] = useState([
-    { resourceId: 1, resourceName: 'Pluto 1', color: '#FF0000', resourceGroup: 'Group A' },
-    { resourceId: 2, resourceName: 'Pippo 2', color: '#00FF00', resourceGroup: 'Group B' },
-    { resourceId: 3, resourceName: 'Unico 3', color: '#00FF00', resourceGroup: 'Group B' },
-  ]);
+  const [events, setEvents] = useState([]); // Stato per gli eventi del Gantt
+  const [showIndicatorModal, setShowIndicatorModal] = useState(false);
+  const handleAddIndicator = (indicator) => {
+    console.log("📢 handleAddIndicator chiamato con:", indicator);
+  
+    setEvents((prevEvents) => {
+      const updatedEvents = prevEvents.map((event) =>
+        event.Id === indicator.taskId
+          ? {
+              ...event,
+              Indicators: [...(event.Indicators || []), {
+                date: indicator.date,
+                name: indicator.name,
+                tooltip: indicator.tooltip,
+                iconClass: indicator.iconClass // ✅ Passiamo solo la classe CSS pura!
+              }]
+            }
+          : event
+      );
+  
+      console.log("📢 Eventi aggiornati con gli indicatori:", updatedEvents);
+  
+      if (ganttRef1.current) {
+        console.log("🔄 Aggiornamento forzato del Gantt con i nuovi indicatori!");
+        ganttRef1.current.dataSource = updatedEvents;
+        ganttRef1.current.refresh();
+      }
+  
+      return updatedEvents;
+    });
+  
+    setShowIndicatorModal(false);
+  };
+  
+  
+  
+  
 
-  const [events, setEvents] = useState([
-    {
-      Id: 1,
-      Subject: 'Evento 1',
-      StartTime: new Date('2025-01-01'),
-      EndTime: new Date('2025-01-02'),
-      CommessaId: 1,
-      CategoryColor: '#FF0000',
-      Progress: 30,
-      work: 16,
-      //parentID: 2,
-     // resources: [1, 2],
-      
-      
-    },
-    {
-      Id: 2,
-      Subject: 'Evento 2',
-      StartTime: new Date('2025-01-03'),
-      EndTime: new Date('2025-01-04'),
-      CommessaId: 2,
-      CategoryColor: '#00FF00',
-      Progress: 30,
-      work: 16,
-      //resources: [3],
-      
-    },
-    {
-      Id: 3,
-      Subject: 'Evento 3',
-      StartTime: new Date('2025-01-03'),
-      EndTime: new Date('2025-01-04'),
-      CommessaId: 2,
-      CategoryColor: '#00FF00',
-      Progress: 30,
-      work: 16,
-      //parentID:2
-    },
-  ]);
+
+  // Funzione per ricevere eventi aggiornati dal Gantt
+  const handleEventsUpdate = (updatedEvents) => {
+    console.log("Aggiornamento eventi ricevuto:", updatedEvents);
+    setEvents(updatedEvents);
+  };
+
+
+
 
   const ganttRef1 = useRef(null);
   const ganttRef2 = useRef(null);
@@ -99,26 +104,44 @@ const App = () => {
     }
   };
 
+  console.log("📢 Controllo IndicatorModal - onSave:", handleAddIndicator);
+  console.log("📢 handleAddIndicator è definito:", typeof handleAddIndicator);
+
 
   return (
     <div className="App">
       <Sidebar
-        setProjectResources={setProjectResources}
-        projectResources={projectResources}
+
       />
 
-        <button onClick={syncCommesse} style={{ margin: '10px', padding: '10px' }}>
-          🔄 Sincronizza Commesse (MySQL → SQLite)
-        </button>
+      <button onClick={syncCommesse} style={{ margin: '10px', padding: '10px' }}>
+        🔄 Sincronizza Commesse (MySQL → SQLite)
+      </button>
+      <button onClick={() => setShowIndicatorModal(true)} style={{ margin: '10px', padding: '10px' }}>
+        ✨ Aggiungi Indicatore
+      </button>
+
+
+
+      {showIndicatorModal && (
+  <IndicatorModal 
+    tasks={events} 
+    onSave={handleAddIndicator} 
+    onClose={() => setShowIndicatorModal(false)} 
+  />
+)}
+
+
 
 
 
       <Gantt
+        onEventsUpdate={handleEventsUpdate}
         //ganttData={events}
         //projectResources={projectResources}
-       // onUpdateEvent={handleUpdateEvent}
-      //  onDeleteEvent={handleDeleteEvent}
-       // onSaveEvent={handleSaveEvent}
+        // onUpdateEvent={handleUpdateEvent}
+        //  onDeleteEvent={handleDeleteEvent}
+        // onSaveEvent={handleSaveEvent}
         ref={ganttRef1}
       />
 
