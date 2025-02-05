@@ -7,6 +7,8 @@ import IndicatorModal from './components/indicators';
 //import Gantt2 from './components/Gantt2';
 import Sidebar from './sidebar/Sidebar';
 //import '@syncfusion/ej2-icons/styles/material.css'; // Stili Syncfusion Icons
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import GanttResourceView from './components/GanttResourceView';
 
 const App = () => {
   const [events, setEvents] = useState([]); // Stato per gli eventi del Gantt
@@ -121,6 +123,13 @@ const App = () => {
         ✨ Aggiungi Indicatore
       </button>
 
+      <button 
+  onClick={() => window.open('/resource-view', '_blank')}
+  style={{ margin: '10px', padding: '10px' }}
+>
+  📊 Visualizza Risorse
+</button>
+
 
 
       {showIndicatorModal && (
@@ -131,28 +140,16 @@ const App = () => {
   />
 )}
 
+<Router>
+      <Routes>
+        <Route path="/" element={<Gantt />} />
+        <Route path="/resource-view" element={<GanttResourceView onEventsUpdate={handleEventsUpdate} ref={ganttRef1} />} />
+      </Routes>
+    </Router>
 
 
 
 
-      <Gantt
-        onEventsUpdate={handleEventsUpdate}
-        //ganttData={events}
-        //projectResources={projectResources}
-        // onUpdateEvent={handleUpdateEvent}
-        //  onDeleteEvent={handleDeleteEvent}
-        // onSaveEvent={handleSaveEvent}
-        ref={ganttRef1}
-      />
-
-      {/* <Gantt2
-        ganttData={events}
-        projectResources={projectResources}
-        onUpdateEvent={handleUpdateEvent}
-        onDeleteEvent={handleDeleteEvent}
-        onSaveEvent={handleSaveEvent}
-        ref={ganttRef2}
-      /> */}
     </div>
   );
 };

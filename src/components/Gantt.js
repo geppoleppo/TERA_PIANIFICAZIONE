@@ -207,7 +207,7 @@ useEffect(() => {
   
   
 
-//console.log("commesse: ",commesse)
+console.log("commesse: ",commesse)
 
   return (
     <div>
@@ -230,7 +230,14 @@ useEffect(() => {
           parentID: 'parentID',
           CommessaName: 'CommessaName',
           indicators: 'Indicators', // 👈 Aggiunto per supportare gli indicators
+          notes: 'info',
         }}
+
+        selectionSettings= {{
+          mode: 'Cell',
+          type: 'Multiple ',
+          enableToggle: true,  
+      }}
         columns={[
           { field: 'Id', visible: false },
           {
