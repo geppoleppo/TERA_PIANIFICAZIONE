@@ -87,7 +87,12 @@ const GanttResourceView = ({ onEventsUpdate }) => {
             >
                 {loading ? "⏳ Aggiornamento..." : "🔄 Aggiorna"}
             </button>
-
+{/* 🔄 Mostra un messaggio di caricamento mentre i dati vengono recuperati */}
+{loading ? (
+                <div style={{ textAlign: "center", fontSize: "18px", padding: "20px" }}>
+                    ⏳ Caricamento dati in corso...
+                </div>
+            ) : (
             
 
             <GanttComponent
@@ -126,7 +131,7 @@ const GanttResourceView = ({ onEventsUpdate }) => {
                 }}
                 columns={[
                     { field: 'Id', visible: false },
-                    { field: 'Subject', headerText: 'Task Name', width: 250 },
+                    { field: 'Subject', headerText: 'RISORSA', width: 250 },
                     { field: 'work', headerText: 'Work' },
                     { field: 'Progress' },
                     { field: 'resourceGroup', headerText: 'Group' },
@@ -148,7 +153,8 @@ const GanttResourceView = ({ onEventsUpdate }) => {
                 height="800px"
             >
                 <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize,Filter]} />
-            </GanttComponent>
+                </GanttComponent>
+            )}
         </div>
     );
 };

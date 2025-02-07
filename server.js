@@ -173,7 +173,8 @@ app.get('/api/eventi', (req, res) => {
                 resources: ids, // 👈 Ora è nel formato corretto!
                 parentID: evento.ParentID || null,
                 CategoryColor: evento.Colore || '#1aaa55',
-                CommessaName: evento.CommessaName
+                CommessaName: evento.CommessaName,
+                info: evento.info,
             };
         });
 
