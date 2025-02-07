@@ -38,6 +38,42 @@ const GanttResourceView = ({ onEventsUpdate }) => {
     useEffect(() => {
         loadData();
     }, []);
+    console.log("task gant 2:",tasks)
+    let prova=[{
+        CategoryColor : "#abb8c3",
+        CommessaName : "22013_OPERA_UNIVERSITARIA_BORINO",
+        Duration
+        : 
+        null,
+        EndTime
+        : 
+        "2025-02-18T16:00:00.000Z",
+        Id
+        : 
+        1,
+        Predecessors
+        : 
+        "",
+        Progress
+        : 
+        0,
+        StartTime
+        : 
+        "2025-02-10T07:00:00.278Z",
+        Subject
+        : 
+        "22013_OPERA_UNIVERSITARIA_BORINO",
+        parentID
+        : 
+        null,
+        resources
+        : 
+        [1, 2]
+
+
+    }]
+
+
 
     return (
         <div>
@@ -51,6 +87,8 @@ const GanttResourceView = ({ onEventsUpdate }) => {
             >
                 {loading ? "⏳ Aggiornamento..." : "🔄 Aggiorna"}
             </button>
+
+            
 
             <GanttComponent
                 id="ResourceView"
@@ -72,6 +110,7 @@ const GanttResourceView = ({ onEventsUpdate }) => {
                     child: 'subtasks'
                 }}
                 taskType="FixedWork"
+                
                 resourceFields={{
                     id: 'resourceId',
                     name: 'resourceName',
@@ -106,7 +145,7 @@ const GanttResourceView = ({ onEventsUpdate }) => {
                 allowSelection={true}
                 highlightWeekends={true}
                 treeColumnIndex={1}
-                height="450px"
+                height="800px"
             >
                 <Inject services={[Selection, DayMarkers, Toolbar, Edit, Resize,Filter]} />
             </GanttComponent>

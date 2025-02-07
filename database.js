@@ -86,8 +86,8 @@ const createEvento = (evento) => {
 
         console.log("aggiungi",evento)
         const query = `
-            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId,Colore,Progresso, Dipendenza, ParentID)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
+            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId,Colore,Progresso, Dipendenza, ParentID, info)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?)
         `;
         const params = [
             evento.Subject || 'No Description',
@@ -99,6 +99,7 @@ const createEvento = (evento) => {
             evento.Progress || 0,
             evento.Predecessors || '',
             evento.parentID,
+            evento.info
             
             
         ];
@@ -120,7 +121,7 @@ const updateEvento = (id, evento) => {
 
         const query = `
             UPDATE Eventi
-            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?, ParentID = ?
+            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?, ParentID = ?, info=?
             WHERE Id = ?
         `;
         const params = [
@@ -133,6 +134,7 @@ const updateEvento = (id, evento) => {
             incaricatiIds,  // 👈 Ora salva una stringa di ID separati da virgole
             evento.taskData.Predecessors || '',
             evento.taskData.parentID,
+            evento.taskData.info,
             id
         ];
 

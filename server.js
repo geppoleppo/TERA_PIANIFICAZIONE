@@ -202,6 +202,7 @@ console.log("req.body",req.body.taskData)
         Progress,
         Predecessors,
         parentID,
+        info,
         Id
       });
       res.status(201).json(newEvento);
@@ -213,7 +214,7 @@ console.log("req.body",req.body.taskData)
 
 app.put('/api/eventi/:id', (req, res) => {
     try {
-        console.log('req.body:',req.body)
+        console.log('req:',req)
         const updatedEvento = db.updateEvento(req.params.id, req.body);
         res.json(updatedEvento);
     } catch (error) {

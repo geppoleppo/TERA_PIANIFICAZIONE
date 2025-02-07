@@ -31,17 +31,17 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
         },
         body: JSON.stringify(eventData),
       });
-  
+
       if (!response.ok) {
         throw new Error(`Errore aggiornamento evento: ${response.statusText}`);
       }
-  
+
       console.log(`Evento ${eventData.Id} aggiornato con successo!`);
     } catch (error) {
       console.error("Errore nel salvataggio dell'evento:", error);
     }
   };
-  
+
   const handleCreateEvent = async (newEvent) => {
     try {
       const response = await fetch("http://localhost:4443/api/eventi", {
@@ -51,34 +51,34 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
         },
         body: JSON.stringify(newEvent),
       });
-  
+
       if (!response.ok) {
         throw new Error(`Errore creazione evento: ${response.statusText}`);
       }
-  
+
       console.log("Nuovo evento creato con successo!");
     } catch (error) {
       console.error("Errore nella creazione dell'evento:", error);
     }
   };
-  
+
   const handleDeleteEvent = async (eventId) => {
     try {
       const response = await fetch(`http://localhost:4443/api/eventi/${eventId}`, {
         method: "DELETE",
       });
-  
+
       if (!response.ok) {
         throw new Error(`Errore eliminazione evento: ${response.statusText}`);
       }
-  
+
       console.log(`Evento ${eventId} eliminato con successo!`);
     } catch (error) {
       console.error("Errore nell'eliminazione dell'evento:", error);
     }
   };
-  
-  
+
+
 
 
   // Configura il DataManager per leggere i collaboratori
@@ -100,32 +100,32 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
     });
   }, []);
 
-// Carica gli eventi dal database
-useEffect(() => {
-  console.log("USE EFFECT 2")
-  const eventDataManager = new DataManager({
-    url: 'http://localhost:4443/api/eventi',
-    adaptor: new WebApiAdaptor(),
-    crossDomain: true,
-  });
+  // Carica gli eventi dal database
+  useEffect(() => {
+    console.log("USE EFFECT 2")
+    const eventDataManager = new DataManager({
+      url: 'http://localhost:4443/api/eventi',
+      adaptor: new WebApiAdaptor(),
+      crossDomain: true,
+    });
 
-  eventDataManager.executeQuery(new Query()).then((response) => {
-    setTasks(response.result || []);
-    console.log('Eventi caricati:', response.result);
+    eventDataManager.executeQuery(new Query()).then((response) => {
+      setTasks(response.result || []);
+      console.log('Eventi caricati:', response.result);
 
-    // 📌 Passiamo gli eventi aggiornati a App.js
-    if (typeof onEventsUpdate === "function") {
-      onEventsUpdate(response.result);
-    }
-  }).catch((error) => {
-    console.error('Errore nel caricamento degli eventi:', error);
-  });
-}, []);
+      // 📌 Passiamo gli eventi aggiornati a App.js
+      if (typeof onEventsUpdate === "function") {
+        onEventsUpdate(response.result);
+      }
+    }).catch((error) => {
+      console.error('Errore nel caricamento degli eventi:', error);
+    });
+  }, []);
 
 
-useEffect(() => {
-  console.log("📢 Gantt ha ricevuto nuovi eventi:", tasks);
-}, [tasks]);
+  useEffect(() => {
+    console.log("📢 Gantt ha ricevuto nuovi eventi:", tasks);
+  }, [tasks]);
 
 
   useEffect(() => {
@@ -165,55 +165,55 @@ useEffect(() => {
   const refreshGantt = () => {
     if (ganttRef.current) {
       console.log('Forzando il refresh completo del Gantt');
-  
+
       try {
         ganttRef.current.dataBind();
         ganttRef.current.refresh();
-       
+
       } catch (error) {
         console.error("Errore durante il refresh del Gantt:", error);
       }
     }
   };
-  
+
   const handleAddIndicator = (indicator) => {
     console.log("📢 handleAddIndicator chiamato con:", indicator);
-  
+
     setEvents((prevEvents) => {
       const updatedEvents = prevEvents.map((event) =>
         event.Id === indicator.taskId
           ? {
-              ...event,
-              Indicators: [...(event.Indicators || []), indicator],
-            }
+            ...event,
+            Indicators: [...(event.Indicators || []), indicator],
+          }
           : event
       );
-  
+
       console.log("📢 Eventi aggiornati con gli indicatori:", updatedEvents);
-  
+
       // 📢 Passiamo gli eventi aggiornati al Gantt
       if (ganttRef1.current) {
         console.log("🔄 Aggiornamento forzato del Gantt con i nuovi indicatori!");
         ganttRef1.current.dataSource = updatedEvents;
         ganttRef1.current.refresh();
       }
-  
+
       return updatedEvents;
     });
-  
+
     setShowIndicatorModal(false);
   };
-  
-  
-  
 
-console.log("commesse: ",commesse)
+
+
+
+  console.log("tasks: ", tasks)
 
   return (
     <div>
       <GanttComponent
-      taskType="FixedDuration"  // 👈 Evita che la durata cambi automaticamente
-      validateManualTasksOnLinking={false}  // 👈 Disabilita modifiche automatiche alla durata
+        taskType="FixedDuration"  // 👈 Evita che la durata cambi automaticamente
+        validateManualTasksOnLinking={false}  // 👈 Disabilita modifiche automatiche alla durata
         id="ganttChart"
         ref={ganttRef}
         dataSource={tasks}
@@ -233,11 +233,11 @@ console.log("commesse: ",commesse)
           notes: 'info',
         }}
 
-        selectionSettings= {{
+        selectionSettings={{
           mode: 'Cell',
           type: 'Multiple ',
-          enableToggle: true,  
-      }}
+          enableToggle: true,
+        }}
         columns={[
           { field: 'Id', visible: false },
           {
@@ -257,7 +257,7 @@ console.log("commesse: ",commesse)
                 if (!commesse.length) {
                   console.warn("⚠️ Nessuna commessa trovata! Assicurati che l'API funzioni correttamente.");
                 }
-          
+
                 const dropdown = new DropDownList({
                   dataSource: commesse,  // 📌 Usa le commesse caricate
                   fields: { text: 'CommessaName', value: 'CommessaName' },
@@ -273,10 +273,10 @@ console.log("commesse: ",commesse)
                     console.log("📌 DropDownList aggiornato con le commesse:", commesse);
                   }
                 });
-          
+
                 dropdown.appendTo(args.element);
                 args.column.dropdownInstance = dropdown;
-          
+
                 // 🔹 Se `commesse` non è ancora caricato, aggiorna il DropDownList dopo il caricamento
                 if (!commesse.length) {
                   setTimeout(() => {
@@ -293,15 +293,15 @@ console.log("commesse: ",commesse)
               },
             },
           },
-          
-          
+
+
           { field: 'Subject', headerText: 'Task Name', width: '250' },
-          { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit', visible: false  },
+          { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit', visible: false },
           { field: 'resources', headerText: 'Resources', width: '200', editType: 'dropdownedit' },
           {
             field: 'parentID',
             headerText: 'Parent Task',
-            visible: true, 
+            visible: true,
             width: '200',
             edit: {
               create: () => {
@@ -319,10 +319,10 @@ console.log("commesse: ",commesse)
                     .filter(task => task.Id !== args.rowData.Id) // Esclude l'ID dell'evento stesso
                     .map(task => ({
                       value: task.Id,
-                      text: task.CommessaName +'-'+task.Subject,
+                      text: task.CommessaName + '-' + task.Subject,
                     }))
                 ];
-                
+
 
                 const dropdown = new DropDownList({
                   dataSource: parentOptions,
@@ -364,7 +364,7 @@ console.log("commesse: ",commesse)
 
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
 
-        treeColumnIndex={1} 
+        treeColumnIndex={1}
         editSettings={{
           allowAdding: true,
           allowEditing: true,
@@ -381,17 +381,17 @@ console.log("commesse: ",commesse)
         }}
         actionBegin={(args) => {
           console.log("AZIONE", args.requestType);
-        
+
           if (args.requestType === 'beforeSave') {
             console.log('Intercepting beforeSave:', args.data.ganttProperties);
-        
+
             // Usa un fallback più sicuro
             const previousParentId = args.data.ganttProperties?.parentID ?? args.data.ganttProperties?.parentId ?? null;
             const newParentId = args.data.parentID ?? args.data.parentId ?? null;
-        
+
             if (previousParentId !== newParentId) {
               console.log('Parent ID modificato:', previousParentId, '→', newParentId);
-        
+
               // Verifica che il Gantt sia inizializzato prima di aggiornare
               if (ganttRef.current) {
                 setTimeout(() => {
@@ -399,33 +399,44 @@ console.log("commesse: ",commesse)
                 }, 200); // Delay per evitare problemi di rendering
               }
             }
-        
+
             // Assegna il nuovo valore al parentID
             args.data.ganttProperties.parentID = newParentId;
             args.data.ganttProperties.parentId = newParentId; // Copia anche in parentId per sicurezza
             args.data.taskData.parentID = newParentId;
           }
         }}
-        
-        
+
+
         actionComplete={(args) => {
-          
+
           if (args.requestType === "save") {
             console.log("Salvataggio completato:", args.data);
             handleSaveEvent(args.data);
-            
+
           }
           //console.log("AGGIUNTAaaaaaaaaaaa",args.action)
           if (args.action === "add") {
-            
+
             handleCreateEvent(args.data);
-          } 
-         else if (args.requestType === "delete") {
-          console.log("Eliminazione evento:", args.data[0].Id);
-          handleDeleteEvent(args.data[0].Id);
+          }
+          else if (args.requestType === "delete") {
+            console.log("🔴 Eliminazione multipla di eventi:", args.data);
+
+            // Controlla se args.data è un array e ha elementi
+            if (Array.isArray(args.data) && args.data.length > 0) {
+              // Itera su ogni evento e chiama handleDeleteEvent
+              args.data.forEach(event => {
+                console.log(`📌 Eliminazione evento ID: ${event.Id}`);
+                handleDeleteEvent(event.Id);
+              });
+            } else {
+              console.warn("⚠️ Nessun evento da eliminare trovato.");
+            }
+          }
 
 
-        }} }
+        }}
       >
         <Inject services={[Edit, Toolbar, Selection, Resize, RowDD, DayMarkers, Filter]} />
       </GanttComponent>

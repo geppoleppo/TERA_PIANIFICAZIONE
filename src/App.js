@@ -70,11 +70,11 @@ const App = () => {
     if (ganttRef2.current) ganttRef2.current.refresh();
   };
 
-  const handleDeleteEvent = (eventId) => {
-    setEvents((prevEvents) => prevEvents.filter((event) => event.Id !== eventId));
-    if (ganttRef1.current) ganttRef1.current.refresh();
-    if (ganttRef2.current) ganttRef2.current.refresh();
-  };
+ // const handleDeleteEvent = (eventId) => {
+   // setEvents((prevEvents) => prevEvents.filter((event) => event.Id !== eventId));
+   // if (ganttRef1.current) ganttRef1.current.refresh();
+   // if (ganttRef2.current) ganttRef2.current.refresh();
+ // };
 
   const handleSaveEvent = (newEvent) => {
     setEvents((prevEvents) => [...prevEvents, { ...newEvent, Id: prevEvents.length + 1 }]);
