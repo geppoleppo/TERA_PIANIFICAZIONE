@@ -295,9 +295,61 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
           },
 
 
-          { field: 'Subject', headerText: 'Task Name', width: '250' },
+          {
+            field: 'Subject',
+            headerText: 'AMBITO',
+            width: 250,
+            edit: {
+              create: () => {
+                const input = document.createElement('input');
+                input.className = 'e-field';
+                return input;
+              },
+              read: (element) => element.ej2_instances?.[0]?.value || null,
+              write: (args) => {
+                if (!args?.element) return;
+          
+                const subjectOptions = [
+                  { value: "Impianti elettrici - PFTE", text: "Impianti elettrici - PFTE" },
+                  { value: "Impianti elettrici - PE", text: "Impianti elettrici - PE" },
+                  { value: "Impianti meccanici - PFTE", text: "Impianti meccanici - PFTE" },
+                  { value: "Impianti meccanici - PE", text: "Impianti meccanici - PE" },
+                  { value: "Impianti meccanici - DL", text: "Impianti meccanici - DL" },
+                  { value: "Sicurezza Progettuale", text: "Sicurezza Progettuale" },
+                  { value: "Sicurezza Esecutiva", text: "Sicurezza Esecutiva" },
+                  { value: "Ambiente", text: "Ambiente" },
+                  { value: "Energia", text: "Energia" },
+                  { value: "Gare", text: "Gare" },
+                  
+                ];
+          
+                const comboBox = new ComboBox({
+                  dataSource: subjectOptions,
+                  fields: { text: 'text', value: 'value' },
+                  value: args.rowData.Subject || '',
+                  placeholder: 'Seleziona o scrivi un task...',
+                  allowCustom: true, // 🔥 Permette inserimento manuale
+                  change: (e) => {
+                    args.rowData.Subject = e.value;
+                    console.log("Task Name aggiornato:", e.value);
+                  },
+                });
+          
+                comboBox.appendTo(args.element);
+                args.column.comboBoxInstance = comboBox;
+              },
+              destroy: (args) => {
+                if (args?.column?.comboBoxInstance) {
+                  args.column.comboBoxInstance.destroy();
+                  args.column.comboBoxInstance = null;
+                }
+              },
+            },
+          },
+          
+          
           { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit', visible: false },
-          { field: 'resources', headerText: 'Resources', width: '200', editType: 'dropdownedit' },
+          { field: 'resources', headerText: 'RISORSE', width: '200', editType: 'dropdownedit' },
           {
             field: 'parentID',
             headerText: 'Parent Task',

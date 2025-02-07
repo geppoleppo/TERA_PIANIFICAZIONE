@@ -39,39 +39,7 @@ const GanttResourceView = ({ onEventsUpdate }) => {
         loadData();
     }, []);
     console.log("task gant 2:",tasks)
-    let prova=[{
-        CategoryColor : "#abb8c3",
-        CommessaName : "22013_OPERA_UNIVERSITARIA_BORINO",
-        Duration
-        : 
-        null,
-        EndTime
-        : 
-        "2025-02-18T16:00:00.000Z",
-        Id
-        : 
-        1,
-        Predecessors
-        : 
-        "",
-        Progress
-        : 
-        0,
-        StartTime
-        : 
-        "2025-02-10T07:00:00.278Z",
-        Subject
-        : 
-        "22013_OPERA_UNIVERSITARIA_BORINO",
-        parentID
-        : 
-        null,
-        resources
-        : 
-        [1, 2]
 
-
-    }]
 
 
 
@@ -129,9 +97,12 @@ const GanttResourceView = ({ onEventsUpdate }) => {
                     allowTaskbarEditing: false,
                     showDeleteConfirmDialog: false
                 }}
+                
                 columns={[
                     { field: 'Id', visible: false },
                     { field: 'Subject', headerText: 'RISORSA', width: 250 },
+                    { field: 'CommessaName', headerText: 'COMMESSA', width: 250 },
+
                     { field: 'work', headerText: 'Work' },
                     { field: 'Progress' },
                     { field: 'resourceGroup', headerText: 'Group' },
