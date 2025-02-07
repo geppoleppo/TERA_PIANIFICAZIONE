@@ -1,5 +1,6 @@
 // App.js - Sincronizzazione con tasto per aggiornare dati tra Gantt
 import React, { useState, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import './App.css';
 import Gantt from './components/Gantt';
@@ -10,11 +11,36 @@ import Sidebar from './sidebar/Sidebar';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import GanttResourceView from './components/GanttResourceView';
 
+const ToggleViewButton = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleToggleView = () => {
+    if (location.pathname === "/") {
+      navigate("/resource-view");
+    } else {
+      navigate("/");
+    }
+  };
+
+  return (
+    <button onClick={handleToggleView} style={{ margin: '10px', padding: '10px' }}>
+      {location.pathname === "/" ? "📊 Visualizza Risorse" : "📅 Torna al Gantt"}
+    </button>
+  );
+};
+
+
+
 const App = () => {
   const [events, setEvents] = useState([]); // Stato per gli eventi del Gantt
   const [showIndicatorModal, setShowIndicatorModal] = useState(false);
+
+
   const handleAddIndicator = (indicator) => {
     console.log("📢 handleAddIndicator chiamato con:", indicator);
+
+
   
     setEvents((prevEvents) => {
       const updatedEvents = prevEvents.map((event) =>
@@ -111,46 +137,32 @@ const App = () => {
 
 
   return (
-    <div className="App">
-      <Sidebar
+    <Router>
+      <div className="App">
+        <Sidebar />
+        <ToggleViewButton />
 
-      />
+        <button onClick={() => setShowIndicatorModal(true)} style={{ margin: '10px', padding: '10px' }}>
+          ✨ Aggiungi Indicatore
+        </button>
 
-      <button onClick={syncCommesse} style={{ margin: '10px', padding: '10px' }}>
-        🔄 Sincronizza Commesse (MySQL → SQLite)
-      </button>
-      <button onClick={() => setShowIndicatorModal(true)} style={{ margin: '10px', padding: '10px' }}>
-        ✨ Aggiungi Indicatore
-      </button>
+        {showIndicatorModal && (
+          <IndicatorModal
+            tasks={events}
+            onSave={(indicator) => {
+              console.log("📢 Indicatore aggiunto:", indicator);
+              setShowIndicatorModal(false);
+            }}
+            onClose={() => setShowIndicatorModal(false)}
+          />
+        )}
 
-      <button 
-  onClick={() => window.open('/resource-view', '_blank')}
-  style={{ margin: '10px', padding: '10px' }}
->
-  📊 Visualizza Risorse
-</button>
-
-
-
-      {showIndicatorModal && (
-  <IndicatorModal 
-    tasks={events} 
-    onSave={handleAddIndicator} 
-    onClose={() => setShowIndicatorModal(false)} 
-  />
-)}
-
-<Router>
-      <Routes>
-        <Route path="/" element={<Gantt />} />
-        <Route path="/resource-view" element={<GanttResourceView onEventsUpdate={handleEventsUpdate} ref={ganttRef1} />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Gantt />} />
+          <Route path="/resource-view" element={<GanttResourceView />} />
+        </Routes>
+      </div>
     </Router>
-
-
-
-
-    </div>
   );
 };
 
