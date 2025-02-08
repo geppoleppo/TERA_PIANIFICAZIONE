@@ -42,38 +42,36 @@ const App = () => {
   const handleAddIndicator = (indicator) => {
     console.log("📢 handleAddIndicator chiamato con:", indicator);
 
-
-  
     setEvents((prevEvents) => {
-      const updatedEvents = prevEvents.map((event) =>
-        event.Id === indicator.taskId
-          ? {
-              ...event,
-              Indicators: [...(event.Indicators || []), {
-                date: indicator.date,
-                name: indicator.name,
-                tooltip: indicator.tooltip,
-                iconClass: indicator.iconClass // ✅ Passiamo solo la classe CSS pura!
-              }]
-            }
-          : event
-      );
-  
-      console.log("📢 Eventi aggiornati con gli indicatori:", updatedEvents);
-  
-      if (ganttRef1.current) {
-        console.log("🔄 Aggiornamento forzato del Gantt con i nuovi indicatori!");
-        ganttRef1.current.dataSource = updatedEvents;
-        ganttRef1.current.refresh();
-      }
-  
-      return updatedEvents;
+        const updatedEvents = prevEvents.map((event) =>
+            event.Id === indicator.taskId
+                ? {
+                    ...event,
+                    Indicators: [...(event.Indicators || []), {
+                        date: indicator.date,
+                        name: indicator.name,
+                        tooltip: indicator.tooltip,
+                        iconClass: indicator.iconClass,
+                    }]
+                }
+                : event
+        );
+
+        console.log("📢 Eventi aggiornati con gli indicatori:", updatedEvents);
+
+        // Forza aggiornamento del Gantt
+        if (ganttRef1.current) {
+            console.log("🔄 Aggiornamento forzato del Gantt con i nuovi indicatori!");
+            ganttRef1.current.dataSource = updatedEvents;
+            ganttRef1.current.refresh();
+        }
+
+        return updatedEvents;
     });
-  
+
     setShowIndicatorModal(false);
-  };
-  
-  
+};
+
   
   
 
@@ -98,11 +96,7 @@ const App = () => {
     if (ganttRef2.current) ganttRef2.current.refresh();
   };
 
- // const handleDeleteEvent = (eventId) => {
-   // setEvents((prevEvents) => prevEvents.filter((event) => event.Id !== eventId));
-   // if (ganttRef1.current) ganttRef1.current.refresh();
-   // if (ganttRef2.current) ganttRef2.current.refresh();
- // };
+
 
   const handleSaveEvent = (newEvent) => {
     setEvents((prevEvents) => [...prevEvents, { ...newEvent, Id: prevEvents.length + 1 }]);
@@ -110,15 +104,6 @@ const App = () => {
     if (ganttRef2.current) ganttRef2.current.refresh();
   };
 
-  const syncGanttData = () => {
-    console.log("ci provo...")
-    if (ganttRef1.current && ganttRef2.current) {
-      const dataFromGantt1 = ganttRef1.current.dataSource;
-      ganttRef2.current.dataSource = [...dataFromGantt1];
-      ganttRef2.current.refresh();
-      console.log('Dati sincronizzati dal Gantt 1 al Gantt 2');
-    }
-  };
 
   const syncCommesse = async () => {
     console.log("Sincronizzazione delle commesse in corso...");
@@ -136,7 +121,7 @@ const App = () => {
 
   console.log("📢 Controllo IndicatorModal - onSave:", handleAddIndicator);
   console.log("📢 handleAddIndicator è definito:", typeof handleAddIndicator);
-
+  console.log("📢 EVENTI:", events);
 
   return (
     <Router>
@@ -163,9 +148,7 @@ const App = () => {
         )}
 
         <Routes>
-          <Route path="/" element={<Gantt 
-          indirizzo_url={indirizzo_url}
-          />} />
+        <Route path="/" element={<Gantt ref={ganttRef1} indirizzo_url={indirizzo_url} onEventsUpdate={handleEventsUpdate} />} />
           <Route path="/resource-view" element={<GanttResourceView 
           indirizzo_url={indirizzo_url}/>} />
         </Routes>

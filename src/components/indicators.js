@@ -13,6 +13,7 @@ const availableIcons = [
 ];
 
 const IndicatorModal = ({ tasks, onSave, onClose }) => {
+ 
   const [selectedTask, setSelectedTask] = useState("");
   const [indicatorName, setIndicatorName] = useState("");
   const [tooltip, setTooltip] = useState("");
@@ -21,34 +22,30 @@ const IndicatorModal = ({ tasks, onSave, onClose }) => {
 
   const handleSave = () => {
     console.log("📢 handleSave chiamato!");
-  
-    if (typeof onSave !== "function") {
-      console.error("❌ ERRORE: onSave non è una funzione! Verifica che venga passato correttamente.");
-      return;
+
+    if (!onSave) {
+        console.error("❌ ERRORE: onSave non è definito! Verifica che venga passato correttamente.");
+        return;
     }
-  
+
     if (selectedTask && indicatorName && tooltip && indicatorDate) {
-      console.log("📢 Dati inviati a onSave:", {
-        taskId: selectedTask,
-        name: indicatorName,
-        tooltip: tooltip,
-        date: indicatorDate, 
-        iconClass: iconClass,
-      });
-  
-      onSave({
-        taskId: selectedTask,
-        name: indicatorName,
-        tooltip: tooltip,
-        date: indicatorDate, 
-        iconClass: iconClass,
-      });
-  
-      onClose();
+        const newIndicator = {
+            taskId: selectedTask,
+            name: indicatorName,
+            tooltip: tooltip,
+            date: indicatorDate,
+            iconClass: iconClass,
+        };
+
+        console.log("📢 Dati inviati a onSave:", newIndicator);
+
+        onSave(newIndicator); // ✅ Ora i dati vengono passati correttamente
+        onClose();
     } else {
-      console.warn("⚠️ Alcuni campi sono vuoti, il salvataggio è stato bloccato!");
+        console.warn("⚠️ Alcuni campi sono vuoti, il salvataggio è stato bloccato!");
     }
-  };
+};
+
   
   console.log("📢 IndicatorModal ricevuto onSave:", typeof onSave);
 

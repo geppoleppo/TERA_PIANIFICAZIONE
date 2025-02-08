@@ -16,6 +16,8 @@ import { DropDownList } from '@syncfusion/ej2-dropdowns';
 import { ComboBox } from '@syncfusion/ej2-dropdowns';
 //const indirizzo_url='http://localhost:3003'
 
+
+
 const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
   const ganttRef = useRef(null);
   const [editingResources, setResources] = useState([]); // Stato per i dati delle risorse
@@ -206,7 +208,6 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
 
 
 
-
   console.log("tasks: ", tasks)
 
   return (
@@ -320,7 +321,7 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
                   { value: "Ambiente", text: "Ambiente" },
                   { value: "Energia", text: "Energia" },
                   { value: "Gare", text: "Gare" },
-                  
+                  { value: "Seleziona una commessa...", text: "🔽 Seleziona una commessa..." } // Opzione speciale per commesse
                 ];
           
                 const comboBox = new ComboBox({
@@ -330,8 +331,28 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
                   placeholder: 'Seleziona o scrivi un task...',
                   allowCustom: true, // 🔥 Permette inserimento manuale
                   change: (e) => {
-                    args.rowData.Subject = e.value;
-                    console.log("Task Name aggiornato:", e.value);
+                    if (e.value === "Seleziona una commessa...") {
+                      // Se l'utente sceglie questa opzione, apriamo il dropdown per le commesse
+                      setTimeout(() => {
+                        const dropdown = new DropDownList({
+                          dataSource: commesse,
+                          fields: { text: 'CommessaName', value: 'CommessaName' },
+                          placeholder: 'Scegli una commessa...',
+                          allowFiltering: true,
+                          filterType: 'Contains',
+                          change: (ev) => {
+                            args.rowData.Subject = ev.value; // Imposta il valore della commessa
+                            comboBox.value = ev.value; // Aggiorna il ComboBox
+                            console.log("🔹 Commessa selezionata:", ev.value);
+                          },
+                        });
+          
+                        dropdown.appendTo(args.element);
+                      }, 200);
+                    } else {
+                      args.rowData.Subject = e.value;
+                      console.log("Task Name aggiornato:", e.value);
+                    }
                   },
                 });
           

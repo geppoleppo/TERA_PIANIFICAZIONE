@@ -81,7 +81,8 @@ const GanttResourceView = ({ onEventsUpdate, indirizzo_url }) => {
                     dependency: 'Predecessors',
                     resourceInfo: 'resources',
                     work: 'work',
-                    child: 'subtasks'
+                    child: 'subtasks',
+                    parentID: 'parentID',
                 }}
                 taskType="FixedWork"
                 
@@ -109,6 +110,7 @@ const GanttResourceView = ({ onEventsUpdate, indirizzo_url }) => {
                     { field: 'resourceGroup', headerText: 'Group' },
                     { field: 'StartTime' },
                     { field: 'Duration' },
+                    //{ field: 'parentID' },
                 ]}
                 toolbar={['Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
                 labelSettings={{
