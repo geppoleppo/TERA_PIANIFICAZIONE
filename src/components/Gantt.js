@@ -506,35 +506,61 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
         }}
 
 
-        actionComplete={(args) => {
-
+        actionComplete={async (args) => {
           if (args.requestType === "save") {
-            console.log("Salvataggio completato:", args.data);
-            handleSaveEvent(args.data);
-
+              console.log("Salvataggio completato:", args.data);
+              await handleSaveEvent(args.data);
           }
-          //console.log("AGGIUNTAaaaaaaaaaaa",args.action)
+      
           if (args.action === "add") {
-
-            handleCreateEvent(args.data);
+              console.log("📌 Nuovo evento aggiunto:", args.data);
+              await handleCreateEvent(args.data);
           }
-          else if (args.requestType === "delete") {
-            console.log("🔴 Eliminazione multipla di eventi:", args.data);
-
-            // Controlla se args.data è un array e ha elementi
-            if (Array.isArray(args.data) && args.data.length > 0) {
-              // Itera su ogni evento e chiama handleDeleteEvent
-              args.data.forEach(event => {
-                console.log(`📌 Eliminazione evento ID: ${event.Id}`);
-                handleDeleteEvent(event.Id);
-              });
-            } else {
-              console.warn("⚠️ Nessun evento da eliminare trovato.");
-            }
+      
+          if (args.requestType === "delete") {
+              console.log("🔴 Eliminazione multipla di eventi:", args.data);
+              if (Array.isArray(args.data) && args.data.length > 0) {
+                  for (const event of args.data) {
+                      console.log(`📌 Eliminazione evento ID: ${event.Id}`);
+                      await handleDeleteEvent(event.Id);
+                  }
+              } else {
+                  console.warn("⚠️ Nessun evento da eliminare trovato.");
+              }
           }
-
-
-        }}
+      
+          if (args.requestType === "rowDropped") {
+              console.log("📌 Drag and Drop completato:", args);
+      
+              const draggedTask = args.modifiedRecords?.[0]; // Primo elemento spostato
+              if (draggedTask) {
+                  const updatedParentId = draggedTask.parentID || null; // Nuovo parent ID
+                  const taskId = draggedTask.Id;
+      
+                  console.log(`🔄 Aggiornamento ParentID: Task ${taskId} → Parent ${updatedParentId}`);
+      
+                  // Aggiorna il database con il nuovo parentID
+                  try {
+                      const response = await fetch(`${indirizzo_url}/api/eventi/${taskId}`, {
+                          method: "PUT",
+                          headers: {
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ parentID: updatedParentId }),
+                      });
+      
+                      if (!response.ok) {
+                          throw new Error(`Errore aggiornamento parentID: ${response.statusText}`);
+                      }
+      
+                      console.log(`✅ ParentID aggiornato con successo per Task ${taskId}`);
+                  } catch (error) {
+                      console.error("❌ Errore nell'aggiornamento del parentID:", error);
+                  }
+              }
+          }
+      }}
+      
       >
         <Inject services={[Edit, Toolbar, Selection, Resize, RowDD, DayMarkers, Filter,Sort]} />
       </GanttComponent>

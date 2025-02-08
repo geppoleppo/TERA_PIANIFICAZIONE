@@ -113,42 +113,59 @@ const createEvento = (evento) => {
 };
 
 const updateEvento = (id, evento) => {
-    console.log('EVENTOOOO', JSON.stringify(evento.taskData));
+    console.log('📌 Evento ricevuto per aggiornamento:', JSON.stringify(evento));
 
     try {
-        // Estrai gli ID delle risorse come array di numeri
-        const incaricatiIds = evento.taskData.resources.map(res => res.resourceId).join(',');
+        // Se la richiesta contiene solo il parentID, aggiorna solo quel campo
+        if (evento.parentID !== undefined) {
+            console.log(`🔄 Aggiornamento solo del parentID per l'evento ID ${id} → Nuovo ParentID: ${evento.parentID}`);
+
+            const query = `
+                UPDATE Eventi
+                SET ParentID = ?
+                WHERE Id = ?
+            `;
+
+            const result = db.prepare(query).run(evento.parentID, id);
+            return { Id: id, parentID: evento.parentID };
+        }
+
+        // Se arrivano tutti i dati, fai un aggiornamento completo
+        console.log('📊 Aggiornamento completo dell\'evento...');
+
+        const incaricatiIds = evento.taskData?.resources?.map(res => res.resourceId).join(',') || '';
 
         const query = `
             UPDATE Eventi
             SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?, ParentID = ?, info=?
             WHERE Id = ?
         `;
+
         const params = [
-            evento.taskData.Subject || evento.Subject || 'No Description',
-            evento.taskData.StartTime || new Date().toISOString(),
-            evento.taskData.EndTime || new Date().toISOString(),
-            evento.taskData.CommessaName,
-            evento.taskData.CategoryColor || '',
-            evento.taskData.Progress || 0,
-            incaricatiIds,  // 👈 Ora salva una stringa di ID separati da virgole
-            evento.taskData.Predecessors || '',
-            evento.taskData.parentID,
-            evento.taskData.info,
+            evento.taskData?.Subject || evento.Subject || 'No Description',
+            evento.taskData?.StartTime || new Date().toISOString(),
+            evento.taskData?.EndTime || new Date().toISOString(),
+            evento.taskData?.CommessaName,
+            evento.taskData?.CategoryColor || '',
+            evento.taskData?.Progress || 0,
+            incaricatiIds,
+            evento.taskData?.Predecessors || '',
+            evento.taskData?.parentID,
+            evento.taskData?.info,
             id
         ];
 
-        console.log('Update Event Params:', params);
+        console.log('📝 Parametri aggiornamento evento:', params);
 
-        // Esegui la query
         const result = db.prepare(query).run(...params);
         return { ...evento.taskData, Id: id };
 
     } catch (error) {
-        console.error("Database error:", error);
+        console.error("❌ Errore nel database:", error);
         throw new Error("Failed to update event.");
     }
 };
+
 ;
 
 const deleteEvento = (id) => {
