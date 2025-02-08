@@ -11,6 +11,8 @@ import Sidebar from './sidebar/Sidebar';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import GanttResourceView from './components/GanttResourceView';
 
+const indirizzo_url='https://localhost:3004'
+
 const ToggleViewButton = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -121,7 +123,7 @@ const App = () => {
   const syncCommesse = async () => {
     console.log("Sincronizzazione delle commesse in corso...");
     try {
-      const response = await fetch('http://localhost:4443/api/sync-commesse');
+      const response = await fetch( indirizzo_url+'/api/sync-commesse');
       const data = await response.json();
       console.log("Risultato sincronizzazione:", data.message);
 
@@ -146,6 +148,9 @@ const App = () => {
           ✨ Aggiungi Indicatore
         </button>
 
+        <button onClick={syncCommesse} style={{ margin: '10px', padding: '10px' }}>
+        🔄 Sincronizza Commesse (MySQL → SQLite)
+      </button>
         {showIndicatorModal && (
           <IndicatorModal
             tasks={events}
@@ -158,8 +163,11 @@ const App = () => {
         )}
 
         <Routes>
-          <Route path="/" element={<Gantt />} />
-          <Route path="/resource-view" element={<GanttResourceView />} />
+          <Route path="/" element={<Gantt 
+          indirizzo_url={indirizzo_url}
+          />} />
+          <Route path="/resource-view" element={<GanttResourceView 
+          indirizzo_url={indirizzo_url}/>} />
         </Routes>
       </div>
     </Router>

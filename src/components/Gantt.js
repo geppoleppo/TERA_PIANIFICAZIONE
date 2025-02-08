@@ -14,17 +14,17 @@ import { DataManager, WebApiAdaptor, Query } from '@syncfusion/ej2-data';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
 
 import { ComboBox } from '@syncfusion/ej2-dropdowns';
+//const indirizzo_url='http://localhost:3003'
 
-const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
+const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
   const ganttRef = useRef(null);
   const [editingResources, setResources] = useState([]); // Stato per i dati delle risorse
   const [tasks, setTasks] = useState([]);
   const [commesse, setCommesse] = useState([]); // Stato per le commesse disponibili
 
-
   const handleSaveEvent = async (eventData) => {
     try {
-      const response = await fetch(`http://localhost:4443/api/eventi/${eventData.Id}`, {
+      const response = await fetch(indirizzo_url+`/api/eventi/${eventData.Id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -44,7 +44,7 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
 
   const handleCreateEvent = async (newEvent) => {
     try {
-      const response = await fetch("http://localhost:4443/api/eventi", {
+      const response = await fetch(indirizzo_url+"/api/eventi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +64,7 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
 
   const handleDeleteEvent = async (eventId) => {
     try {
-      const response = await fetch(`http://localhost:4443/api/eventi/${eventId}`, {
+      const response = await fetch(indirizzo_url+`/api/eventi/${eventId}`, {
         method: "DELETE",
       });
 
@@ -83,7 +83,7 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
 
   // Configura il DataManager per leggere i collaboratori
   const resourceDataManager = new DataManager({
-    url: 'http://localhost:4443/api/collaboratori', // Endpoint API REST
+    url: indirizzo_url+'/api/collaboratori', // Endpoint API REST
     adaptor: new WebApiAdaptor(),
     crossDomain: true,
   });
@@ -104,7 +104,7 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
   useEffect(() => {
     console.log("USE EFFECT 2")
     const eventDataManager = new DataManager({
-      url: 'http://localhost:4443/api/eventi',
+      url: indirizzo_url+'/api/eventi',
       adaptor: new WebApiAdaptor(),
       crossDomain: true,
     });
@@ -150,7 +150,7 @@ const Gantt = forwardRef(({ onEventsUpdate }, ref) => {
   // Carica le commesse disponibili
   useEffect(() => {
     console.log("Caricamento commesse...");
-    fetch('http://localhost:4443/api/commesse')
+    fetch(indirizzo_url+'/api/commesse')
       .then(response => response.json())
       .then(data => {
         setCommesse(data || []);

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { GanttComponent, Inject, Selection, DayMarkers, Toolbar, Edit, Resize,Filter } from '@syncfusion/ej2-react-gantt';
 
-const GanttResourceView = ({ onEventsUpdate }) => {
+const GanttResourceView = ({ onEventsUpdate, indirizzo_url }) => {
     const ganttRef = useRef(null);
     const [tasks, setTasks] = useState([]);
     const [resources, setResources] = useState([]);
@@ -14,7 +14,7 @@ const GanttResourceView = ({ onEventsUpdate }) => {
 
         try {
             // Carica i dati degli eventi (task)
-            const eventiResponse = await fetch('http://localhost:4443/api/eventi');
+            const eventiResponse = await fetch(indirizzo_url+'/api/eventi');
             const eventiData = await eventiResponse.json();
             setTasks(eventiData);
             if (onEventsUpdate) {
@@ -22,7 +22,7 @@ const GanttResourceView = ({ onEventsUpdate }) => {
             }
 
             // Carica le risorse (collaboratori)
-            const risorseResponse = await fetch('http://localhost:4443/api/collaboratori');
+            const risorseResponse = await fetch(indirizzo_url+'/api/collaboratori');
             const risorseData = await risorseResponse.json();
             setResources(risorseData);
             
@@ -70,6 +70,7 @@ const GanttResourceView = ({ onEventsUpdate }) => {
                 resources={resources}
                 viewType="ResourceView"
                 showOverAllocation={true}
+                allowFiltering={true} // ✅ Abilita il filtro
                 taskFields={{
                     id: 'Id',
                     name: 'Subject',

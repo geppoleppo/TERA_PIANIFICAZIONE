@@ -12,7 +12,7 @@ const options = {
   };
   
 const app = express();
-const port = 4443;
+const port = 3004;
 
 app.use(cors());
 
@@ -190,9 +190,9 @@ app.get('/api/eventi', (req, res) => {
    
 
 app.post('/api/eventi', (req, res) => {
-console.log("req.body",req.body.taskData)
+console.log("creare evento",req.body.taskData)
 
-    const { Subject, StartTime, EndTime, CommessaName, resources, Progress, Predecessors ,parentID,Id} = req.body.taskData;
+    const { Subject, StartTime, EndTime, CommessaName, resources, Progress, Predecessors ,parentID,info,Id} = req.body.taskData;
     try {
       const newEvento = db.createEvento({
         Subject,
@@ -223,18 +223,6 @@ app.put('/api/eventi/:id', (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 app.delete('/api/eventi/:id', (req, res) => {
@@ -281,15 +269,11 @@ const http = require('http');
 
 // Configura il server HTTP
 http.createServer(app).listen(3003, () => {
-  console.log('Server HTTP in esecuzione su http://localhost:4443');
+  console.log('Server HTTP in esecuzione su http://localhost:3003');
 });
 
 // Configura il server HTTPS
-https.createServer(options, app).listen(3004, '0.0.0.0', () => {
-    console.log('Server HTTPS in esecuzione su https://casavela.freeddns.it/:3004');
-  });
-  
-
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+https.createServer(options, app).listen(3004, () => {
+    console.log('Server HTTPS in esecuzione su https://localhost:3004');
 });
+  
