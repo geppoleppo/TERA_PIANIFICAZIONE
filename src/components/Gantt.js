@@ -9,6 +9,7 @@ import {
   RowDD,
   DayMarkers,
   Filter,
+  Sort,
 } from '@syncfusion/ej2-react-gantt';
 import { DataManager, WebApiAdaptor, Query } from '@syncfusion/ej2-data';
 import { DropDownList } from '@syncfusion/ej2-dropdowns';
@@ -151,17 +152,29 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
 
   // Carica le commesse disponibili
   useEffect(() => {
-    console.log("Caricamento commesse...");
-    fetch(indirizzo_url+'/api/commesse')
-      .then(response => response.json())
-      .then(data => {
-        setCommesse(data || []);
-        //console.log('Commesse caricate:', data);
-      })
-      .catch(error => {
-        console.error('Errore nel caricamento delle commesse:', error);
-      });
-  }, []);
+    console.log("🔄 Caricamento commesse...");
+    setCommesse([]); // Svuota le commesse per evitare problemi con dati obsoleti
+
+    fetch(indirizzo_url + "/api/commesse")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Errore HTTP! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+                setCommesse(data);
+                console.log("✅ Commesse caricate:", data);
+            } else {
+                console.warn("⚠️ Nessuna commessa disponibile.");
+            }
+        })
+        .catch(error => {
+            console.error("❌ Errore nel caricamento delle commesse:", error);
+        });
+}, []);
+
 
 
   const refreshGantt = () => {
@@ -212,6 +225,16 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
 
   return (
     <div>
+<button onClick={() => {
+    console.log("🔄 Ricaricamento commesse...");
+    fetch(indirizzo_url + "/api/commesse")
+        .then(response => response.json())
+        .then(data => setCommesse(data))
+        .catch(error => console.error("Errore nel caricamento delle commesse:", error));
+}}>
+    🔄 Ricarica Commesse
+</button>
+
       <GanttComponent
         taskType="FixedDuration"  // 👈 Evita che la durata cambi automaticamente
         validateManualTasksOnLinking={false}  // 👈 Disabilita modifiche automatiche alla durata
@@ -240,7 +263,7 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
           enableToggle: true,
         }}
         columns={[
-          { field: 'Id', visible: false },
+          { field: 'Id', visible: true },
           {
             field: 'CommessaName',
             headerText: 'Commessa',
@@ -255,36 +278,31 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
                 return element.ej2_instances?.[0]?.value || null;
               },
               write: (args) => {
+                // ⏳ Attendere il caricamento delle commesse
                 if (!commesse.length) {
                   console.warn("⚠️ Nessuna commessa trovata! Assicurati che l'API funzioni correttamente.");
+                  args.element.innerHTML = '<span style="color: red;">⚠️ Nessuna commessa disponibile</span>';
+                  return;
                 }
-
+          
                 const dropdown = new DropDownList({
-                  dataSource: commesse,  // 📌 Usa le commesse caricate
+                  dataSource: commesse,
                   fields: { text: 'CommessaName', value: 'CommessaName' },
                   value: args.rowData.CommessaName || null,
                   placeholder: 'Seleziona una commessa...',
-                  allowFiltering: true,  // 🔥 Abilita AUTOCOMPLETAMENTO!
-                  filterType: 'Contains',  // 🔍 Consente la ricerca flessibile
+                  allowFiltering: true,
+                  filterType: 'Contains',
                   change: (e) => {
                     args.rowData.CommessaName = e.value;
-                    console.log('Commessa aggiornata:', e.value);
+                    console.log("🔹 Commessa aggiornata:", e.value);
                   },
                   actionComplete: () => {
                     console.log("📌 DropDownList aggiornato con le commesse:", commesse);
                   }
                 });
-
+          
                 dropdown.appendTo(args.element);
                 args.column.dropdownInstance = dropdown;
-
-                // 🔹 Se `commesse` non è ancora caricato, aggiorna il DropDownList dopo il caricamento
-                if (!commesse.length) {
-                  setTimeout(() => {
-                    dropdown.refresh();
-                    //console.log("📌 DropDownList aggiornato post-caricamento.");
-                  }, 700);
-                }
               },
               destroy: (args) => {
                 if (args?.column?.dropdownInstance) {
@@ -294,6 +312,7 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
               },
             },
           },
+          
 
 
           {
@@ -430,10 +449,13 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
           group: 'resourceGroup',
         }}
         height="800px"
+        
         allowSorting={true}
         enableContextMenu={true}
         highlightWeekends={true}
         allowFiltering={true}
+        allowRowDragAndDrop={ true}
+        allowTaskbarDragAndDrop={ true}
 
         toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
 
@@ -454,6 +476,9 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
         }}
         actionBegin={(args) => {
           console.log("AZIONE", args.requestType);
+          if (args.requestType === 'beforeDrop') {
+            console.log('Intercepting beforeDrop:', args);
+          }
 
           if (args.requestType === 'beforeSave') {
             console.log('Intercepting beforeSave:', args.data.ganttProperties);
@@ -511,7 +536,7 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
 
         }}
       >
-        <Inject services={[Edit, Toolbar, Selection, Resize, RowDD, DayMarkers, Filter]} />
+        <Inject services={[Edit, Toolbar, Selection, Resize, RowDD, DayMarkers, Filter,Sort]} />
       </GanttComponent>
     </div>
   );
