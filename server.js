@@ -161,7 +161,7 @@ app.get('/api/eventi', (req, res) => {
                 ids = evento.IncaricatoId.split(',').map(id => id.trim()).map(Number);
                 resourceInfo = ids.map(id => collaboratoriMap[id] || { resourceId: id, resourceName: "Unknown", unit: 100, resourceGroup: "Unknown" });
             }
-            console.log("ids:", ids);
+            console.log("orderrrrrrrrrrrrrrrrrrr:", );
             return {
                 Id: evento.Id,
                 Subject: evento.Descrizione || 'Nessun titolo',
@@ -175,6 +175,7 @@ app.get('/api/eventi', (req, res) => {
                 CategoryColor: evento.Colore || '#1aaa55',
                 CommessaName: evento.CommessaName,
                 info: evento.info,
+                orderIndex:evento.orderIndex,
             };
         });
 

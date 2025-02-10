@@ -255,15 +255,19 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
           CommessaName: 'CommessaName',
           indicators: 'Indicators', // 👈 Aggiunto per supportare gli indicators
           notes: 'info',
+          orderIndex: 'orderIndex', // ✅ Aggiunto
         }}
 
         selectionSettings={{
-          mode: 'Cell',
+          mode: 'Row',
           type: 'Multiple ',
           enableToggle: true,
         }}
+
+        sortSettings={{ columns: [{ field: 'orderIndex', direction: 'Ascending' }] }}
         columns={[
-          { field: 'Id', visible: true },
+          { field: 'Id', visible: true ,allowSorting: true},
+          { field: 'orderIndex', headerText: 'Ordine', width: 100, allowSorting: true }, // ✅ Sorting abilitato
           {
             field: 'CommessaName',
             headerText: 'Commessa',
@@ -528,37 +532,130 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
                   console.warn("⚠️ Nessun evento da eliminare trovato.");
               }
           }
-      
           if (args.requestType === "rowDropped") {
-              console.log("📌 Drag and Drop completato:", args);
-      
-              const draggedTask = args.modifiedRecords?.[0]; // Primo elemento spostato
-              if (draggedTask) {
-                  const updatedParentId = draggedTask.parentID || null; // Nuovo parent ID
-                  const taskId = draggedTask.Id;
-      
-                  console.log(`🔄 Aggiornamento ParentID: Task ${taskId} → Parent ${updatedParentId}`);
-      
-                  // Aggiorna il database con il nuovo parentID
-                  try {
-                      const response = await fetch(`${indirizzo_url}/api/eventi/${taskId}`, {
-                          method: "PUT",
-                          headers: {
-                              "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({ parentID: updatedParentId }),
-                      });
-      
-                      if (!response.ok) {
-                          throw new Error(`Errore aggiornamento parentID: ${response.statusText}`);
-                      }
-      
-                      console.log(`✅ ParentID aggiornato con successo per Task ${taskId}`);
-                  } catch (error) {
-                      console.error("❌ Errore nell'aggiornamento del parentID:", error);
-                  }
-              }
-          }
+            console.log("📌 Drag and Drop completato:", args);
+        
+            const { fromIndex, dropIndex } = args;
+            console.log(`🔄 Drag & Drop: Spostato da ${fromIndex} a ${dropIndex}`);
+        
+            if (Array.isArray(tasks) && tasks.length > 0) {
+                // **1️⃣ Foto PRIMA della modifica**
+                console.log("📷 Stato PRECEDENTE degli eventi:");
+                tasks.forEach(task => console.log(`Task ${task.Id}: orderIndex = ${task.orderIndex}`));
+        
+                // **2️⃣ Creiamo una copia ordinata per sicurezza**
+                let updatedTasks = [...tasks].sort((a, b) => a.orderIndex - b.orderIndex);
+        
+                // **3️⃣ Troviamo il task spostato usando `fromIndex`**
+                let movedTask = updatedTasks[fromIndex];
+        
+                if (!movedTask) {
+                    console.error("❌ Errore: Task non trovato con fromIndex =", fromIndex);
+                    return;
+                }
+        
+                console.log(`🚀 Task spostato: ID ${movedTask.Id} (vecchio orderIndex: ${movedTask.orderIndex})`);
+        
+                // **4️⃣ Rimuoviamo il task dalla sua posizione originale**
+                updatedTasks.splice(fromIndex, 1);
+        
+                // **5️⃣ Aggiorniamo gli altri `orderIndex`**
+                if (fromIndex < dropIndex) {
+                    updatedTasks.forEach(task => {
+                        if (task.orderIndex > fromIndex && task.orderIndex <= dropIndex) {
+                            task.orderIndex -= 1;
+                        }
+                    });
+                } else {
+                    updatedTasks.forEach(task => {
+                        if (task.orderIndex >= dropIndex && task.orderIndex < fromIndex) {
+                            task.orderIndex += 1;
+                        }
+                    });
+                }
+        
+                // **6️⃣ Assegniamo il nuovo `orderIndex` al task spostato**
+                movedTask.orderIndex = dropIndex;
+        
+                // **7️⃣ Inseriamo il task nella nuova posizione**
+                updatedTasks.splice(dropIndex, 0, movedTask);
+        
+                // **8️⃣ Verifichiamo il nuovo stato**
+                console.log("🟢 Nuovo ordine calcolato per gli eventi:");
+                updatedTasks.forEach(task => console.log(`Task ${task.Id}: nuovo orderIndex = ${task.orderIndex}`));
+        
+                // **9️⃣ Aggiorniamo lo stato con il nuovo ordine**
+                setTasks([...updatedTasks]);
+        
+                // **🔟 Troviamo solo i task con `orderIndex` cambiato per aggiornare il database**
+                const changedTasks = updatedTasks.filter(task => {
+                    const previousTask = tasks.find(t => t.Id === task.Id);
+                    return previousTask && previousTask.orderIndex !== task.orderIndex;
+                });
+        
+                console.log("📌 Task da aggiornare nel DB:");
+                changedTasks.forEach(task => console.log(`Task ${task.Id} → Nuovo orderIndex: ${task.orderIndex}`));
+        
+                // **🔟 Aggiorniamo il database solo per i task modificati**
+                Promise.all(changedTasks.map(async (task) => {
+                    try {
+                        console.log(`⏳ Aggiornamento DB per Task ${task.Id}...`);
+                        
+                        const response = await fetch(`${indirizzo_url}/api/eventi/${task.Id}`, {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ 
+                                parentID: task.parentID || null,
+                                orderIndex: task.orderIndex 
+                            }),
+                        });
+        
+                        const responseData = await response.json();
+        
+                        if (!response.ok) {
+                            throw new Error(`Errore aggiornamento: ${responseData.error || response.statusText}`);
+                        }
+        
+                        console.log(`✅ Task ${task.Id} aggiornato con ParentID ${task.parentID} e orderIndex ${task.orderIndex}`);
+                    } catch (error) {
+                        console.error(`❌ Errore nell'aggiornamento del task ${task.Id}:`, error);
+                    }
+                })).then(() => {
+                    // **🔟 Dopo l'aggiornamento, ricarichiamo i dati dal server**
+                    setTimeout(() => {
+                        console.log("🔄 Ricaricamento dati dal server...");
+                        fetch(`${indirizzo_url}/api/eventi`)
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log("✅ Dati ricaricati con successo!");
+                                setTasks(data);
+                                ganttRef.current.refresh(); // ✅ Forza il refresh del Gantt
+                            })
+                            .catch(error => console.error("❌ Errore nel ricaricamento degli eventi:", error));
+                    }, 500);
+                });
+            }
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
       }}
       
       >

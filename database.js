@@ -116,28 +116,28 @@ const updateEvento = (id, evento) => {
     console.log('📌 Evento ricevuto per aggiornamento:', JSON.stringify(evento));
 
     try {
-        // Se la richiesta contiene solo il parentID, aggiorna solo quel campo
-        if (evento.parentID !== undefined) {
-            console.log(`🔄 Aggiornamento solo del parentID per l'evento ID ${id} → Nuovo ParentID: ${evento.parentID}`);
-
+        // Se la richiesta contiene solo `parentID` e `orderIndex`, aggiorniamo solo quei campi
+        if (evento.parentID !== undefined || evento.orderIndex !== undefined) {
+            console.log(`🔄 Aggiornamento ParentID e ordine per evento ID ${id}`);
+            
             const query = `
                 UPDATE Eventi
-                SET ParentID = ?
+                SET ParentID = ?, orderIndex = ?
                 WHERE Id = ?
             `;
 
-            const result = db.prepare(query).run(evento.parentID, id);
-            return { Id: id, parentID: evento.parentID };
+            db.prepare(query).run(evento.parentID, evento.orderIndex, id);
+            return { Id: id, parentID: evento.parentID, orderIndex: evento.orderIndex };
         }
 
-        // Se arrivano tutti i dati, fai un aggiornamento completo
+        // Se arrivano tutti i dati, facciamo un aggiornamento completo
         console.log('📊 Aggiornamento completo dell\'evento...');
 
         const incaricatiIds = evento.taskData?.resources?.map(res => res.resourceId).join(',') || '';
 
         const query = `
             UPDATE Eventi
-            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?, ParentID = ?, info=?
+            SET Descrizione = ?, Inizio = ?, Fine = ?, CommessaName = ?, Colore = ?, Progresso = ?, IncaricatoId = ?, Dipendenza = ?, ParentID = ?, orderIndex = ?, info=?
             WHERE Id = ?
         `;
 
@@ -151,13 +151,14 @@ const updateEvento = (id, evento) => {
             incaricatiIds,
             evento.taskData?.Predecessors || '',
             evento.taskData?.parentID,
+            evento.taskData?.orderIndex,
             evento.taskData?.info,
             id
         ];
 
         console.log('📝 Parametri aggiornamento evento:', params);
 
-        const result = db.prepare(query).run(...params);
+        db.prepare(query).run(...params);
         return { ...evento.taskData, Id: id };
 
     } catch (error) {
@@ -165,6 +166,8 @@ const updateEvento = (id, evento) => {
         throw new Error("Failed to update event.");
     }
 };
+
+
 
 ;
 
