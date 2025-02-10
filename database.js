@@ -113,11 +113,11 @@ const createEvento = (evento) => {
 };
 
 const updateEvento = (id, evento) => {
-    console.log('📌 Evento ricevuto per aggiornamento:', JSON.stringify(evento));
+    console.log('🔄 Aggiornamento ParentID e ordine per evento ID',JSON.stringify(evento));
 
     try {
         // Se la richiesta contiene solo `parentID` e `orderIndex`, aggiorniamo solo quei campi
-        if (evento.parentID !== undefined || evento.orderIndex !== undefined) {
+         if (evento.parentID !== undefined || evento.orderIndex !== undefined) {
             console.log(`🔄 Aggiornamento ParentID e ordine per evento ID ${id}`);
             
             const query = `
@@ -128,7 +128,7 @@ const updateEvento = (id, evento) => {
 
             db.prepare(query).run(evento.parentID, evento.orderIndex, id);
             return { Id: id, parentID: evento.parentID, orderIndex: evento.orderIndex };
-        }
+        } 
 
         // Se arrivano tutti i dati, facciamo un aggiornamento completo
         console.log('📊 Aggiornamento completo dell\'evento...');

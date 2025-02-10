@@ -161,7 +161,7 @@ app.get('/api/eventi', (req, res) => {
                 ids = evento.IncaricatoId.split(',').map(id => id.trim()).map(Number);
                 resourceInfo = ids.map(id => collaboratoriMap[id] || { resourceId: id, resourceName: "Unknown", unit: 100, resourceGroup: "Unknown" });
             }
-            console.log("orderrrrrrrrrrrrrrrrrrr:", );
+           
             return {
                 Id: evento.Id,
                 Subject: evento.Descrizione || 'Nessun titolo',
@@ -217,7 +217,7 @@ console.log("creare evento",req.body.taskData)
   app.put('/api/eventi/:id', async (req, res) => {
     try {
         console.log('📩 Richiesta ricevuta per aggiornamento evento:', req.params.id);
-        console.log('📊 Dati ricevuti:', req.body);
+       // console.log('📊 Dati ricevuti:', req.body);
 
         // Verifica che il parentID sia un valore valido
         if (!req.body || req.body.parentID === undefined) {
