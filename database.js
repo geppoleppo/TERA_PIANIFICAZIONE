@@ -116,9 +116,12 @@ const updateEvento = (id, evento) => {
     console.log('🔄 Aggiornamento ParentID e ordine per evento ID',JSON.stringify(evento));
 
     try {
-        // Se la richiesta contiene solo `parentID` e `orderIndex`, aggiorniamo solo quei campi
-         if (evento.parentID !== undefined || evento.orderIndex !== undefined) {
-            console.log(`🔄 Aggiornamento ParentID e ordine per evento ID ${id}`);
+        // **Verifichiamo se l'oggetto evento contiene SOLO parentID e orderIndex**
+        const isDragDropUpdate = Object.keys(evento).length === 2 && 
+                                 (evento.hasOwnProperty("parentID") || evento.hasOwnProperty("orderIndex"));
+
+        if (isDragDropUpdate) {
+            console.log(`🔄 Aggiornamento SOLO ParentID e OrderIndex per evento ID ${id}`);
             
             const query = `
                 UPDATE Eventi
@@ -128,9 +131,10 @@ const updateEvento = (id, evento) => {
 
             db.prepare(query).run(evento.parentID, evento.orderIndex, id);
             return { Id: id, parentID: evento.parentID, orderIndex: evento.orderIndex };
-        } 
+        }
 
-        // Se arrivano tutti i dati, facciamo un aggiornamento completo
+        // **Altrimenti aggiorniamo l'intero evento**
+        console.log('📊 Aggiornamento completo dell\'evento ID', id);
         console.log('📊 Aggiornamento completo dell\'evento...');
 
         const incaricatiIds = evento.taskData?.resources?.map(res => res.resourceId).join(',') || '';
