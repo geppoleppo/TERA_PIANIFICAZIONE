@@ -114,6 +114,49 @@ useEffect(() => {
     }
   };
 
+/** 🔹 Funzione per duplicare un evento selezionato */
+const handleDuplicateEvent = async () => {
+  if (!ganttRef.current) return;
+
+  const selectedRows = ganttRef.current.selectionModule.getSelectedRecords();
+  if (!selectedRows || selectedRows.length === 0) {
+    alert("⚠️ Seleziona un evento da duplicare!");
+    return;
+  }
+
+  const selectedEvent = selectedRows[0]; // Prende il primo evento selezionato
+  console.log("📑 Evento selezionato per la duplicazione:", selectedEvent);
+
+  // ✅ Crea una copia dell'evento con un nuovo ID e titolo aggiornato
+  const duplicatedEvent = {
+    ...selectedEvent,
+    Id: Math.floor(Math.random() * 1000000), // 🔥 Genera un nuovo ID casuale
+    Subject: `${selectedEvent.Subject} (Copia)`, // 👈 Aggiunge "(Copia)" al nome
+    StartTime: new Date(selectedEvent.StartTime).toISOString(), // 📅 Converti la data in stringa
+    EndTime: new Date(selectedEvent.EndTime).toISOString(),
+  };
+
+  console.log("📌 Nuovo evento duplicato:", duplicatedEvent);
+
+  try {
+    const response = await fetch(`${indirizzo_url}/api/eventi`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(duplicatedEvent),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Errore duplicazione evento: ${response.statusText}`);
+    }
+
+    console.log("✅ Evento duplicato con successo!");
+    setTasks([...tasks, duplicatedEvent]); // 🔄 Aggiunge l'evento duplicato alla lista
+
+  } catch (error) {
+    console.error("❌ Errore nella duplicazione dell'evento:", error);
+  }
+};
+
 
 
 
@@ -272,6 +315,10 @@ useEffect(() => {
                     🔄 Ricarica Commesse
                 </button>
 
+                <button onClick={handleDuplicateEvent} style={{ marginLeft: "10px" }}>
+            📑 Duplica Evento
+          </button>
+
                 <GanttComponent
         taskType="FixedDuration"  // 👈 Evita che la durata cambi automaticamente
         validateManualTasksOnLinking={false}  // 👈 Disabilita modifiche automatiche alla durata
@@ -296,7 +343,7 @@ useEffect(() => {
         }}
 
         selectionSettings={{
-          mode: 'Cell',
+          mode: 'Row',
           type: 'Multiple ',
           enableToggle: true,
         }}
