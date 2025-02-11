@@ -175,70 +175,6 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
         });
 }, []);
 
-const [isLoading, setIsLoading] = useState(true); // 🔥 Stato per gestire il caricamento
-
-useEffect(() => {
-    console.log("🔄 Caricamento eventi dal database...");
-    setIsLoading(true); // Inizio caricamento
-
-    fetch(`${indirizzo_url}/api/eventi`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Errore HTTP! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log("✅ Eventi caricati:", data);
-            setTasks(data);
-            setIsLoading(false); // 🔥 Dati caricati, fine caricamento
-        })
-        .catch(error => {
-            console.error("❌ Errore nel caricamento degli eventi:", error);
-            setIsLoading(false);
-        });
-}, []);
-
-useEffect(() => {
-    console.log("🔄 Caricamento risorse dal database...");
-    setIsLoading(true);
-
-    fetch(`${indirizzo_url}/api/collaboratori`)
-        .then(response => response.json())
-        .then(data => {
-            console.log("✅ Risorse caricate:", data);
-            setResources(data);
-            setIsLoading(false);
-        })
-        .catch(error => {
-            console.error("❌ Errore nel caricamento delle risorse:", error);
-            setIsLoading(false);
-        });
-}, []);
-
-useEffect(() => {
-    console.log("🔄 Caricamento commesse...");
-    setIsLoading(true);
-
-    fetch(`${indirizzo_url}/api/commesse`)
-        .then(response => response.json())
-        .then(data => {
-            console.log("✅ Commesse caricate:", data);
-            setCommesse(data);
-            setIsLoading(false);
-        })
-        .catch(error => {
-            console.error("❌ Errore nel caricamento delle commesse:", error);
-            setIsLoading(false);
-        });
-}, []);
-
-useEffect(() => {
-    if (!isLoading && ganttRef.current) {
-        console.log("🔄 Forzando il refresh completo del Gantt");
-        ganttRef.current.refresh();
-    }
-}, [tasks, isLoading]);
 
 
   const refreshGantt = () => {
@@ -289,19 +225,15 @@ useEffect(() => {
 
   return (
     <div>
-        {isLoading ? (
-            <p>⏳ Caricamento dati in corso...</p> // 🔥 Mostriamo un messaggio mentre i dati vengono caricati
-        ) : (
-            <>
-                <button onClick={() => {
-                    console.log("🔄 Ricaricamento commesse...");
-                    fetch(indirizzo_url + "/api/commesse")
-                        .then(response => response.json())
-                        .then(data => setCommesse(data))
-                        .catch(error => console.error("Errore nel caricamento delle commesse:", error));
-                }}>
-                    🔄 Ricarica Commesse
-                </button>
+<button onClick={() => {
+    console.log("🔄 Ricaricamento commesse...");
+    fetch(indirizzo_url + "/api/commesse")
+        .then(response => response.json())
+        .then(data => setCommesse(data))
+        .catch(error => console.error("Errore nel caricamento delle commesse:", error));
+}}>
+    🔄 Ricarica Commesse
+</button>
 
       <GanttComponent
         taskType="FixedDuration"  // 👈 Evita che la durata cambi automaticamente
@@ -323,14 +255,14 @@ useEffect(() => {
           CommessaName: 'CommessaName',
           indicators: 'Indicators', // 👈 Aggiunto per supportare gli indicators
           notes: 'info',
+          orderIndex:'orderIndex',
         }}
 
-        //selectionSettings={{
-          //mode: 'Both',
-          //type: 'Multiple ',
-          //enableToggle: true,
-        //}}
-        sortSettings={{ columns: [{ field: 'orderIndex', direction: 'Ascending' }] }}
+        selectionSettings={{
+          mode: 'Cell',
+          type: 'Multiple ',
+          enableToggle: true,
+        }}
         columns={[
           { field: 'Id', visible: true },
           { field: 'orderIndex', visible: true },
@@ -600,110 +532,40 @@ useEffect(() => {
           }
       
           if (args.requestType === "rowDropped") {
-            console.log("📌 Drag and Drop completato:", args);
-        
-            const { fromIndex, dropIndex } = args;
-            console.log(`🔄 Drag & Drop: Spostato da ${fromIndex} a ${dropIndex}`);
-        
-            if (Array.isArray(tasks) && tasks.length > 0) {
-                // **📷 Salviamo lo stato precedente prima di modificare**
-                const previousState = tasks.map(task => ({ Id: task.Id, orderIndex: task.orderIndex }));
-        
-                console.log("📷 Stato PRECEDENTE degli eventi:");
-                previousState.forEach(task => console.log(`Task ${task.Id}: orderIndex = ${task.orderIndex}`));
-        
-                let updatedTasks = [...tasks].sort((a, b) => a.orderIndex - b.orderIndex);
-                let movedTask = updatedTasks[fromIndex];
-        
-                if (!movedTask) {
-                    console.error("❌ Errore: Task non trovato con fromIndex =", fromIndex);
-                    return;
-                }
-        
-                console.log(`🚀 Task spostato: ID ${movedTask.Id} (vecchio orderIndex: ${movedTask.orderIndex})`);
-        
-                updatedTasks.splice(fromIndex, 1);
-        
-                if (fromIndex < dropIndex) {
-                    updatedTasks.forEach(task => {
-                        if (task.orderIndex > fromIndex && task.orderIndex <= dropIndex) {
-                            task.orderIndex -= 1;
-                        }
-                    });
-                } else {
-                    updatedTasks.forEach(task => {
-                        if (task.orderIndex >= dropIndex && task.orderIndex < fromIndex) {
-                            task.orderIndex += 1;
-                        }
-                    });
-                }
-        
-                movedTask.orderIndex = dropIndex;
-                updatedTasks.splice(dropIndex, 0, movedTask);
-        
-                console.log("🟢 Nuovo ordine calcolato per gli eventi:");
-                updatedTasks.forEach(task => console.log(`Task ${task.Id}: nuovo orderIndex = ${task.orderIndex}`));
-        
-                // **🚀 Confrontiamo con lo stato precedente**
-                const changedTasks = updatedTasks.filter(task => {
-                    const prevTask = previousState.find(t => t.Id === task.Id);
-                    return prevTask && prevTask.orderIndex !== task.orderIndex;
-                });
-        
-                console.log("📌 Task da aggiornare nel DB:", changedTasks);
-        
-                if (changedTasks.length === 0) {
-                    console.warn("⚠️ Nessun task ha cambiato orderIndex! Interrompo l'aggiornamento.");
-                    return;
-                }
-        
-                Promise.all(changedTasks.map(async (task) => {
-                    try {
-                        console.log(`⏳ Aggiornamento DB per Task ${task.Id}...`);
-                        
-                        const response = await fetch(`${indirizzo_url}/api/eventi/${task.Id}`, {
-                            method: "PUT",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({ 
-                                parentID: task.parentID || null,
-                                orderIndex: task.orderIndex 
-                            }),
-                        });
-        
-                        if (!response.ok) {
-                            throw new Error(`Errore aggiornamento: ${response.statusText}`);
-                        }
-        
-                        console.log(`✅ Task ${task.Id} aggiornato con ParentID ${task.parentID} e orderIndex ${task.orderIndex}`);
-                    } catch (error) {
-                        console.error(`❌ Errore nell'aggiornamento del task ${task.Id}:`, error);
-                    }
-                })).then(() => {
-                    setTimeout(() => {
-                        console.log("🔄 Ricaricamento dati dal server...");
-                        fetch(`${indirizzo_url}/api/eventi`)
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log("✅ Dati ricaricati con successo!");
-                                setTasks(data);
-                            })
-                            .catch(error => console.error("❌ Errore nel ricaricamento degli eventi:", error));
-                    }, 500);
-                });
-            }
-        }
-        
-        
-        
+              console.log("📌 Drag and Drop completato:", args);
+      
+              const draggedTask = args.modifiedRecords?.[0]; // Primo elemento spostato
+              if (draggedTask) {
+                  const updatedParentId = draggedTask.parentID || null; // Nuovo parent ID
+                  const taskId = draggedTask.Id;
+      
+                  console.log(`🔄 Aggiornamento ParentID: Task ${taskId} → Parent ${updatedParentId}`);
+      
+                  // Aggiorna il database con il nuovo parentID
+                  try {
+                      const response = await fetch(`${indirizzo_url}/api/eventi/${taskId}`, {
+                          method: "PUT",
+                          headers: {
+                              "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ parentID: updatedParentId }),
+                      });
+      
+                      if (!response.ok) {
+                          throw new Error(`Errore aggiornamento parentID: ${response.statusText}`);
+                      }
+      
+                      console.log(`✅ ParentID aggiornato con successo per Task ${taskId}`);
+                  } catch (error) {
+                      console.error("❌ Errore nell'aggiornamento del parentID:", error);
+                  }
+              }
+          }
       }}
       
       >
         <Inject services={[Edit, Toolbar, Selection, Resize, RowDD, DayMarkers, Filter,Sort]} />
       </GanttComponent>
-      </>
-        )}
     </div>
   );
 });

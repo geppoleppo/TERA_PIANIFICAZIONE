@@ -161,7 +161,7 @@ app.get('/api/eventi', (req, res) => {
                 ids = evento.IncaricatoId.split(',').map(id => id.trim()).map(Number);
                 resourceInfo = ids.map(id => collaboratoriMap[id] || { resourceId: id, resourceName: "Unknown", unit: 100, resourceGroup: "Unknown" });
             }
-           
+            //console.log("ids:", ids);
             return {
                 Id: evento.Id,
                 Subject: evento.Descrizione || 'Nessun titolo',
@@ -179,7 +179,7 @@ app.get('/api/eventi', (req, res) => {
             };
         });
 
-        console.log("Eventi formattati:", eventi);
+        //console.log("Eventi formattati:", eventi);
         res.json(eventi);
     } catch (error) {
         console.error('Errore nel recupero degli eventi:', error);
@@ -193,7 +193,7 @@ app.get('/api/eventi', (req, res) => {
 app.post('/api/eventi', (req, res) => {
 console.log("creare evento",req.body.taskData)
 
-    const { Subject, StartTime, EndTime, CommessaName, resources, Progress, Predecessors ,parentID,info,Id} = req.body.taskData;
+    const { Subject, StartTime, EndTime, CommessaName, resources, Progress, Predecessors ,parentID,info,orderIndex,Id} = req.body.taskData;
     try {
       const newEvento = db.createEvento({
         Subject,
@@ -205,6 +205,7 @@ console.log("creare evento",req.body.taskData)
         Predecessors,
         parentID,
         info,
+        orderIndex,
         Id
       });
       res.status(201).json(newEvento);
@@ -217,7 +218,7 @@ console.log("creare evento",req.body.taskData)
   app.put('/api/eventi/:id', async (req, res) => {
     try {
         console.log('📩 Richiesta ricevuta per aggiornamento evento:', req.params.id);
-       // console.log('📊 Dati ricevuti:', req.body);
+        //console.log('📊 Dati ricevuti:', req.body);
 
         // Verifica che il parentID sia un valore valido
         if (!req.body || req.body.parentID === undefined) {
