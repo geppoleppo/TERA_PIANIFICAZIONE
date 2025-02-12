@@ -429,7 +429,7 @@ const handleDuplicateEvent = async () => {
                   { value: "Ambiente", text: "Ambiente" },
                   { value: "Energia", text: "Energia" },
                   { value: "Gare", text: "Gare" },
-                  { value: "Seleziona una commessa...", text: "🔽 Seleziona una commessa..." } // Opzione speciale per commesse
+                  { value: "Seleziona una commessa...", text: "🔽 Seleziona una commessa..." }
                 ];
           
                 const comboBox = new ComboBox({
@@ -437,29 +437,44 @@ const handleDuplicateEvent = async () => {
                   fields: { text: 'text', value: 'value' },
                   value: args.rowData.Subject || '',
                   placeholder: 'Seleziona o scrivi un task...',
-                  allowCustom: true, // 🔥 Permette inserimento manuale
+                  allowCustom: true,
                   change: (e) => {
                     if (e.value === "Seleziona una commessa...") {
-                      // Se l'utente sceglie questa opzione, apriamo il dropdown per le commesse
+                      console.log("📌 Selezione speciale: Aprire il menu commesse...");
+          
+                      // **Preveniamo il blur con `setTimeout`**
                       setTimeout(() => {
+                        if (!args.element) return;
+          
+                        const dropdownContainer = document.createElement('div');
+                        dropdownContainer.style.position = "absolute";
+                        dropdownContainer.style.zIndex = "1000"; // Evita sovrapposizioni
+                        args.element.appendChild(dropdownContainer);
+          
                         const dropdown = new DropDownList({
                           dataSource: commesse,
                           fields: { text: 'CommessaName', value: 'CommessaName' },
                           placeholder: 'Scegli una commessa...',
                           allowFiltering: true,
                           filterType: 'Contains',
+                          open: () => {
+                            console.log("📂 DropDown aperto con commesse");
+                          },
                           change: (ev) => {
-                            args.rowData.Subject = ev.value; // Imposta il valore della commessa
-                            comboBox.value = ev.value; // Aggiorna il ComboBox
+                            args.rowData.Subject = ev.value;
+                            comboBox.value = ev.value;
                             console.log("🔹 Commessa selezionata:", ev.value);
+          
+                            // **Rimuove il dropdown solo dopo la selezione**
+                            setTimeout(() => dropdownContainer.remove(), 100);
                           },
                         });
           
-                        dropdown.appendTo(args.element);
-                      }, 200);
+                        dropdown.appendTo(dropdownContainer);
+                      }, 150);
                     } else {
                       args.rowData.Subject = e.value;
-                      console.log("Task Name aggiornato:", e.value);
+                      console.log("✅ Task Name aggiornato:", e.value);
                     }
                   },
                 });
@@ -474,7 +489,9 @@ const handleDuplicateEvent = async () => {
                 }
               },
             },
-          },
+          }
+          ,
+          
           
           
           { field: 'isManual', headerText: 'Manual Task', width: '150', editType: 'booleanedit', visible: false },
