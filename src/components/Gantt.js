@@ -51,12 +51,12 @@ const Gantt = forwardRef(({ onEventsUpdate,indirizzo_url}, ref) => {
 }, []);
 
 // 🔄 Evita il refresh continuo del Gantt, lo aggiorna solo quando `tasks` cambia
-useEffect(() => {
-    if (!isLoading && ganttRef.current) {
-        console.log("🔄 Refresh Gantt con nuovi dati...");
-        ganttRef.current.refresh();
-    }
-}, [tasks]);
+//useEffect(() => {
+    //if (!isLoading && ganttRef.current) {
+       // console.log("🔄 Refresh Gantt con nuovi dati...");
+       // ganttRef.current.refresh();
+   // }
+//}, [tasks]);
 
   const handleSaveEvent = async (eventData) => {
     try {
@@ -640,98 +640,75 @@ const handleDuplicateEvent = async () => {
           if (args.requestType === "rowDropped") {
             console.log("📌 Drag and Drop completato:", args);
         
-            const { fromIndex, dropIndex } = args;
-            console.log(`🔄 Drag & Drop: Spostato da ${fromIndex} a ${dropIndex}`);
-        
-            if (Array.isArray(tasks) && tasks.length > 0) {
-                // **📷 Salviamo lo stato precedente prima di modificare**
-                const previousState = tasks.map(task => ({ Id: task.Id, orderIndex: task.orderIndex }));
-        
-                console.log("📷 Stato PRECEDENTE degli eventi:");
-                previousState.forEach(task => console.log(`Task ${task.Id}: orderIndex = ${task.orderIndex}`));
-        
-                let updatedTasks = [...tasks].sort((a, b) => a.orderIndex - b.orderIndex);
-                let movedTask = updatedTasks[fromIndex];
-        
-                if (!movedTask) {
-                    console.error("❌ Errore: Task non trovato con fromIndex =", fromIndex);
-                    return;
-                }
-        
-                console.log(`🚀 Task spostato: ID ${movedTask.Id} (vecchio orderIndex: ${movedTask.orderIndex})`);
-        
-                updatedTasks.splice(fromIndex, 1);
-        
-                if (fromIndex < dropIndex) {
-                    updatedTasks.forEach(task => {
-                        if (task.orderIndex > fromIndex && task.orderIndex <= dropIndex) {
-                            task.orderIndex -= 1;
-                        }
-                    });
-                } else {
-                    updatedTasks.forEach(task => {
-                        if (task.orderIndex >= dropIndex && task.orderIndex < fromIndex) {
-                            task.orderIndex += 1;
-                        }
-                    });
-                }
-        
-                movedTask.orderIndex = dropIndex;
-                updatedTasks.splice(dropIndex, 0, movedTask);
-        
-                console.log("🟢 Nuovo ordine calcolato per gli eventi:");
-                updatedTasks.forEach(task => console.log(`Task ${task.Id}: nuovo orderIndex = ${task.orderIndex}`));
-        
-                // **🚀 Confrontiamo con lo stato precedente**
-                const changedTasks = updatedTasks.filter(task => {
-                    const prevTask = previousState.find(t => t.Id === task.Id);
-                    return prevTask && prevTask.orderIndex !== task.orderIndex;
-                });
-        
-                console.log("📌 Task da aggiornare nel DB:", changedTasks);
-        
-                if (changedTasks.length === 0) {
-                    console.warn("⚠️ Nessun task ha cambiato orderIndex! Interrompo l'aggiornamento.");
-                    return;
-                }
-        
-                Promise.all(changedTasks.map(async (task) => {
-                    try {
-                        console.log(`⏳ Aggiornamento DB per Task ${task.Id}...`);
-                        
-                        const response = await fetch(`${indirizzo_url}/api/eventi/${task.Id}`, {
-                            method: "PUT",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({ 
-                                parentID: task.parentID || null,
-                                orderIndex: task.orderIndex 
-                            }),
-                        });
-        
-                        if (!response.ok) {
-                            throw new Error(`Errore aggiornamento: ${response.statusText}`);
-                        }
-        
-                        console.log(`✅ Task ${task.Id} aggiornato con ParentID ${task.parentID} e orderIndex ${task.orderIndex}`);
-                    } catch (error) {
-                        console.error(`❌ Errore nell'aggiornamento del task ${task.Id}:`, error);
-                    }
-                })).then(() => {
-                    setTimeout(() => {
-                        console.log("🔄 Ricaricamento dati dal server...");
-                        fetch(`${indirizzo_url}/api/eventi`)
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log("✅ Dati ricaricati con successo!");
-                                setTasks(data);
-                            })
-                            .catch(error => console.error("❌ Errore nel ricaricamento degli eventi:", error));
-                    }, 500);
-                });
+            if (!ganttRef.current) {
+                console.error("❌ Errore: Il riferimento al Gantt è nullo!");
+                return;
             }
+        
+            // **🔄 Estrarre la sequenza aggiornata direttamente dal Gantt**
+            const updatedTasks = ganttRef.current.flatData.map((task, index) => ({
+                Id: task.taskData.Id,  // ✅ Assicura di prendere l'ID corretto
+                orderIndex: index,  // ✅ Imposta il nuovo ordine dalla lista attuale
+                parentID: task.parentItem ? task.parentItem.taskData.Id : null  // ✅ Assegna il parent corretto
+            }));
+        
+            console.log("📋 Sequenza aggiornata post-drop:");
+            updatedTasks.forEach(task => console.log(`Task ${task.Id}: nuovo orderIndex = ${task.orderIndex}, parentID = ${task.parentID}`));
+        
+            // **🚀 Confrontare con lo stato precedente per aggiornare solo i task modificati**
+            const changedTasks = updatedTasks.filter(task => {
+                const originalTask = tasks.find(t => t.Id === task.Id);
+                return originalTask && (originalTask.orderIndex !== task.orderIndex || originalTask.parentID !== task.parentID);
+            });
+        
+            console.log("📌 Task da aggiornare nel DB:", changedTasks);
+        
+            if (changedTasks.length === 0) {
+                console.warn("⚠️ Nessun task ha cambiato ordine o parentID! Interrompo l'aggiornamento.");
+                return;
+            }
+        
+            // **🚀 Aggiorna il database con i nuovi dati**
+            Promise.all(changedTasks.map(async (task) => {
+                try {
+                    console.log(`⏳ Aggiornamento DB per Task ${task.Id}...`);
+        
+                    const response = await fetch(`${indirizzo_url}/api/eventi/${task.Id}`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ 
+                            parentID: task.parentID,
+                            orderIndex: task.orderIndex 
+                        }),
+                    });
+        
+                    if (!response.ok) {
+                        throw new Error(`Errore aggiornamento: ${response.statusText}`);
+                    }
+        
+                    console.log(`✅ Task ${task.Id} aggiornato con ParentID ${task.parentID} e orderIndex ${task.orderIndex}`);
+                } catch (error) {
+                    console.error(`❌ Errore nell'aggiornamento del task ${task.Id}:`, error);
+                }
+            })).then(() => {
+                setTimeout(() => {
+                    console.log("🔄 Ricaricamento dati dal server...");
+                    fetch(`${indirizzo_url}/api/eventi`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("✅ Dati ricaricati con successo!");
+                            setTasks(data);
+                        })
+                        .catch(error => console.error("❌ Errore nel ricaricamento degli eventi:", error));
+                }, 500);
+            });
         }
+        
+        
+        
+        
         
       }}
       
