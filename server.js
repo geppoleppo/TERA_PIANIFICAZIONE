@@ -218,24 +218,25 @@ console.log("creare evento",req.body.taskData)
   app.put('/api/eventi/:id', async (req, res) => {
     try {
         console.log('📩 Richiesta ricevuta per aggiornamento evento:', req.params.id);
-        //console.log('📊 Dati ricevuti:', req.body);
-
-        // Verifica che il parentID sia un valore valido
-        if (!req.body || req.body.parentID === undefined) {
-            return res.status(400).json({ error: 'parentID mancante nella richiesta' });
+        
+        if (!req.params.id || req.params.id === "undefined") {
+            return res.status(400).json({ error: "ID evento non valido" });
         }
 
-        // Esegui l'aggiornamento nel database
+        if (!req.body || req.body.parentID === undefined) {
+            return res.status(400).json({ error: "parentID mancante nella richiesta" });
+        }
+
         const updatedEvento = await db.updateEvento(req.params.id, req.body);
 
         if (!updatedEvento) {
-            return res.status(404).json({ error: 'Evento non trovato' });
+            return res.status(404).json({ error: "Evento non trovato" });
         }
 
-        res.json({ message: 'Evento aggiornato con successo', updatedEvento });
+        res.json({ message: "Evento aggiornato con successo", updatedEvento });
     } catch (error) {
         console.error("❌ Errore nell'aggiornamento dell'evento:", error);
-        res.status(500).json({ error: 'Errore interno del server' });
+        res.status(500).json({ error: "Errore interno del server" });
     }
 });
 
