@@ -1,5 +1,5 @@
 // App.js - Sincronizzazione con tasto per aggiornare dati tra Gantt
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef,useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import './App.css';
@@ -119,11 +119,63 @@ const App = () => {
     }
   };
 
+  const [sslError, setSSLError] = useState(false);
+  const [showSslButton, setShowSslButton] = useState(false);
+  
+  useEffect(() => {
+    const checkSSLCert = async () => {
+      try {
+        // Prova a fare una chiamata all'API HTTPS
+        const response = await fetch("https://localhost:3004/api/collaboratori");
+        if (!response.ok) throw new Error("Errore API");
+      } catch (error) {
+        console.error("⚠️ Errore certificato SSL:", error);
+        setSSLError(true);
+        setShowSslButton(true); // Mostra il pulsante per accettare il certificato
+      }
+    };
+  
+    checkSSLCert();
+  }, []);
+  
+  const handleAcceptCert = () => {
+    const newTab = window.open("https://localhost:3004/api/collaboratori", "_blank");
+    if (newTab) {
+      setTimeout(() => {
+        window.location.reload(); // Ricarica la pagina dopo aver accettato il certificato
+      }, 5000);
+    } else {
+      alert("⚠️ Il tuo browser ha bloccato il popup. Apri manualmente questo link:\nhttps://localhost:3004/api/collaboratori");
+    }
+  };
+  
+  
+  
+  
+
+
+
   console.log("📢 Controllo IndicatorModal - onSave:", handleAddIndicator);
   console.log("📢 handleAddIndicator è definito:", typeof handleAddIndicator);
   console.log("📢 EVENTI:", events);
 
-  return (
+
+    return (
+      <div className="App">
+{sslError && (
+  <div style={{ backgroundColor: "red", color: "white", padding: "10px", textAlign: "center" }}>
+    ⚠️ Connessione non sicura! <br />
+    Devi accettare manualmente il certificato SSL prima di continuare. <br />
+    <button 
+      onClick={handleAcceptCert} 
+      style={{ backgroundColor: "yellow", color: "black", padding: "10px", marginTop: "10px" }}
+    >
+      🔓 Apri pagina per autorizzare il certificato
+    </button>
+  </div>
+)}
+
+
     <Router>
       <div className="App">
         <Sidebar />
@@ -154,6 +206,7 @@ const App = () => {
         </Routes>
       </div>
     </Router>
+    </div>
   );
 };
 
