@@ -155,11 +155,13 @@ const handleActionComplete = (args) => {
     // ✅ Crea una copia dell'evento con un nuovo ID e titolo aggiornato
     const duplicatedEvent = {
       ...selectedEvent,
-      Id: Math.floor(Math.random() * 1000000), // 🔥 Genera un nuovo ID casuale
-      Subject: `${selectedEvent.Subject} (Copia)`, // 👈 Aggiunge "(Copia)" al nome
-      StartTime: new Date(selectedEvent.StartTime).toISOString(), // 📅 Converti la data in stringa
+      //Id: null, // ❌ Usa `null` così il database assegna un nuovo ID automaticamente
+      Subject: `${selectedEvent.Subject} (Copia)`,
+      StartTime: new Date(selectedEvent.StartTime).toISOString(),
       EndTime: new Date(selectedEvent.EndTime).toISOString(),
-    };
+      IncaricatoId: selectedEvent.IncaricatoId ? selectedEvent.IncaricatoId.replace(/,+$/, '') : '', // ❌ Rimuove la virgola finale
+  };
+  
 
     console.log("📌 Nuovo evento duplicato:", duplicatedEvent);
 
