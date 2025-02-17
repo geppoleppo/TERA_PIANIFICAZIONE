@@ -83,26 +83,30 @@ const getAllEventi = () => {
 
 const createEvento = (evento) => {
     try {
+        console.log("aggiungi", evento);
 
-        console.log("aggiungi",evento)
         const query = `
-            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId,Colore,Progresso, Dipendenza, ParentID, info)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?)
+            INSERT INTO Eventi (Descrizione, Inizio, Fine, CommessaName, IncaricatoId, Colore, Progresso, Dipendenza, ParentID, info)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
+
+        const incaricatoId = Array.isArray(evento.resources) && evento.resources.length > 0
+            ? evento.resources.map(res => res.resourceId).join(',')
+            : '1';
+
         const params = [
             evento.Subject || 'No Description',
             evento.StartTime || new Date().toISOString(),
             evento.EndTime || new Date().toISOString(),
             evento.CommessaName || 'COMMESSA DA ASSEGNARE',
-            evento.resources ? evento.resources.map(res => res.resourceId).join(',') : null,
+            incaricatoId, // Assicura che il valore sia corretto
             evento.CategoryColor || '#abb8c3',
             evento.Progress || 0,
             evento.Predecessors || '',
             evento.parentID,
             evento.info
-            
-            
         ];
+
         console.log('Create Event Params:', params);
         const result = db.prepare(query).run(params);
         return { ...evento, Id: result.lastInsertRowid };
@@ -112,17 +116,18 @@ const createEvento = (evento) => {
     }
 };
 
+
 const updateEvento = (id, evento) => {
-    console.log('🔄 Aggiornamento ParentID e ordine per evento ID',JSON.stringify(evento));
+    console.log('🔄 Aggiornamento ParentID e ordine per evento ID', JSON.stringify(evento));
 
     try {
         // **Verifichiamo se l'oggetto evento contiene SOLO parentID e orderIndex**
-        const isDragDropUpdate = Object.keys(evento).length === 2 && 
-                                 (evento.hasOwnProperty("parentID") || evento.hasOwnProperty("orderIndex"));
+        const isDragDropUpdate = Object.keys(evento).length === 2 &&
+            (evento.hasOwnProperty("parentID") || evento.hasOwnProperty("orderIndex"));
 
         if (isDragDropUpdate) {
             console.log(`🔄 Aggiornamento SOLO ParentID e OrderIndex per evento ID ${id}`);
-            
+
             const query = `
                 UPDATE Eventi
                 SET ParentID = ?, orderIndex = ?
@@ -137,7 +142,10 @@ const updateEvento = (id, evento) => {
         console.log('📊 Aggiornamento completo dell\'evento ID', id);
         console.log('📊 Aggiornamento completo dell\'evento...');
 
-        const incaricatiIds = evento.taskData?.resources?.map(res => res.resourceId).join(',') || '';
+        // **Correzione del campo IncaricatoId per evitare virgole in eccesso**
+        const incaricatiIds = Array.isArray(evento.taskData?.resources) && evento.taskData.resources.length > 0
+            ? evento.taskData.resources.map(res => res.resourceId).join(',')
+            : '1';
 
         const query = `
             UPDATE Eventi
@@ -152,7 +160,7 @@ const updateEvento = (id, evento) => {
             evento.taskData?.CommessaName,
             evento.taskData?.CategoryColor || '',
             evento.taskData?.Progress || 0,
-            incaricatiIds,
+            incaricatiIds, // ✅ Assicura che non abbia virgole in eccesso
             evento.taskData?.Predecessors || '',
             evento.taskData?.parentID,
             evento.taskData?.orderIndex,
@@ -170,6 +178,7 @@ const updateEvento = (id, evento) => {
         throw new Error("Failed to update event.");
     }
 };
+
 
 
 

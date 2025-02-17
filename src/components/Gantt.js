@@ -440,7 +440,7 @@ const handleActionComplete = (args) => {
 
               {
                 field: 'Subject',
-                headerText: 'AMBITO',
+                headerText: 'Task',
                 width: 250,
                 edit: {
                   create: () => {
@@ -532,7 +532,7 @@ const handleActionComplete = (args) => {
               { field: 'resources', headerText: 'RISORSE', width: '200', editType: 'dropdownedit' },
               {
                 field: 'parentID',
-                headerText: 'Parent Task',
+                headerText: 'Task Genitore',
                 visible: true,
                 width: '200',
                 edit: {
@@ -599,7 +599,7 @@ const handleActionComplete = (args) => {
 
             toolbar={['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'ZoomIn', 'ZoomOut', 'ZoomToFit', 'Search']}
 
-            treeColumnIndex={1}
+            treeColumnIndex={2}
             editSettings={{
               allowAdding: true,
               allowEditing: true,
@@ -612,7 +612,7 @@ const handleActionComplete = (args) => {
               rightLabel: 'resources',
             }}
             splitterSettings={{
-              position: '35%',
+              position: '280px',
             }}
 
             //sortSettings={{ columns: [{ field: 'orderIndex', direction: 'Ascending' }] }}
